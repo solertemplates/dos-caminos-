@@ -131,5 +131,5 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   ac.close();
   if (signal?.aborted) throw new DOMException('cancelado', 'AbortError');
   const type = mime.split(';')[0];
-  return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type };
+  return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type, realtime: true };
 }

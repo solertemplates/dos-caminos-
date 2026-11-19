@@ -5,11 +5,12 @@ let dbp = null;
 function db() {
   if (!dbp) {
     dbp = new Promise((res, rej) => {
-      const r = indexedDB.open(DB, 1);
+      const r = indexedDB.open(DB, 2);
       r.onupgradeneeded = () => {
         const d = r.result;
         if (!d.objectStoreNames.contains('songs')) d.createObjectStore('songs', { keyPath: 'id' });
         if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+        if (!d.objectStoreNames.contains('videos')) d.createObjectStore('videos', { keyPath: 'id' });
       };
       r.onsuccess = () => res(r.result);
       r.onerror = () => rej(r.error);
@@ -34,6 +35,16 @@ export const songs = {
   put: (song) => tx('songs', 'readwrite', (s) => s.put(song)),
   del: (id) => tx('songs', 'readwrite', (s) => s.delete(id)),
   async update(id, patch) { const s = await songs.get(id); if (s) await songs.put({ ...s, ...patch }); },
+};
+
+// Mis videos: cada video se guarda en cuanto termina (blob + textos + redes donde ya se publicó).
+export const videos = {
+  all: () => tx('videos', 'readonly', (s) => s.getAll()).then((l) => l.sort((a, b) => b.created - a.created)),
+  get: (id) => tx('videos', 'readonly', (s) => s.get(id)),
+  put: (v) => tx('videos', 'readwrite', (s) => s.put(v)),
+  del: (id) => tx('videos', 'readwrite', (s) => s.delete(id)),
+  async update(id, patch) { const v = await videos.get(id); if (v) await videos.put({ ...v, ...patch }); return v; },
+  count: () => tx('videos', 'readonly', (s) => s.count()),
 };
 
 const LS = {
@@ -78,6 +89,12 @@ export const DEFAULTS = {
 export const settings = {
   get: () => ({ ...DEFAULTS, ...LS.get('settings', {}) }),
   set(patch) { const s = { ...settings.get(), ...patch }; LS.set('settings', s); return s; },
+};
+// Tanda en curso: si la app se cierra, se retoma donde se quedó.
+export const queue = {
+  get: () => LS.get('queue', null),
+  set: (q) => LS.set('queue', q),
+  clear: () => { try { localStorage.removeItem('dc.queue'); } catch (e) {} },
 };
 export const draft = {
   get: () => LS.get('draft', ''),

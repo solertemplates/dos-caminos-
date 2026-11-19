@@ -1,6 +1,7 @@
 // Dos Caminos — audio. Efectos de sonido sintetizados por código (obra propia, dedicada CC0)
 // y mezcla con la música del banco del usuario. Todo se genera en el teléfono, sin API.
 import { SCENES } from './scenes.js';
+import { tOfP, CHOICE } from './render.js';
 
 const SR = 48000;
 
@@ -65,6 +66,8 @@ export const SFX = {
   step(c, o, nb, t, e) { noise(c, o, nb, t, 0.04 * (e.vol ?? 1), 0.003, 0.06, 'lowpass', 500, 0, 0.7); },
   thud(c, o, nb, t) { tone(c, o, t, 90, 'sine', 0.35, 0.003, 0.25, 50); noise(c, o, nb, t, 0.08, 0.002, 0.15, 'lowpass', 400, 0, 0.7); },
   crackle(c, o, nb, t) { for (let i = 0; i < 6; i++) noise(c, o, nb, t + i * 0.045 + Math.random() * 0.03, 0.05, 0.001, 0.02, 'highpass', 2000 + Math.random() * 2000, 0, 1); },
+  // el momento en que cada uno elige: dos notas que se separan
+  choice(c, o, nb, t) { tone(c, o, t, 659.25, 'sine', 0.06, 0.01, 0.9); tone(c, o, t + 0.18, 880, 'sine', 0.045, 0.01, 1.1); tone(c, o, t + 0.18, 587.33, 'sine', 0.045, 0.01, 1.1); },
   shimmer(c, o, nb, t) { [1318.5, 1760, 2093, 2637].forEach((f, i) => tone(c, o, t + i * 0.06, f, 'sine', 0.025, 0.01, 0.9)); },
 };
 
@@ -183,11 +186,12 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
       const pan = job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
       for (const e of scene.events(S)) {
         let t;
-        if (e.p != null) t = tl.mainStart + Math.min(1, e.p) * tl.mainDur;
+        if (e.p != null) t = tOfP(tl, e.p);
         else t = tl.resStart + e.r * tl.res;
         play(e.type, t, e, pan);
       }
     });
+    play('choice', tl.mainStart + CHOICE * 0.6);
     play('ping', tl.endStart + 0.5, { vol: 0.8 });
   }
   return await ctx.startRendering();

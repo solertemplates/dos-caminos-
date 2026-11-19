@@ -70,11 +70,23 @@ export function classifyResult(res) {
   return { good: true, bad: null };
 }
 
-const THEMES = { pareja: 'pareja', amor: 'pareja', couple: 'pareja', love: 'pareja', familia: 'familia', family: 'familia', dinero: 'dinero', money: 'dinero', finanzas: 'dinero', trabajo: 'trabajo', work: 'trabajo', superacion: 'superacion', 'self-improvement': 'superacion', growth: 'superacion', fe: 'fe', faith: 'fe', dios: 'fe' };
+const THEMES = {
+  pareja: 'pareja', amor: 'pareja', couple: 'pareja', love: 'pareja', relationships: 'pareja',
+  familia: 'familia', family: 'familia', hogar: 'familia',
+  hijos: 'hijos', hijo: 'hijos', crianza: 'hijos', kids: 'hijos', parenting: 'hijos', children: 'hijos',
+  dinero: 'dinero', money: 'dinero', finanzas: 'dinero', ahorro: 'dinero', finance: 'dinero',
+  trabajo: 'trabajo', work: 'trabajo', career: 'trabajo', empleo: 'trabajo',
+  amistad: 'amistad', amigos: 'amistad', friendship: 'amistad', friends: 'amistad',
+  salud: 'salud', health: 'salud', ejercicio: 'salud', fitness: 'salud',
+  movil: 'movil', celular: 'movil', telefono: 'movil', pantallas: 'movil', phone: 'movil', screens: 'movil',
+  constancia: 'constancia', habitos: 'constancia', disciplina: 'constancia', consistency: 'constancia', habits: 'constancia',
+  superacion: 'constancia', 'self-improvement': 'constancia', growth: 'constancia',
+  fe: 'fe', faith: 'fe', dios: 'fe',
+};
 export const EMOTIONS = ['romantica', 'tension', 'triste', 'emotiva', 'inspiracional', 'alegre'];
 const EMO_ALIAS = { romantica: 'romantica', romantic: 'romantica', tension: 'tension', suspenso: 'tension', triste: 'triste', sad: 'triste', emotiva: 'emotiva', emotional: 'emotiva', emocionante: 'emotiva', inspiracional: 'inspiracional', inspiradora: 'inspiracional', inspiring: 'inspiracional', alegre: 'alegre', happy: 'alegre', feliz: 'alegre' };
-const THEME_EMO = { pareja: 'romantica', familia: 'emotiva', dinero: 'inspiracional', trabajo: 'inspiracional', superacion: 'inspiracional', fe: 'emotiva' };
-const THEME_SCENE = { pareja: 'puente', familia: 'mesa', dinero: 'alcancia', trabajo: 'casa', superacion: 'escalera', fe: 'arbol' };
+const THEME_EMO = { pareja: 'romantica', familia: 'emotiva', hijos: 'emotiva', dinero: 'inspiracional', trabajo: 'inspiracional', amistad: 'alegre', salud: 'inspiracional', movil: 'tension', constancia: 'inspiracional', fe: 'emotiva' };
+const THEME_SCENE = { pareja: 'puente', familia: 'mesa', hijos: 'arbol', dinero: 'alcancia', trabajo: 'casa', amistad: 'abrazo', salud: 'camino', movil: 'mesa', constancia: 'escalera', fe: 'arbol' };
 
 function splitPeople(s) {
   return norm(s).split(/\s*(?:\+|,|\by\b|\band\b|&)\s*/).filter(Boolean);
@@ -133,7 +145,7 @@ export function parseScripts(text) {
       return;
     }
     const errs = [];
-    const theme = THEMES[norm(f.theme)] || 'superacion';
+    const theme = THEMES[norm(f.theme)] || 'constancia';
     const label = `Guion ${scripts.length + 1}`;
     const A = parseSide(f.A, theme, errs, label + ' A');
     const B = parseSide(f.B, theme, errs, label + ' B');

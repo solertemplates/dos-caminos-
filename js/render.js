@@ -1,5 +1,5 @@
 // Dos Caminos — composición del video: fondo de estrellas, división, textos, escenas y línea de tiempo.
-import { SCENES, clamp, smooth, lerp, glow, RED } from './scenes.js';
+import { SCENES, clamp, smooth, lerp, glow, heart, RED, setNeutral } from './scenes.js';
 import { WHITE } from './figure.js';
 
 export const W = 1080, H = 1920, FPS = 30;
@@ -16,15 +16,22 @@ export function makeTimeline(D) {
   return { D, hookHold: 1.2, mainStart, resStart, endStart, mainDur, res, end, C };
 }
 
+// Regla de guion: los dos empiezan iguales (neutral = 1). En CHOICE segundos cada uno elige
+// distinto y desde ahí la diferencia crece con el progreso p.
+export const CHOICE = 0.75;
+export function tOfP(tl, p) { return tl.mainStart + CHOICE + clamp(p) * (tl.mainDur - CHOICE); }
 export function stateAt(tl, t) {
-  if (t < tl.hookHold) return { phase: 'hook', p: 1, r: 1, hookK: t / tl.hookHold, endK: 0 };
+  if (t < tl.hookHold) return { phase: 'hook', p: 1, r: 1, hookK: t / tl.hookHold, endK: 0, neutral: 0 };
   if (t < tl.mainStart) {
     const k = smooth((t - tl.hookHold) / (tl.mainStart - tl.hookHold));
-    return { phase: 'rewind', p: 1 - k, r: 1 - k, rewK: k, endK: 0 };
+    return { phase: 'rewind', p: 1 - k, r: 1 - k, rewK: k, endK: 0, neutral: smooth((k - 0.55) / 0.45) };
   }
-  if (t < tl.resStart) return { phase: 'main', p: (t - tl.mainStart) / tl.mainDur, r: 0, endK: 0 };
-  if (t < tl.endStart) return { phase: 'result', p: 1, r: (t - tl.resStart) / tl.res, endK: 0 };
-  return { phase: 'end', p: 1, r: 1, endK: (t - tl.endStart) / tl.end };
+  if (t < tl.resStart) {
+    const tc = t - tl.mainStart;
+    return { phase: 'main', p: clamp((tc - CHOICE) / (tl.mainDur - CHOICE)), r: 0, endK: 0, neutral: 1 - smooth((tc - 0.35) / 0.55), choiceK: tc / CHOICE };
+  }
+  if (t < tl.endStart) return { phase: 'result', p: 1, r: (t - tl.resStart) / tl.res, endK: 0, neutral: 0 };
+  return { phase: 'end', p: 1, r: 1, endK: (t - tl.endStart) / tl.end, neutral: 0 };
 }
 
 // Zona segura de reels: arriba ~130 px y abajo desde ~1380 px los tapan los textos y botones
@@ -34,21 +41,21 @@ export function layoutFor(kind) {
     return {
       kind,
       panels: [
-        { cx: 270, groundY: 960, stageW: 510, F: 255, titleY: 235, tw: 470, clip: [0, 130, 538, 1250], size: 36, sub: 26, align: 'center' },
-        { cx: 800, groundY: 960, stageW: 500, F: 255, titleY: 235, tw: 460, clip: [542, 130, 538, 1250], size: 36, sub: 26, align: 'center' },
+        { cx: 270, groundY: 1000, stageW: 510, F: 255, titleY: 305, tw: 470, clip: [0, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
+        { cx: 800, groundY: 1000, stageW: 500, F: 255, titleY: 305, tw: 460, clip: [542, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
       ],
-      divider: [540, 180, 540, 1300],
-      endY: 230,
+      divider: [540, 250, 540, 1320],
+      endY: 300,
     };
   }
   return {
     kind: 'ab',
     panels: [
-      { cx: 520, groundY: 640, stageW: 940, F: 245, titleY: 205, tx: 50, tw: 900, clip: [0, 130, 1080, 612], size: 44, sub: 28, align: 'left' },
-      { cx: 520, groundY: 1262, stageW: 940, F: 245, titleY: 827, tx: 50, tw: 900, clip: [0, 748, 1080, 612], size: 44, sub: 28, align: 'left' },
+      { cx: 520, groundY: 680, stageW: 940, F: 240, titleY: 290, tx: 50, tw: 900, clip: [0, 150, 1080, 602], size: 42, sub: 27, align: 'left' },
+      { cx: 520, groundY: 1292, stageW: 940, F: 240, titleY: 850, tx: 50, tw: 900, clip: [0, 758, 1080, 602], size: 42, sub: 27, align: 'left' },
     ],
-    divider: [40, 745, 1040, 745],
-    endY: 205,
+    divider: [40, 755, 1040, 755],
+    endY: 290,
   };
 }
 
@@ -75,8 +82,11 @@ export function makeStars(seed) {
 function drawStars(ctx, stars, t) {
   ctx.fillStyle = WHITE;
   for (const s of stars) {
-    const y = (s.y + t * 3 * s.sp) % H;
-    ctx.globalAlpha = s.a * (0.55 + 0.45 * Math.sin(t * s.sp + s.ph));
+    const y = s.y;
+    const tw = 0.5 + 0.5 * Math.sin(t * s.sp * 0.9 + s.ph);
+    const a = s.a * tw * tw * (3 - 2 * tw);
+    if (a < 0.01) continue;
+    ctx.globalAlpha = a;
     ctx.beginPath();
     ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
     ctx.fill();
@@ -149,7 +159,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
   const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
   ctx.save();
   ctx.strokeStyle = WHITE;
-  ctx.globalAlpha = 0.22 * (st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1);
+  const pulse = st.phase === 'main' && st.choiceK != null ? Math.max(0, Math.sin(clamp(st.choiceK * 1.1 - 0.15) * Math.PI)) : 0;
+  ctx.globalAlpha = (0.22 + 0.45 * pulse) * (st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1);
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(lerp(mx, x1, dk), lerp(my, y1, dk));
@@ -170,7 +181,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const S = {
       w: pn.stageW, F: pn.F, people: side.people, good: side.good, bad: side.bad,
       p: clamp(st.p), r: clamp(st.r), t, C: tl.C, seed: job.seed + i * 13,
-      dimmed: !side.good && st.r > 0.4,
+      dimmed: !side.good && st.r > 0.4, focus: null,
     };
     let a = endDim * hookIn;
     if (!side.good && st.phase !== 'main') a *= 1 - 0.25 * clamp(st.r);
@@ -178,7 +189,19 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const sceneAlpha = a;
     const scene = SCENES[side.scene] || SCENES.arbol;
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
+    setNeutral(st.neutral || 0);
     withAlpha(ctx, sceneAlpha, () => scene.draw(ctx, S));
+    setNeutral(0);
+    // final feliz: corazón grande y brillante sobre el objeto principal de la escena
+    if (side.good && S.focus && st.r > 0.45) {
+      const k = smooth((st.r - 0.45) / 0.4);
+      const [fx, fy] = S.focus;
+      const beat = 1 + 0.07 * Math.max(0, Math.sin(t * 5.2)) * Math.max(0, Math.sin(t * 5.2 + 0.6));
+      ctx.globalAlpha = 1;
+      glow(ctx, fx, fy, pn.F * 1.05 * k, RED, 0.95);
+      glow(ctx, fx, fy, pn.F * 0.45 * k, '#FF8A5C', 0.6);
+      heart(ctx, fx, fy, pn.F * 0.3 * k * beat, RED, Math.max(0.85, endDim) * k);
+    }
     ctx.restore();
   });
 
@@ -215,7 +238,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.globalAlpha = a;
     ctx.font = `300 42px ${FONT}`;
     const lines = wrap(ctx, job.texts.hook, 900, 3);
-    let y = layout.kind === 'lr' ? 230 : 200;
+    let y = layout.kind === 'lr' ? 300 : 290;
     for (const ln of lines.slice(0, 2)) { spaced(ctx, ln, W / 2, y, 3); y += 54; }
     ctx.restore();
   }

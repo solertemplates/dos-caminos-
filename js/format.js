@@ -1,45 +1,55 @@
-// Instrucciones para pedirle guiones a Claude (se copian desde Ajustes).
-export const CLAUDE_PROMPT = `Escribe guiones para mi app "Dos Caminos" (videos verticales sin voz que comparan dos formas de vivir). Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
+// Instrucciones para pedirle guiones a Claude (se copian desde Ajustes). Mantener igual que MAESTRO.md.
+export const CLAUDE_PROMPT = `Escribe guiones para mi app "Dos Caminos" (canal en inglés: "Two Paths Stories"). Son videos verticales sin voz: la pantalla se divide en dos y cada lado muestra una forma de vivir y su resultado.
+
+Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
 
 TITULO: título corto
-TEMA: pareja | familia | dinero | trabajo | superacion | fe
+TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
-A: TÍTULO DEL CAMINO A | SUBTÍTULO O CONTADOR | escena | personajes | acciones | resultado
-B: TÍTULO DEL CAMINO B | SUBTÍTULO O CONTADOR | escena | personajes | acciones | resultado
+A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
+B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 FRASE: reflexión final corta
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
-GANCHO_EN: hook in US English
-A_EN: PATH A TITLE | SUBTITLE OR COUNTER
-B_EN: PATH B TITLE | SUBTITLE OR COUNTER
-FRASE_EN: closing reflection in US English
-PREGUNTA_EN: closing question in US English
+GANCHO_EN: hook, natural US English
+A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
+B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
+FRASE_EN: closing line, natural US English (not a literal translation)
+PREGUNTA_EN: closing question, natural US English
 ---
 
-Reglas:
+REGLAS DE LA HISTORIA
+1. Los dos caminos empiezan en igualdad de condiciones: misma escena, mismos personajes, mismo punto de partida.
+2. En los primeros segundos se ve el momento en que cada uno elige distinto (uno toma la tabla, el otro saca el móvil).
+3. Desde ahí la diferencia crece poco a poco hasta el final: uno crece o se une; el otro se seca, se queda atrás o se cae.
+4. Un lado termina bien y el otro mal. Se cuenta con acciones y objetos, no con carteles.
+5. Temas universales: pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil y la constancia. Fe solo de vez en cuando, sutil y con un mensaje que entienda cualquiera. Cada guion, de un tema distinto.
+
+REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.
-- Contador animado: escribe {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
-- escena (una): puente, arbol, alcancia, casa, escalera, mesa, fogata, camino, libros, abrazo.
-- personajes: hombre, mujer, nino, nina, unidos con +. Ej: hombre+mujer. Máximo 3 (mesa) y 2 en las demás.
-- acciones (una por personaje, unidas con +):
-  puente: construir, esperar, celular
-  arbol: orar, orar-domingo, regar, celular, dormir
+- Contador animado: {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
+- FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
+
+VOCABULARIO (usa solo estas palabras)
+- escena: puente, arbol, alcancia, casa, escalera, mesa, fogata, camino, libros, abrazo
+- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa)
+- acciones, una por personaje, unidas con +:
+  puente: construir, esperar, celular, descansar
+  arbol: regar, cuidar, celular, dormir, orar, orar-domingo
   alcancia: ahorrar, gastar, celular
   casa: construir, descansar, celular
   escalera: subir, sentarse
   mesa: hablar, celular
   fogata: cuidar, celular, alejarse
-  camino: caminar, correr, levantarse (se cae y se levanta), caer (se cae y se queda), sentarse
+  camino: caminar, correr, levantarse, caer, sentarse
   libros: leer, celular
   abrazo: acercarse, alejarse
-- resultado: bueno = crece, se unen, llega, se llena, florece. Malo = se seca, se apaga, se vacía, se queda, se queda atrás, nunca se completa, se cae, se alejan.
-- Un lado termina bien y el otro mal. La historia se cuenta con acciones, no con texto.
-- FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
-- Que cada guion sea distinto: cambia tema, escena, personajes, contador y frase.
+- final bueno: crece, florece, se unen, se llena, llega
+- final malo: se seca, se apaga, se vacía, se queda, se queda atrás, nunca se completa, se cae, se alejan
 
-Ejemplo:
+EJEMPLO
 TITULO: El puente
 TEMA: pareja
 EMOCION: romantica
@@ -50,11 +60,11 @@ B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | constru
 FRASE: El amor se construye desde los dos lados.
 PREGUNTA: ¿Cuál de los dos eres tú?
 TITULO_EN: The bridge
-GANCHO_EN: One bridge. Two stories.
+GANCHO_EN: Same bridge. Two stories.
 A_EN: BOTH OF THEM BUILD | DAY {1-90}
 B_EN: ONE BUILDS, ONE WAITS | DAY {1-90}
 FRASE_EN: Love is built from both sides.
 PREGUNTA_EN: Which one are you?
 ---
 
-Escríbeme 10 guiones nuevos sobre: `;
+Escríbeme guiones nuevos, cada uno de un tema distinto, sobre: `;

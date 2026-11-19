@@ -24,12 +24,23 @@
       <svg viewBox="0 0 40 40" class="logo" aria-hidden="true"><path d="M20 36 V22 M20 22 L9 6 M20 22 L31 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="31" cy="6" r="2.4" fill="#E5484D"/></svg>
       <h1 data-i18n="app">Dos Caminos</h1>
     </div>
+    <div class="top-btns">
+    <button class="icon-btn" id="openVideos" aria-label="Mis videos">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10 9.3v5.4l4.6-2.7z" fill="currentColor"/></svg>
+      <span class="badge" id="videoBadge" hidden></span>
+    </button>
     <button class="icon-btn" id="openSettings" aria-label="Ajustes">
       <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
     </button>
+    </div>
   </header>
 
   <p class="tagline" data-i18n="tagline">Dos formas de vivir. Dos resultados.</p>
+
+  <div class="resume" id="resumeBox" hidden>
+    <p id="resumeText"></p>
+    <div class="row-btns"><button class="chip strong" id="resumeGo">Continuar</button><button class="chip subtle" id="resumeDrop">Descartar</button></div>
+  </div>
 
   <section class="block">
     <button class="big-ghost" id="openPaste">
@@ -60,16 +71,25 @@
 <div class="sheet" id="pasteSheet" hidden>
   <div class="sheet-card tall">
     <div class="sheet-head">
-      <h2 data-i18n="paste">Pegar guiones</h2>
-      <button class="text-btn" data-close data-i18n="done">Listo</button>
+      <h2>Pegar guiones</h2>
+      <button class="text-btn" data-close>Listo</button>
     </div>
-    <textarea id="scriptsText" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="TITULO: …&#10;A: … | … | puente | hombre+mujer | construir+construir | se unen&#10;B: …&#10;---"></textarea>
+    <textarea id="scriptsText" class="short" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Pega aquí los guiones (formato en Ajustes)."></textarea>
     <div class="row-btns">
-      <button class="chip" id="pasteClip" data-i18n="pasteClip">Pegar del portapapeles</button>
-      <button class="chip" id="loadExamples" data-i18n="examples">Cargar 30 ejemplos</button>
-      <button class="chip subtle" id="clearScripts" data-i18n="clear">Borrar</button>
+      <button class="chip" id="pasteClip">Pegar del portapapeles</button>
+      <button class="chip" id="loadExamples">Ejemplo del puente</button>
+      <button class="chip subtle" id="clearScripts">Borrar</button>
     </div>
     <p class="hint" id="parseInfo"></p>
+    <div class="pick-head" id="pickHead" hidden>
+      <button class="text-btn small" id="pickAll">Marcar todos</button>
+      <button class="text-btn small" id="pickNone">Ninguno</button>
+    </div>
+    <ul class="list picks" id="scriptList"></ul>
+    <div class="row-btns end" id="createBtns" hidden>
+      <button class="chip strong" id="createSelected">Crear seleccionados</button>
+      <button class="chip" id="createAll">Crear todos</button>
+    </div>
   </div>
 </div>
 
@@ -79,22 +99,24 @@
     <canvas id="stage" class="stage"></canvas>
     <div class="prog-text" id="progText">…</div>
     <div class="bar"><i id="progBar"></i></div>
+    <p class="awake">Mantén la pantalla encendida y la app abierta hasta que termine.<br>Cada video se guarda en «Mis videos» en cuanto está listo; si algo se interrumpe, al volver la app sigue donde se quedó.</p>
     <button class="text-btn" id="cancel" data-i18n="cancel">Cancelar</button>
   </div>
 </div>
 
-<!-- Resultados -->
-<div class="sheet solid" id="resultsSheet" hidden>
+<!-- Mis videos -->
+<div class="sheet solid" id="videosSheet" hidden>
   <div class="results">
     <div class="sheet-head">
-      <h2 data-i18n="ready">Tus videos</h2>
-      <button class="text-btn" data-close data-i18n="close">Cerrar</button>
+      <h2>Mis videos</h2>
+      <button class="text-btn" data-close>Cerrar</button>
     </div>
+    <p class="hint" id="videosInfo"></p>
     <div class="row-btns" id="batchBtns">
-      <button class="chip strong" id="saveAll" data-i18n="saveAll">Guardar todos</button>
-      <button class="chip" id="zipAll" data-i18n="zip">Descargar ZIP</button>
+      <button class="chip strong" id="saveAll">Guardar todos</button>
+      <button class="chip" id="zipAll">Descargar ZIP</button>
     </div>
-    <div id="resultList"></div>
+    <div id="videoList"></div>
   </div>
 </div>
 

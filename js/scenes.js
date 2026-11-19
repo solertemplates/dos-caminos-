@@ -1,12 +1,23 @@
 // Dos Caminos — escenas. Cada escena se dibuja en coordenadas de escenario:
 // x desde -w/2 a w/2, y = 0 es el suelo, y negativo hacia arriba.
-import { drawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
+import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
 export const RED = '#E5484D';
-export const GOLD = '#E9C46A';
+// Al empezar, los dos caminos están en igualdad: todos de pie (o sentados a la mesa), sin objetos.
+let NEUTRAL = 0;
+export function setNeutral(v) { NEUTRAL = v; }
+function neutralPose(pose) {
+  const chair = pose.fl1 > 0.8 && pose.fl2 > -0.6 && pose.fl2 < 0.6 && pose.tr < 0.5;
+  return chair ? POSES.sit : POSES.stand;
+}
+function drawFigure(ctx, o) {
+  if (NEUTRAL > 0.001) o = { ...o, pose: lerpPose(o.pose, neutralPose(o.pose), NEUTRAL) };
+  return rawFigure(ctx, o);
+}
+export const GOLD = '#F4A259';
 export const AMBER = '#F4B860';
 export const FLAME = '#FF7A45';
-export const COLD = '#9FB4D3';
+export const COLD = '#CFCBC2';
 
 export const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 export const smooth = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
@@ -120,14 +131,17 @@ function groundLine(ctx, F, x1, x2, a = 0.55, mass = true) {
   line(ctx, x1, 0, x2, 0);
 }
 function phoneAt(ctx, h, F, a = 1) {
+  a *= 1 - NEUTRAL;
+  if (a <= 0.02) return;
   ctx.save();
   ctx.globalAlpha = a;
-  glow(ctx, h[0], h[1] - F * 0.02, F * 0.22, COLD, 0.7);
-  ctx.fillStyle = '#DCE6F5';
+  glow(ctx, h[0], h[1] - F * 0.02, F * 0.2, COLD, 0.45);
+  ctx.fillStyle = '#E8E4DC';
   ctx.fillRect(h[0] - F * 0.018, h[1] - F * 0.05, F * 0.036, F * 0.06);
   ctx.restore();
 }
 function plankAt(ctx, h, F, facing) {
+  if (NEUTRAL > 0.5) return;
   setLine(ctx, F, 0.95, 0.8);
   ctx.strokeRect(h[0] - F * 0.12 + facing * F * 0.04, h[1] - F * 0.03, F * 0.24, F * 0.035);
 }
@@ -290,17 +304,12 @@ SCENES.puente = {
       if (pe.act === 'celular' || pe.act === 'phone') phoneAt(ctx, fig.fh, F);
       if (hearts.length && hearts[hearts.length - 1].i === i) {
         const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
-        const fade = S.good ? 1 : 1 - 0.55 * smooth((S.r - 0.3) / 0.6);
+        const fade = (1 - NEUTRAL) * (S.good ? 1 : (1 - 0.3 * smooth(S.p)) * (1 - 0.5 * smooth((S.r - 0.3) / 0.6)));
         glow(ctx, hx, hy, F * 0.35, RED, 0.5 * fade);
         heart(ctx, hx, hy - F * 0.01, F * 0.12 * (1 + 0.05 * Math.sin(t * 3)), fade > 0.6 ? RED : '#8E3A3D', fade);
       }
     }
-    if (meet && S.r > 0.45) {
-      const k = smooth((S.r - 0.45) / 0.35);
-      const hy = -F * (1.05 + 0.25 * k);
-      glow(ctx, 0, hy, F * 0.7 * k, RED, 0.9);
-      heart(ctx, 0, hy, F * 0.2 * k * (1 + 0.06 * Math.sin(t * 4)), RED, k);
-    }
+    if (S.good) S.focus = [meet ? 0 : (bL ? gR - F * 0.3 : gL + F * 0.3), -F * 1.35];
   },
 };
 
@@ -431,9 +440,10 @@ SCENES.arbol = {
     if (S.good) g = 0.12 + 0.88 * smooth(S.p);
     else {
       g = 0.12 + (S.bad === 'stall' ? 0.3 : 0.42) * smooth(S.p);
-      decay = S.bad === 'stall' ? 0 : clamp(S.p * 0.25 + S.r * 0.85);
+      decay = S.bad === 'stall' ? 0 : clamp(S.p * 0.45 + S.r * 0.7);
     }
     const tr = drawTree(ctx, S, tx, g, decay);
+    S.focus = [tx, -F * 0.95];
     // frutos rojos al final del camino bueno
     if (S.good && S.r > 0.3) {
       const k = smooth((S.r - 0.3) / 0.4);
@@ -480,7 +490,7 @@ SCENES.arbol = {
         if (pr < 0.5) phoneAt(ctx, fig.fh, F, 1 - pr * 2);
       }
       if ((act === 'orar' || act === 'pray') && S.good) glow(ctx, fig.head[0] + F * 0.1, fig.head[1], F * 0.4, AMBER, 0.25 + 0.15 * Math.sin(t * 1.5));
-      if (can) {
+      if (can && NEUTRAL < 0.5) {
         const h = fig.fh;
         setLine(ctx, F, 0.95, 0.8);
         ctx.save();
@@ -561,6 +571,7 @@ SCENES.alcancia = {
       const k = smooth((S.r - 0.2) / 0.5);
       setLine(ctx, F, 0.95, 0.8);
       const top = -jh - F * 0.32 * k;
+      S.focus = [jx, top - F * 0.3];
       line(ctx, jx, -jh + F * 0.02, jx, top);
       ctx.save(); ctx.fillStyle = WHITE;
       ctx.beginPath(); ctx.ellipse(jx - F * 0.05, top + F * 0.08, F * 0.05 * k, F * 0.02 * k, -0.5, 0, Math.PI * 2); ctx.fill();
@@ -599,6 +610,8 @@ SCENES.alcancia = {
     } else pose = breathe(POSES.stand, t);
     if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.look, resultBlend(S)) : lerpPose(pose, POSES.slump, resultBlend(S));
     const fig = drawFigure(ctx, { x: px, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    if (S.good) S.focus = S.focus || [jx, -jh - F * 0.6];
+    if (NEUTRAL > 0.5) coin = null;
     if (idle && S.r < 0.5) phoneAt(ctx, fig.fh, F);
     if (coin) {
       setLine(ctx, F, 1, 0.8);
@@ -674,6 +687,15 @@ SCENES.casa = {
         ctx.rotate(rot * k);
         ctx.translate(-(bx + bw / 2), -(by + bh / 2));
       }
+      if (!S.good) {
+        // cada ladrillo nuevo queda un poco más torcido: la diferencia crece
+        const q = i / Math.max(1, total - 1);
+        const tilt = q * (0.12 + 0.22 * R()) * (i % 2 ? 1 : -1);
+        const lean = row * row * bw * 0.06 * q;
+        ctx.translate(bx + bw / 2 + lean, by + bh / 2);
+        ctx.rotate(tilt);
+        ctx.translate(-(bx + bw / 2), -(by + bh / 2));
+      }
       ctx.strokeRect(bx + 1.5, by + 1.5, bw - 3, bh - 3);
       ctx.restore();
     }
@@ -685,6 +707,7 @@ SCENES.casa = {
       const top = -rows * bh;
       const peak = top - F * 0.3;
       const mid = (left + right) / 2;
+      S.focus = [mid, peak - F * 0.3];
       setLine(ctx, F, 0.95, 0.9);
       ctx.beginPath();
       ctx.moveTo(left, top); ctx.lineTo(lerp(left, mid, k), lerp(top, peak, k));
@@ -715,7 +738,7 @@ SCENES.casa = {
       else pose = lerpPose(pose, POSES.slump, resultBlend(S));
     }
     const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
-    if (holding) { setLine(ctx, F, 1, 0.75); ctx.strokeRect(fig.fh[0] - bw / 2 + F * 0.03, fig.fh[1] - bh * 0.6, bw - 3, bh - 3); }
+    if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.75); ctx.strokeRect(fig.fh[0] - bw / 2 + F * 0.03, fig.fh[1] - bh * 0.6, bw - 3, bh - 3); }
     if ((pe.act === 'celular' || pe.act === 'descansar' || pe.act === 'gastar') && !working && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     void wallTop;
   },
@@ -753,9 +776,10 @@ SCENES.escalera = {
     groundLine(ctx, F, x0 + K * sw, w / 2, 0.4, false);
     // estrella en lo alto
     const sx = x0 + K * sw + sw * 0.2, sy = -K * sh - F * 1.0;
-    const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.7 * smooth(S.r / 0.6));
+    const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.35 * smooth(S.p)) * (1 - 0.6 * smooth(S.r / 0.6));
+    if (S.good) S.focus = [sx, sy];
     glow(ctx, sx, sy, F * (0.35 + 0.5 * shine), GOLD, shine);
-    star(ctx, sx, sy, F * (0.05 + 0.03 * shine) * (1 + 0.04 * Math.sin(t * 2)), shine > 0.3 ? GOLD : '#8a7a4a', 0.5 + 0.5 * shine);
+    if (!(S.good && S.r > 0.5)) star(ctx, sx, sy, F * (0.05 + 0.03 * shine) * (1 + 0.04 * Math.sin(t * 2)), shine > 0.3 ? GOLD : '#8a7a4a', 0.5 + 0.5 * shine);
 
     S.people.forEach((pe, i) => {
       const act = pe.act;
@@ -803,7 +827,7 @@ SCENES.mesa = {
     const scale = n > 2 ? 0.88 : 1;
     const FF = F * scale;
     const tw = FF * 1.0, th = FF * 0.36;
-    const apart = !S.good ? smooth(S.r / 0.8) * FF * 0.2 : 0;
+    const apart = !S.good ? (0.35 * smooth(S.p) + 0.65 * smooth(S.r / 0.8)) * FF * 0.22 : 0;
     // lámpara
     const lampOn = S.good ? 0.35 + 0.5 * smooth(S.p) + 0.15 * S.r : 0.6 * (1 - 0.55 * S.p) * (1 - smooth(S.r / 0.4));
     const ly = -FF * 1.25;
@@ -847,12 +871,7 @@ SCENES.mesa = {
       const fig = drawFigure(ctx, { x: s.x, pose, F: FF, facing: -side, kind: pe.kind, alpha: personDim(S) });
       if ((act === 'celular' || act === 'phone') && S.r < 0.6) phoneAt(ctx, fig.fh, FF);
     }
-    if (S.good && S.r > 0.3) {
-      const k = smooth((S.r - 0.3) / 0.4);
-      const hy = -th - FF * (0.25 + 0.3 * k);
-      glow(ctx, 0, hy, FF * 0.6 * k, RED, 0.9);
-      heart(ctx, 0, hy, FF * 0.16 * k * (1 + 0.06 * Math.sin(t * 4)), RED, k);
-    }
+    if (S.good) S.focus = [0, -th - FF * 0.55];
   },
 };
 
@@ -908,6 +927,7 @@ SCENES.fogata = {
       line(ctx, fx + Math.sin(a) * F * 0.2, -F * 0.005, fx + Math.sin(a) * F * 0.06, -F * 0.08);
     }
     flame(ctx, fx, -F * 0.05, size, F, t);
+    if (S.good) S.focus = [fx, -F * 1.0];
     // chispas o humo
     if (S.good) {
       ctx.save(); ctx.fillStyle = '#FFD08A';
@@ -970,7 +990,7 @@ SCENES.fogata = {
         ctx.strokeRect(x - F * 0.13, -0.24 * H, F * 0.26, 0.24 * H);
       }
       const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
-      if (holding) { setLine(ctx, F, 1, 0.9); line(ctx, fig.fh[0] - F * 0.08, fig.fh[1], fig.fh[0] + F * 0.08, fig.fh[1] - F * 0.03); }
+      if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.9); line(ctx, fig.fh[0] - F * 0.08, fig.fh[1], fig.fh[0] + F * 0.08, fig.fh[1] - F * 0.03); }
       if (phone) phoneAt(ctx, fig.fh, F);
     });
   },
@@ -1014,6 +1034,7 @@ SCENES.camino = {
     ctx.stroke();
     // bandera en la cima
     const fxp = xe + w * 0.1;
+    if (S.good) S.focus = [xe + w * 0.03, -Hh - F * 1.3];
     setLine(ctx, F, 0.85, 0.8);
     line(ctx, fxp, -Hh, fxp, -Hh - F * 0.4);
     ctx.save();
@@ -1091,6 +1112,7 @@ SCENES.libros = {
       const k = smooth((S.r - 0.45) / 0.4);
       if (k > 0) {
         const yy = -stackH - F * 1.15;
+        S.focus = [sx + F * 0.15, yy];
         glow(ctx, sx + F * 0.15, yy, F * 0.6 * k, GOLD, 0.9);
         star(ctx, sx + F * 0.15, yy, F * 0.07 * k, GOLD, k);
       }
@@ -1129,7 +1151,7 @@ SCENES.libros = {
       line(ctx, cx + F * 0.1, seatY, cx + F * 0.1, 0);
     }
     const fig = drawFigure(ctx, { x, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
-    if (reads && !(S.good && S.r > 0.1)) {
+    if (reads && NEUTRAL < 0.5 && !(S.good && S.r > 0.1)) {
       // libro abierto en las manos, o volando a la pila
       const flying = !cy.done && cy.ph > 0.75;
       setLine(ctx, F, 1, 0.75);
@@ -1186,8 +1208,8 @@ SCENES.abrazo = {
           else pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S));
         }
       } else if (act === 'alejarse' || act === 'espalda') {
-        facing = side;
-        x = side * lerp(startX * 0.75, w * 0.47, stepK / S.C);
+        facing = NEUTRAL > 0.5 ? -side : side;
+        x = side * lerp(startX, w * 0.47, stepK / S.C);
         pose = walking ? walkPose(cy.ph * 4 * Math.PI) : breathe(POSES.stand, t);
         if (S.r > 0) pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S));
       } else {
@@ -1201,7 +1223,9 @@ SCENES.abrazo = {
     // corazón entre los dos
     const hy = -F * 1.15;
     if (S.good) {
-      const k = 0.55 + 0.45 * smooth(S.p) + 0.25 * smooth(S.r / 0.5);
+      S.focus = [0, hy - F * 0.15];
+      if (S.r > 0.7) return;
+      const k = (0.55 + 0.45 * smooth(S.p) + 0.25 * smooth(S.r / 0.5)) * (1 - smooth((S.r - 0.45) / 0.25));
       glow(ctx, 0, hy - S.r * F * 0.15, F * 0.55 * k, RED, 0.5 + 0.4 * S.r);
       heart(ctx, 0, hy - S.r * F * 0.15, F * 0.16 * k * (1 + 0.05 * Math.sin(t * 4)), RED, 1);
     } else {
