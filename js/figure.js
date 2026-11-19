@@ -86,7 +86,7 @@ export function solveFigure(pose, H, facing, kind) {
   const child = kind === 'nino' || kind === 'nina';
   const L = {
     th: 0.245 * H, sh: 0.245 * H, tor: child ? 0.27 * H : 0.3 * H,
-    ua: 0.18 * H, fa: 0.17 * H, neck: 0.045 * H, r: child ? 0.11 * H : 0.085 * H,
+    ua: 0.18 * H, fa: 0.17 * H, neck: 0.045 * H, r: child ? 0.115 * H : 0.095 * H,
   };
   const d = (a, len) => [facing * Math.sin(a) * len, Math.cos(a) * len];
   const add = (p, v) => [p[0] + v[0], p[1] + v[1]];
@@ -121,7 +121,7 @@ export function drawFigure(ctx, o) {
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = o.color || WHITE;
   ctx.fillStyle = o.color || WHITE;
-  ctx.lineWidth = Math.max(2, 0.024 * F);
+  ctx.lineWidth = Math.max(2, 0.03 * F);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   const seg = (...ps) => {

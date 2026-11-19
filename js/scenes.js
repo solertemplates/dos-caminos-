@@ -103,7 +103,19 @@ export function star(ctx, x, y, r, color, a = 1) {
   ctx.fill();
   ctx.restore();
 }
-function groundLine(ctx, F, x1, x2, a = 0.55) {
+// masa de tierra bajo el suelo (gris muy oscuro que se funde con el negro)
+export function groundMass(ctx, F, x1, x2, path) {
+  ctx.save();
+  const g = ctx.createLinearGradient(0, -F * 0.1, 0, F * 1.4);
+  g.addColorStop(0, 'rgba(255,255,255,0.085)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.globalAlpha = 1;
+  if (path) { ctx.beginPath(); path(); ctx.fill(); } else ctx.fillRect(x1, 0, x2 - x1, F * 1.4);
+  ctx.restore();
+}
+function groundLine(ctx, F, x1, x2, a = 0.55, mass = true) {
+  if (mass) groundMass(ctx, F, x1, x2);
   setLine(ctx, F, a, 0.8);
   line(ctx, x1, 0, x2, 0);
 }
@@ -177,9 +189,11 @@ SCENES.puente = {
     const gL = -w * 0.27, gR = w * 0.27, gap = gR - gL;
     const { bL, bR, N, tL, tR } = this.plan(S);
     const pw = gap / N;
-    // orillas
-    groundLine(ctx, F, -w / 2, gL);
-    groundLine(ctx, F, gR, w / 2);
+    // orillas (masas sólidas con borde irregular)
+    groundMass(ctx, F, 0, 0, () => { ctx.moveTo(-w / 2, 0); ctx.lineTo(gL, 0); ctx.lineTo(gL - F * 0.03, F * 0.18); ctx.lineTo(gL + F * 0.01, F * 0.34); ctx.lineTo(gL - F * 0.04, F * 0.55); ctx.lineTo(gL - F * 0.02, F * 1.4); ctx.lineTo(-w / 2, F * 1.4); });
+    groundMass(ctx, F, 0, 0, () => { ctx.moveTo(w / 2, 0); ctx.lineTo(gR, 0); ctx.lineTo(gR + F * 0.03, F * 0.2); ctx.lineTo(gR - F * 0.01, F * 0.36); ctx.lineTo(gR + F * 0.04, F * 0.55); ctx.lineTo(gR + F * 0.02, F * 1.4); ctx.lineTo(w / 2, F * 1.4); });
+    groundLine(ctx, F, -w / 2, gL, 0.55, false);
+    groundLine(ctx, F, gR, w / 2, 0.55, false);
     setLine(ctx, F, 0.5, 0.8);
     ctx.beginPath();
     ctx.moveTo(gL, 0); ctx.lineTo(gL - F * 0.03, F * 0.18); ctx.lineTo(gL + F * 0.01, F * 0.34); ctx.lineTo(gL - F * 0.04, F * 0.55);
@@ -216,6 +230,13 @@ SCENES.puente = {
     const cr = cycle(S.p, Math.max(1, tR));
     const placedL = tL ? Math.min(tL, Math.floor(cl.c + 0.38)) : 0;
     const placedR = tR ? Math.min(tR, Math.floor(cr.c + 0.38)) : 0;
+    // pilas de tablas que quedan por poner, en cada orilla
+    const pile = (x, n) => {
+      setLine(ctx, F, 0.75, 0.7);
+      for (let j = 0; j < Math.min(n, 6); j++) ctx.strokeRect(x - F * 0.13, -(j + 1) * F * 0.035, F * 0.26, F * 0.03);
+    };
+    if (tL) pile(gL - F * 0.62, tL - placedL);
+    if (tR) pile(gR + F * 0.62, tR - placedR);
     setLine(ctx, F, 0.9, 0.8);
     for (let i = 0; i < placedL; i++) plank(gL + i * pw, i, -1);
     for (let i = 0; i < placedR; i++) plank(gR - (i + 1) * pw, i, 1);
@@ -321,7 +342,7 @@ function buildTree(seed) {
 function drawTree(ctx, S, tx, g, decay) {
   const { F, t } = S;
   const tree = buildTree(S.seed % 7 + 3);
-  const U = 0.36 * F;
+  const U = 0.42 * F;
   const pos = new Array(tree.br.length);
   // calcula posiciones con caída (droop) si se seca
   const vis = (b) => clamp((g - b.birth) / 0.16);
@@ -716,17 +737,22 @@ SCENES.escalera = {
   draw(ctx, S) {
     const { w, F, t } = S;
     const K = this.K;
-    const x0 = -w * 0.3, sw = (w * 0.62) / K, sh = F * 0.12;
-    groundLine(ctx, F, -w / 2, x0);
+    const x0 = -w * 0.3, sw = (w * 0.62) / K, sh = F * 0.08;
+    groundMass(ctx, F, 0, 0, () => {
+      ctx.moveTo(-w / 2, 0); ctx.lineTo(x0, 0);
+      for (let i = 1; i <= K; i++) { ctx.lineTo(x0 + (i - 1) * sw, -i * sh); ctx.lineTo(x0 + i * sw, -i * sh); }
+      ctx.lineTo(x0 + K * sw, 0); ctx.lineTo(w / 2, 0); ctx.lineTo(w / 2, F * 1.4); ctx.lineTo(-w / 2, F * 1.4);
+    });
+    groundLine(ctx, F, -w / 2, x0, 0.55, false);
     setLine(ctx, F, 0.85, 0.85);
     ctx.beginPath();
     ctx.moveTo(x0, 0);
     for (let i = 1; i <= K; i++) { ctx.lineTo(x0 + (i - 1) * sw, -i * sh); ctx.lineTo(x0 + i * sw, -i * sh); }
     ctx.lineTo(x0 + K * sw, 0);
     ctx.stroke();
-    groundLine(ctx, F, x0 + K * sw, w / 2, 0.4);
+    groundLine(ctx, F, x0 + K * sw, w / 2, 0.4, false);
     // estrella en lo alto
-    const sx = x0 + K * sw - sw * 0.6, sy = -K * sh - F * 1.2;
+    const sx = x0 + K * sw + sw * 0.2, sy = -K * sh - F * 1.0;
     const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.7 * smooth(S.r / 0.6));
     glow(ctx, sx, sy, F * (0.35 + 0.5 * shine), GOLD, shine);
     star(ctx, sx, sy, F * (0.05 + 0.03 * shine) * (1 + 0.04 * Math.sin(t * 2)), shine > 0.3 ? GOLD : '#8a7a4a', 0.5 + 0.5 * shine);
@@ -963,7 +989,7 @@ SCENES.camino = {
   },
   draw(ctx, S) {
     const { w, F, t } = S;
-    const xs = -w * 0.12, xe = w * 0.3, Hh = F * 0.75;
+    const xs = -w * 0.12, xe = w * 0.3, Hh = F * 0.5;
     const hill = (x) => (x <= xs ? 0 : x >= xe ? -Hh : -Hh * smooth((x - xs) / (xe - xs)));
     // sol que amanece tras la cima
     const sunK = S.good ? smooth(S.r / 0.7) : 0;
@@ -981,6 +1007,7 @@ SCENES.camino = {
     for (let x = -w / 2; x <= w / 2; x += 6) ctx.lineTo(x, hill(x));
     ctx.lineTo(w / 2, F * 0.6); ctx.lineTo(-w / 2, F * 0.6);
     ctx.closePath(); ctx.fill(); ctx.restore();
+    groundMass(ctx, F, 0, 0, () => { ctx.moveTo(-w / 2, 0); for (let x = -w / 2; x <= w / 2; x += 6) ctx.lineTo(x, hill(x)); ctx.lineTo(w / 2, F * 1.4); ctx.lineTo(-w / 2, F * 1.4); });
     setLine(ctx, F, 0.6, 0.8);
     ctx.beginPath();
     for (let x = -w / 2; x <= w / 2; x += 6) x === -w / 2 ? ctx.moveTo(x, hill(x)) : ctx.lineTo(x, hill(x));
@@ -1051,7 +1078,7 @@ SCENES.libros = {
     const cx = -w * 0.2, sx = w * 0.14;
     const cy = cycle(S.p, S.C);
     const n = reads ? Math.min(S.C, Math.floor(cy.c + 0.2)) : 1;
-    const bh = Math.min(F * 0.055, (F * 0.5) / Math.max(1, S.C));
+    const bh = Math.min(F * 0.055, (F * 0.36) / Math.max(1, S.C));
     const R = rng(S.seed + 5);
     setLine(ctx, F, 0.9, 0.75);
     const stackH = n * bh;
@@ -1063,7 +1090,7 @@ SCENES.libros = {
     if (S.good) {
       const k = smooth((S.r - 0.45) / 0.4);
       if (k > 0) {
-        const yy = -stackH - F * 1.3;
+        const yy = -stackH - F * 1.15;
         glow(ctx, sx + F * 0.15, yy, F * 0.6 * k, GOLD, 0.9);
         star(ctx, sx + F * 0.15, yy, F * 0.07 * k, GOLD, k);
       }

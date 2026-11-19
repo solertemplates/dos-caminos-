@@ -27,25 +27,27 @@ export function stateAt(tl, t) {
   return { phase: 'end', p: 1, r: 1, endK: (t - tl.endStart) / tl.end };
 }
 
+// Zona segura de reels: arriba ~130 px y abajo desde ~1380 px los tapan los textos y botones
+// de Instagram/Facebook/TikTok; a la derecha, la columna de botones. Todo lo importante va dentro.
 export function layoutFor(kind) {
   if (kind === 'lr') {
     return {
       kind,
       panels: [
-        { cx: 270, groundY: 1320, stageW: 510, F: 235, titleY: 330, tw: 470, clip: [0, 120, 538, 1500], size: 33, sub: 24 },
-        { cx: 810, groundY: 1320, stageW: 510, F: 235, titleY: 330, tw: 470, clip: [542, 120, 538, 1500], size: 33, sub: 24 },
+        { cx: 270, groundY: 960, stageW: 510, F: 255, titleY: 235, tw: 470, clip: [0, 130, 538, 1250], size: 36, sub: 26, align: 'center' },
+        { cx: 800, groundY: 960, stageW: 500, F: 255, titleY: 235, tw: 460, clip: [542, 130, 538, 1250], size: 36, sub: 26, align: 'center' },
       ],
-      divider: [540, 250, 540, 1450],
-      endY: 250,
+      divider: [540, 180, 540, 1300],
+      endY: 230,
     };
   }
   return {
     kind: 'ab',
     panels: [
-      { cx: 540, groundY: 790, stageW: 980, F: 250, titleY: 215, tw: 940, clip: [0, 120, 1080, 772], size: 38, sub: 26 },
-      { cx: 540, groundY: 1560, stageW: 980, F: 250, titleY: 985, tw: 940, clip: [0, 898, 1080, 800], size: 38, sub: 26 },
+      { cx: 520, groundY: 640, stageW: 940, F: 245, titleY: 205, tx: 50, tw: 900, clip: [0, 130, 1080, 612], size: 44, sub: 28, align: 'left' },
+      { cx: 520, groundY: 1262, stageW: 940, F: 245, titleY: 827, tx: 50, tw: 900, clip: [0, 748, 1080, 612], size: 44, sub: 28, align: 'left' },
     ],
-    divider: [150, 895, 930, 895],
+    divider: [40, 745, 1040, 745],
     endY: 205,
   };
 }
@@ -83,12 +85,12 @@ function drawStars(ctx, stars, t) {
 }
 
 // texto espaciado y centrado (no depende de ctx.letterSpacing)
-function spaced(ctx, text, x, y, sp) {
+function spaced(ctx, text, x, y, sp, left = false) {
   const chars = [...text];
   let total = 0;
   const ws = chars.map((c) => { const m = ctx.measureText(c).width; total += m; return m; });
   total += sp * (chars.length - 1);
-  let cx = x - total / 2;
+  let cx = left ? x : x - total / 2;
   ctx.textAlign = 'left';
   chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += ws[i] + sp; });
   return total;
@@ -190,15 +192,17 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.fillStyle = WHITE;
     ctx.textBaseline = 'alphabetic';
     ctx.globalAlpha = titleA;
-    ctx.font = `300 ${pn.size}px ${FONT}`;
-    const lines = wrap(ctx, tx.title.toUpperCase(), pn.tw, pn.size * 0.16);
+    const left = pn.align === 'left';
+    const ax = left ? pn.tx : pn.cx;
+    ctx.font = `400 ${pn.size}px ${FONT}`;
+    const lines = wrap(ctx, tx.title.toUpperCase(), pn.tw, pn.size * 0.18);
     let y = pn.titleY;
-    for (const ln of lines.slice(0, 3)) { spaced(ctx, ln, pn.cx, y, pn.size * 0.16); y += pn.size * 1.22; }
+    for (const ln of lines.slice(0, 3)) { spaced(ctx, ln, ax, y, pn.size * 0.18, left); y += pn.size * 1.2; }
     if (tx.sub) {
-      ctx.font = `300 ${pn.sub}px ${FONT}`;
-      ctx.globalAlpha = titleA * 0.62;
+      ctx.font = `400 ${pn.sub}px ${FONT}`;
+      ctx.globalAlpha = titleA * 0.6;
       const sub = counterText(tx.sub, st.p).toUpperCase();
-      for (const ln of wrap(ctx, sub, pn.tw, pn.sub * 0.2).slice(0, 2)) { spaced(ctx, ln, pn.cx, y + pn.sub * 0.35, pn.sub * 0.2); y += pn.sub * 1.3; }
+      for (const ln of wrap(ctx, sub, pn.tw, pn.sub * 0.24).slice(0, 2)) { spaced(ctx, ln, ax, y + pn.sub * 0.25, pn.sub * 0.24, left); y += pn.sub * 1.3; }
     }
     ctx.restore();
   });
