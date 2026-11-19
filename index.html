@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dos Caminos</title>
+<meta name="description" content="Crea videos verticales que comparan dos formas de vivir.">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dos Caminos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<main id="home" class="screen">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" class="logo" aria-hidden="true"><path d="M20 36 V22 M20 22 L9 6 M20 22 L31 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="31" cy="6" r="2.4" fill="#E5484D"/></svg>
+      <h1 data-i18n="app">Dos Caminos</h1>
+    </div>
+    <button class="icon-btn" id="openSettings" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+    </button>
+  </header>
+
+  <p class="tagline" data-i18n="tagline">Dos formas de vivir. Dos resultados.</p>
+
+  <section class="block">
+    <button class="big-ghost" id="openPaste">
+      <span class="bg-title" data-i18n="paste">Pegar guiones</span>
+      <span class="bg-sub" id="scriptCount">—</span>
+    </button>
+  </section>
+
+  <section class="block">
+    <div class="label" data-i18n="duration">Duración</div>
+    <div class="seg" id="durSeg">
+      <button data-v="15">15 s</button><button data-v="30">30 s</button><button data-v="45">45 s</button>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="label" data-i18n="language">Idioma</div>
+    <div class="seg" id="langSeg">
+      <button data-v="es">Español</button><button data-v="en">English (US)</button>
+    </div>
+  </section>
+
+  <button class="primary" id="create"><span data-i18n="create">Crear videos</span></button>
+  <p class="foot" id="homeNote"></p>
+</main>
+
+<!-- Pegar guiones -->
+<div class="sheet" id="pasteSheet" hidden>
+  <div class="sheet-card tall">
+    <div class="sheet-head">
+      <h2 data-i18n="paste">Pegar guiones</h2>
+      <button class="text-btn" data-close data-i18n="done">Listo</button>
+    </div>
+    <textarea id="scriptsText" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="TITULO: …&#10;A: … | … | puente | hombre+mujer | construir+construir | se unen&#10;B: …&#10;---"></textarea>
+    <div class="row-btns">
+      <button class="chip" id="pasteClip" data-i18n="pasteClip">Pegar del portapapeles</button>
+      <button class="chip" id="loadExamples" data-i18n="examples">Cargar 30 ejemplos</button>
+      <button class="chip subtle" id="clearScripts" data-i18n="clear">Borrar</button>
+    </div>
+    <p class="hint" id="parseInfo"></p>
+  </div>
+</div>
+
+<!-- Progreso -->
+<div class="sheet solid" id="progressSheet" hidden>
+  <div class="progress-wrap">
+    <canvas id="stage" class="stage"></canvas>
+    <div class="prog-text" id="progText">…</div>
+    <div class="bar"><i id="progBar"></i></div>
+    <button class="text-btn" id="cancel" data-i18n="cancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- Resultados -->
+<div class="sheet solid" id="resultsSheet" hidden>
+  <div class="results">
+    <div class="sheet-head">
+      <h2 data-i18n="ready">Tus videos</h2>
+      <button class="text-btn" data-close data-i18n="close">Cerrar</button>
+    </div>
+    <div class="row-btns" id="batchBtns">
+      <button class="chip strong" id="saveAll" data-i18n="saveAll">Guardar todos</button>
+      <button class="chip" id="zipAll" data-i18n="zip">Descargar ZIP</button>
+    </div>
+    <div id="resultList"></div>
+  </div>
+</div>
+
+<!-- Ajustes -->
+<div class="sheet solid" id="settingsSheet" hidden>
+  <div class="settings">
+    <div class="sheet-head">
+      <h2 data-i18n="settings">Ajustes</h2>
+      <button class="text-btn" data-close data-i18n="done">Listo</button>
+    </div>
+
+    <details class="group" open>
+      <summary data-i18n="sFormat">Formato de guion</summary>
+      <p class="hint" data-i18n="sFormatHint">Copia estas instrucciones, pégalas en Claude y añade el tema que quieras. Luego pega aquí lo que te responda.</p>
+      <button class="chip strong" id="copyPrompt" data-i18n="copyPrompt">Copiar instrucciones para Claude</button>
+      <pre class="format" id="formatPre"></pre>
+    </details>
+
+    <details class="group">
+      <summary data-i18n="sPhrases">Banco de frases de René Soler Rasua</summary>
+      <textarea id="phraseInput" rows="4" data-i18n-ph="phrasePh" placeholder="Pega una o muchas frases, una por línea."></textarea>
+      <div class="row-btns"><button class="chip strong" id="addPhrases" data-i18n="savePhrases">Guardar frases</button></div>
+      <label class="field"><span data-i18n="phraseUse">Usar como reflexión final</span>
+        <select id="phraseChance">
+          <option value="0" data-i18n="never">Nunca</option>
+          <option value="0.3" data-i18n="sometimes">A veces</option>
+          <option value="0.6" data-i18n="often">Seguido</option>
+          <option value="1" data-i18n="always">Siempre</option>
+        </select>
+      </label>
+      <label class="field"><span data-i18n="sign">Firmar con el nombre</span><input type="checkbox" id="signPhrases"></label>
+      <ul class="list" id="phraseList"></ul>
+    </details>
+
+    <details class="group">
+      <summary data-i18n="sMusic">Banco de música</summary>
+      <p class="hint" data-i18n="musicHint">MP3 o M4A desde Archivos. Se guardan solo en este teléfono. La categoría se pone sola y puedes cambiarla.</p>
+      <label class="chip strong file-btn"><span data-i18n="upload">Subir canciones</span><input type="file" id="musicInput" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac" multiple></label>
+      <p class="hint" id="musicStatus"></p>
+      <ul class="list" id="songList"></ul>
+      <label class="field"><span data-i18n="musicVol">Volumen de música</span><input type="range" id="musicVol" min="0.2" max="1" step="0.05"></label>
+    </details>
+
+    <details class="group">
+      <summary data-i18n="sVideo">Video</summary>
+      <label class="field"><span data-i18n="layout">División de pantalla</span>
+        <select id="layoutSel">
+          <option value="auto" data-i18n="lAuto">La que diga el guion</option>
+          <option value="ab" data-i18n="lAb">Arriba y abajo</option>
+          <option value="lr" data-i18n="lLr">A los lados</option>
+        </select>
+      </label>
+      <label class="field"><span data-i18n="quality">Calidad</span>
+        <select id="qualitySel"><option value="1">1080 × 1920</option><option value="0.6667">720 × 1280</option></select>
+      </label>
+      <label class="field"><span data-i18n="sfx">Efectos de sonido</span><input type="checkbox" id="sfxOn"></label>
+      <label class="field"><span data-i18n="starNote">Mencionar la estrellita de vez en cuando</span><input type="checkbox" id="starNote"></label>
+    </details>
+
+    <details class="group">
+      <summary data-i18n="sAbout">Acerca de</summary>
+      <p class="hint" data-i18n="about">Todo se crea en tu teléfono: sin voces, sin imágenes de IA y sin costes. Los efectos de sonido se generan por código y se publican bajo CC0. MP4 con mp4-muxer (MIT).</p>
+    </details>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
