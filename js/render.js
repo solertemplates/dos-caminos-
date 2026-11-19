@@ -1,5 +1,5 @@
 // Dos Caminos — composición del video: fondo de estrellas, división, textos, escenas y línea de tiempo.
-import { SCENES, clamp, smooth, lerp, glow, heart, RED, setNeutral } from './scenes.js';
+import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral } from './scenes.js';
 import { WHITE } from './figure.js';
 
 export const W = 1080, H = 1920, FPS = 30;
@@ -36,7 +36,45 @@ export function stateAt(tl, t) {
 
 // Zona segura de reels: arriba ~130 px y abajo desde ~1380 px los tapan los textos y botones
 // de Instagram/Facebook/TikTok; a la derecha, la columna de botones. Todo lo importante va dentro.
+// DIVISION: tiempo — tres franjas (HOY / EN UN MES / EN UN AÑO), mismo personaje y mismo camino.
+// Cada franja muestra el avance hasta su momento; se van revelando una tras otra.
+export function timeStages(C) {
+  const snap = (x) => Math.max(1, Math.round(x * C)) / C;
+  return [[0, snap(0.15)], [snap(0.15), snap(0.5)], [snap(0.5), 1]];
+}
+export function panelState(layout, i, st, C) {
+  if (layout.kind !== 'time') return { p: clamp(st.p), r: clamp(st.r), show: 1, neutral: st.neutral || 0, cp: clamp(st.p) };
+  const [a, b] = timeStages(C)[i];
+  const w0 = i / 3;
+  const p = a + (b - a) * clamp((st.p - w0) * 3);
+  const show = st.phase === 'main' ? 0.28 + 0.72 * smooth((st.p - w0) * 12) : 1;
+  // contador de cada franja: HOY = inicio, EN UN MES = 1/12 del total, EN UN AÑO = final
+  const from = [0, 0, 1 / 12][i], to = [0, 1 / 12, 1][i];
+  const cp = from + (to - from) * clamp((st.p - w0) * 3);
+  return { p, r: i === 2 ? clamp(st.r) : 0, show, neutral: 0, cp };
+}
+// progreso global en que ocurre un evento de escena (para los sonidos)
+export function timeEventP(C, pe) {
+  const st = timeStages(C);
+  for (let i = 0; i < 3; i++) {
+    const [a, b] = st[i];
+    if (pe >= a && (pe < b || (i === 2 && pe <= 1))) return (i + (pe - a) / (b - a)) / 3;
+  }
+  return null;
+}
+
 export function layoutFor(kind) {
+  if (kind === 'time') {
+    return {
+      kind,
+      panels: [0, 1, 2].map((i) => {
+        const top = 175 + i * 395;
+        return { cx: 520, groundY: top + 340, stageW: 940, F: 185, titleY: top + 72, tx: 50, tw: 900, clip: [0, top, 1080, 390], size: 34, sub: 24, align: 'left' };
+      }),
+      dividers: [[40, 567, 1040, 567], [40, 962, 1040, 962]],
+      endY: 240,
+    };
+  }
   if (kind === 'lr') {
     return {
       kind,
@@ -155,18 +193,20 @@ export function renderFrame(ctx, job, t, scale = 1) {
 
   // línea divisoria: se dibuja desde el centro al inicio
   const dk = smooth(t / 0.5);
-  const [x1, y1, x2, y2] = layout.divider;
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-  ctx.save();
-  ctx.strokeStyle = WHITE;
-  const pulse = st.phase === 'main' && st.choiceK != null ? Math.max(0, Math.sin(clamp(st.choiceK * 1.1 - 0.15) * Math.PI)) : 0;
-  ctx.globalAlpha = (0.22 + 0.45 * pulse) * (st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1);
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(lerp(mx, x1, dk), lerp(my, y1, dk));
-  ctx.lineTo(lerp(mx, x2, dk), lerp(my, y2, dk));
-  ctx.stroke();
-  ctx.restore();
+  const isTime = layout.kind === 'time';
+  for (const [x1, y1, x2, y2] of layout.dividers || [layout.divider]) {
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    ctx.save();
+    ctx.strokeStyle = WHITE;
+    const pulse = !isTime && st.phase === 'main' && st.choiceK != null ? Math.max(0, Math.sin(clamp(st.choiceK * 1.1 - 0.15) * Math.PI)) : 0;
+    ctx.globalAlpha = (0.22 + 0.45 * pulse) * (st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(lerp(mx, x1, dk), lerp(my, y1, dk));
+    ctx.lineTo(lerp(mx, x2, dk), lerp(my, y2, dk));
+    ctx.stroke();
+    ctx.restore();
+  }
 
   const endDim = st.phase === 'end' ? 1 - 0.55 * smooth(st.endK * 2.5) : 1;
   const hookIn = smooth(t / 0.35);
@@ -178,23 +218,30 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.rect(...pn.clip);
     ctx.clip();
     ctx.translate(pn.cx, pn.groundY);
+    const ps = panelState(layout, i, st, tl.C);
     const S = {
       w: pn.stageW, F: pn.F, people: side.people, good: side.good, bad: side.bad,
-      p: clamp(st.p), r: clamp(st.r), t, C: tl.C, seed: job.seed + i * 13,
-      dimmed: !side.good && st.r > 0.4, focus: null,
+      p: ps.p, r: ps.r, t, C: tl.C, seed: isTime ? job.seed : job.seed + i * 13,
+      dimmed: !side.good && ps.r > 0.4, focus: null,
     };
-    let a = endDim * hookIn;
-    if (!side.good && st.phase !== 'main') a *= 1 - 0.25 * clamp(st.r);
+    let a = endDim * hookIn * ps.show;
+    if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.5 * smooth(st.endK * 2.5);
+    if (!side.good && st.phase !== 'main') a *= 1 - 0.25 * ps.r;
+    // EN UN AÑO: la franja se ilumina con luz cálida al final feliz
+    if (isTime && i === 2 && side.good && ps.r > 0.3) {
+      const k = smooth((ps.r - 0.3) / 0.5);
+      glow(ctx, 0, -pn.F * 0.6, 620 * k, AMBER, 0.32 * Math.max(0.8, endDim));
+    }
     ctx.globalAlpha = a;
     const sceneAlpha = a;
     const scene = SCENES[side.scene] || SCENES.arbol;
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
-    setNeutral(st.neutral || 0);
+    setNeutral(ps.neutral);
     withAlpha(ctx, sceneAlpha, () => scene.draw(ctx, S));
     setNeutral(0);
     // final feliz: corazón grande y brillante sobre el objeto principal de la escena
-    if (side.good && S.focus && st.r > 0.45) {
-      const k = smooth((st.r - 0.45) / 0.4);
+    if (side.good && S.focus && ps.r > 0.45) {
+      const k = smooth((ps.r - 0.45) / 0.4);
       const [fx, fy] = S.focus;
       const beat = 1 + 0.07 * Math.max(0, Math.sin(t * 5.2)) * Math.max(0, Math.sin(t * 5.2 + 0.6));
       ctx.globalAlpha = 1;
@@ -210,11 +257,12 @@ export function renderFrame(ctx, job, t, scale = 1) {
   job.sides.forEach((side, i) => {
     const pn = layout.panels[i];
     const tx = job.texts.sides[i];
-    if (titleA <= 0.001) return;
+    if (titleA <= 0.001 || !tx) return;
+    const ps = panelState(layout, i, st, tl.C);
     ctx.save();
     ctx.fillStyle = WHITE;
     ctx.textBaseline = 'alphabetic';
-    ctx.globalAlpha = titleA;
+    ctx.globalAlpha = titleA * (isTime ? 0.45 + 0.55 * ps.show : 1);
     const left = pn.align === 'left';
     const ax = left ? pn.tx : pn.cx;
     ctx.font = `400 ${pn.size}px ${FONT}`;
@@ -224,7 +272,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     if (tx.sub) {
       ctx.font = `400 ${pn.sub}px ${FONT}`;
       ctx.globalAlpha = titleA * 0.6;
-      const sub = counterText(tx.sub, st.p).toUpperCase();
+      const sub = counterText(tx.sub, ps.cp).toUpperCase();
       for (const ln of wrap(ctx, sub, pn.tw, pn.sub * 0.24).slice(0, 2)) { spaced(ctx, ln, ax, y + pn.sub * 0.25, pn.sub * 0.24, left); y += pn.sub * 1.3; }
     }
     ctx.restore();
@@ -238,7 +286,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.globalAlpha = a;
     ctx.font = `300 42px ${FONT}`;
     const lines = wrap(ctx, job.texts.hook, 900, 3);
-    let y = layout.kind === 'lr' ? 300 : 290;
+    let y = layout.kind === 'lr' ? 300 : layout.kind === 'time' ? 250 : 290;
     for (const ln of lines.slice(0, 2)) { spaced(ctx, ln, W / 2, y, 3); y += 54; }
     ctx.restore();
   }

@@ -12,6 +12,7 @@ const KEY = {
   a: 'A', b: 'B',
   frase: 'phrase', reflexion: 'phrase', phrase: 'phrase',
   pregunta: 'question', question: 'question',
+  etapas: 'stages', stages: 'stages', momentos: 'stages',
 };
 
 const SCENE_ALIAS = {
@@ -140,7 +141,8 @@ export function parseScripts(text) {
       const val = m[3].trim().replace(/^\*+\s*/, '').replace(/\*+$/, '').trim();
       if (m[2]) f.en[key] = val; else f[key] = val;
     }
-    if (!f.A || !f.B) {
+    const isTime = /tiempo|time/.test(norm(f.layout));
+    if (!f.A || (!f.B && !isTime)) {
       if (block.trim().length > 10) errors.push(`Guion ${bi + 1}: faltan las líneas A: y B:.`);
       return;
     }
@@ -148,9 +150,10 @@ export function parseScripts(text) {
     const theme = THEMES[norm(f.theme)] || 'constancia';
     const label = `Guion ${scripts.length + 1}`;
     const A = parseSide(f.A, theme, errs, label + ' A');
-    const B = parseSide(f.B, theme, errs, label + ' B');
+    const B = isTime ? A : parseSide(f.B, theme, errs, label + ' B');
     const lay = norm(f.layout);
-    const layout = /lado|side|izq|vert/.test(lay) ? 'lr' : /arriba|abajo|top|bottom|horiz/.test(lay) ? 'ab' : null;
+    const layout = isTime ? 'time' : /lado|side|izq|vert/.test(lay) ? 'lr' : /arriba|abajo|top|bottom|horiz/.test(lay) ? 'ab' : null;
+    const stagesOf = (v, def) => { const l = (v || '').split('|').map((x) => x.trim()).filter(Boolean); return l.length === 3 ? l : def; };
     const enSide = (v, base) => {
       if (!v) return null;
       const [title = base.title, sub = base.sub] = v.split('|').map((x) => x.trim());
@@ -165,10 +168,12 @@ export function parseScripts(text) {
       hook: f.hook || '',
       phrase: f.phrase || '',
       question: f.question || '',
-      sides: [A, B],
+      sides: isTime ? [A, A, A] : [A, B],
+      stages: isTime ? stagesOf(f.stages, ['HOY', 'EN UN MES', 'EN UN AÑO']) : null,
       en: {
         title: f.en.title, hook: f.en.hook, phrase: f.en.phrase, question: f.en.question,
         sides: [enSide(f.en.A, A), enSide(f.en.B, B)],
+        stages: isTime ? stagesOf(f.en.stages, ['TODAY', 'IN A MONTH', 'IN A YEAR']) : null,
       },
     });
     errors.push(...errs);

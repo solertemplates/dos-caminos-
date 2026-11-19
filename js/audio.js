@@ -1,7 +1,7 @@
 // Dos Caminos — audio. Efectos de sonido sintetizados por código (obra propia, dedicada CC0)
 // y mezcla con la música del banco del usuario. Todo se genera en el teléfono, sin API.
 import { SCENES } from './scenes.js';
-import { tOfP, CHOICE } from './render.js';
+import { tOfP, CHOICE, timeEventP } from './render.js';
 
 const SR = 48000;
 
@@ -179,19 +179,25 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
     play('heartbeat', 0.05);
     play('shimmer', 0.2);
     play('whoosh', tl.hookHold - 0.05);
+    const isTime = job.layout.kind === 'time';
     job.sides.forEach((side, i) => {
       const scene = SCENES[side.scene];
       if (!scene || !scene.events) return;
+      if (isTime && i > 0) return; // mismo camino: los sonidos se calculan una vez
       const S = { people: side.people, good: side.good, bad: side.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
-      const pan = job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
+      const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
       for (const e of scene.events(S)) {
         let t;
-        if (e.p != null) t = tOfP(tl, e.p);
-        else t = tl.resStart + e.r * tl.res;
+        if (e.p != null) {
+          const pg = isTime ? timeEventP(tl.C, e.p) : e.p;
+          if (pg == null) continue;
+          t = tOfP(tl, pg);
+        } else t = tl.resStart + e.r * tl.res;
         play(e.type, t, e, pan);
       }
     });
-    play('choice', tl.mainStart + CHOICE * 0.6);
+    if (!isTime) play('choice', tl.mainStart + CHOICE * 0.6);
+    else [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
     play('ping', tl.endStart + 0.5, { vol: 0.8 });
   }
   return await ctx.startRendering();

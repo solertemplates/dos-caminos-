@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 19 nov 2026 (ladrillos de la casa sin base: rectos y desalineados, no torcidos).
+Última actualización: 19 nov 2026 (nuevo tipo DIVISION: tiempo — HOY / EN UN MES / EN UN AÑO).
 
 ---
 
@@ -36,7 +36,8 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 3. **La diferencia crece poco a poco** en el dibujo: pared bien alineada frente a pared de ladrillos desalineados (siempre rectos y limpios, nunca torcidos: unos un poco más arriba y otros más abajo, cada vez más desparejos) hasta que se cae; árbol verde frente a árbol que pierde hojas; corazón que se va apagando; mesa que se separa.
 4. Al final uno **crece / se une / llega** y el otro **se seca / se queda atrás / se cae**.
 5. **Temas:** universales — pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil, la constancia. **Fe casi nunca**: como mucho un guion de vez en cuando, sutil, con un mensaje que entienda cualquiera. **Cada guion, de un tema distinto.**
-6. Los guiones los escribe el usuario (con Claude). La app **no inventa guiones con plantillas**. El único ejemplo incluido es el del puente.
+6. **Tipo «tiempo»** (`DIVISION: tiempo`): un solo camino visto en tres momentos — HOY, EN UN MES, EN UN AÑO. Mismo personaje y mismo camino en las tres franjas; lo que cambia es el resultado (el árbol crece, la alcancía se llena, la escalera se sube, la casa se completa). Las franjas se revelan una tras otra y al final **EN UN AÑO se ilumina** con luz cálida y el **corazón grande**. Aquí no hay momento de elección (es un solo camino).
+7. Los guiones los escribe el usuario (con Claude). La app **no inventa guiones con plantillas**. El único ejemplo incluido es el del puente.
 
 ## 4. Estructura del video (15 / 30 / 45 s)
 
@@ -57,7 +58,7 @@ Un guion tras otro, separados por una línea `---`:
 TITULO: título corto
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
-DIVISION: arriba-abajo | lados
+DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
@@ -76,6 +77,27 @@ PREGUNTA_EN: closing question in natural US English
 - **Contador animado:** `{inicio-fin}` dentro del subtítulo → `DÍA {1-45}` va de «DÍA 1» a «DÍA 45».
 - Si falta `TEMA`, se usa `constancia`. Si falta `EMOCION`, la del tema. Si falta `PREGUNTA`, «¿Cuál de los dos eres tú?» / «Which one are you?».
 - Los campos `_EN` se usan cuando en la app se elige *English (US)*. Deben ser inglés natural, no traducción literal.
+### Tipo «tiempo» (`DIVISION: tiempo`)
+
+Se escribe con **una sola línea `A:`** (sin `B:`). El contador se reparte solo: HOY = inicio, EN UN MES = 1/12 del total, EN UN AÑO = final. Escenas recomendadas: `arbol` (regar), `alcancia` (ahorrar), `escalera` (subir), `casa` (construir). Opcional: `ETAPAS: HOY | EN UN MES | EN UN AÑO` y `ETAPAS_EN: TODAY | IN A MONTH | IN A YEAR`. Si falta `PREGUNTA`: «¿Dónde quieres estar dentro de un año?» / «Where do you want to be a year from now?».
+
+```
+TITULO: Un poco cada semana
+TEMA: dinero
+EMOCION: inspiracional
+DIVISION: tiempo
+GANCHO: Solo cinco dólares.
+A: AHORRA CADA SEMANA | {0-260} DÓLARES | alcancia | hombre | ahorrar | se llena
+FRASE: Lo pequeño, repetido, se vuelve grande.
+PREGUNTA: ¿Dónde quieres estar dentro de un año?
+TITULO_EN: A little every week
+GANCHO_EN: Just five dollars.
+A_EN: SAVES EVERY WEEK | {0-260} DOLLARS
+FRASE_EN: Small things, repeated, become big things.
+PREGUNTA_EN: Where do you want to be a year from now?
+---
+```
+
 - Las instrucciones completas para Claude están en `js/format.js` (botón *Ajustes → Copiar instrucciones para Claude*). **Mantenerlas iguales a este documento.**
 
 ## 6. Vocabulario completo que entiende el formato
@@ -144,6 +166,7 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 - Lienzo 1080 × 1920, 30 fps, H.264 + AAC.
 - **Arriba-abajo:** títulos a la izquierda en y≈290 (panel A) y y≈850 (panel B); suelos en y≈680 y y≈1292.
 - **Lados:** títulos centrados en y≈305; suelo en y≈1000.
+- **Tiempo:** tres franjas de 390 px desde y≈175 (HOY, EN UN MES, EN UN AÑO); etiqueta a la izquierda y suelo a 340 px del borde superior de cada franja; termina en y≈1355.
 - Nada importante por debajo de y≈1360 (ahí van el nombre de la cuenta y la descripción) ni pegado al borde derecho en la mitad de abajo (columna de botones).
 
 ## 8. App (pocos botones)

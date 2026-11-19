@@ -109,7 +109,7 @@ function paintPicks() {
     tx.className = 'pt';
     tx.innerHTML = '<b></b><span></span>';
     tx.querySelector('b').textContent = `${i + 1}. ${sc.title}`;
-    tx.querySelector('span').textContent = `${THEME_ES[sc.theme] || sc.theme} · ${sc.sides[0].title} / ${sc.sides[1].title}`;
+    tx.querySelector('span').textContent = `${THEME_ES[sc.theme] || sc.theme} · ` + (sc.layout === 'time' ? `${sc.stages.join(' → ')} · ${sc.sides[0].scene}` : `${sc.sides[0].title} / ${sc.sides[1].title}`);
     tx.addEventListener('click', () => { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); });
     li.append(cb, tx);
     ul.appendChild(li);
@@ -164,7 +164,8 @@ function buildJob(script, idx, opts) {
   const lang = opts.lang;
   const en = lang === 'en';
   const E = script.en || {};
-  const defQ = en ? 'Which one are you?' : '¿Cuál de los dos eres tú?';
+  const isTime = script.layout === 'time';
+  const defQ = isTime ? (en ? 'Where do you want to be a year from now?' : '¿Dónde quieres estar dentro de un año?') : en ? 'Which one are you?' : '¿Cuál de los dos eres tú?';
   let phrase = (en ? E.phrase : script.phrase) || (en ? 'Small choices, repeated every day, become your life.' : 'Las pequeñas decisiones, repetidas cada día, se vuelven tu vida.');
   let signature = '';
   const bank = phrases.list().filter((p) => phraseLang(p.text) === lang);
@@ -178,8 +179,10 @@ function buildJob(script, idx, opts) {
     phrase = pick.text;
     if (S.signPhrases) signature = '— René Soler Rasua';
   }
-  const sideTexts = script.sides.map((sd, i) => (en && E.sides?.[i]) || { title: sd.title, sub: sd.sub });
-  const layoutKind = S.layout === 'auto' ? script.layout || (idx % 3 === 2 ? 'lr' : 'ab') : S.layout;
+  const sideTexts = isTime
+    ? (en ? E.stages : script.stages).map((lbl) => ({ title: lbl, sub: (en && E.sides?.[0]?.sub) || script.sides[0].sub }))
+    : script.sides.map((sd, i) => (en && E.sides?.[i]) || { title: sd.title, sub: sd.sub });
+  const layoutKind = isTime ? 'time' : S.layout === 'auto' ? script.layout || (idx % 3 === 2 ? 'lr' : 'ab') : S.layout;
   const tl = makeTimeline(opts.duration);
   const seed = (Date.now() + idx * 977) % 100000;
   return {

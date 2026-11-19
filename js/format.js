@@ -6,7 +6,7 @@ Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con t
 TITULO: título corto
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
-DIVISION: arriba-abajo | lados
+DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
@@ -20,8 +20,30 @@ FRASE_EN: closing line, natural US English (not a literal translation)
 PREGUNTA_EN: closing question, natural US English
 ---
 
+TIPO «TIEMPO» (DIVISION: tiempo)
+Tres franjas de arriba abajo: HOY, EN UN MES y EN UN AÑO. Es el mismo personaje y el mismo camino en las tres; lo que cambia es el resultado con el tiempo, y al final la franja EN UN AÑO se ilumina con un corazón grande. Se escribe con UNA sola línea A (sin B):
+A: NOMBRE DEL HÁBITO | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final bueno
+- El contador se reparte solo: HOY muestra el inicio, EN UN MES 1/12 del total y EN UN AÑO el final.
+- Escenas que mejor funcionan: arbol (regar), alcancia (ahorrar), escalera (subir), casa (construir).
+- Opcional: ETAPAS: HOY | EN UN MES | EN UN AÑO (y ETAPAS_EN: TODAY | IN A MONTH | IN A YEAR) para cambiar los nombres.
+Ejemplo:
+TITULO: Un poco cada semana
+TEMA: dinero
+EMOCION: inspiracional
+DIVISION: tiempo
+GANCHO: Solo cinco dólares.
+A: AHORRA CADA SEMANA | {0-260} DÓLARES | alcancia | hombre | ahorrar | se llena
+FRASE: Lo pequeño, repetido, se vuelve grande.
+PREGUNTA: ¿Dónde quieres estar dentro de un año?
+TITULO_EN: A little every week
+GANCHO_EN: Just five dollars.
+A_EN: SAVES EVERY WEEK | {0-260} DOLLARS
+FRASE_EN: Small things, repeated, become big things.
+PREGUNTA_EN: Where do you want to be a year from now?
+---
+
 REGLAS DE LA HISTORIA
-1. Los dos caminos empiezan en igualdad de condiciones: misma escena, mismos personajes, mismo punto de partida.
+1. (En arriba-abajo y lados) Los dos caminos empiezan en igualdad de condiciones: misma escena, mismos personajes, mismo punto de partida.
 2. En los primeros segundos se ve el momento en que cada uno elige distinto (uno toma la tabla, el otro saca el móvil).
 3. Desde ahí la diferencia crece poco a poco hasta el final: uno crece o se une; el otro se seca, se queda atrás o se cae.
 4. Un lado termina bien y el otro mal. Se cuenta con acciones y objetos, no con carteles.
