@@ -45,6 +45,7 @@ export const videos = {
   del: (id) => tx('videos', 'readwrite', (s) => s.delete(id)),
   async update(id, patch) { const v = await videos.get(id); if (v) await videos.put({ ...v, ...patch }); return v; },
   count: () => tx('videos', 'readonly', (s) => s.count()),
+  clear: () => tx('videos', 'readwrite', (s) => s.clear()),
 };
 
 const LS = {

@@ -322,11 +322,19 @@ const allTexts = (list) => list.map((r, i) => `#${i + 1} ${r.title} (${r.name})\
 
 let shown = [];
 let urls = [];
+let picked = new Set();
+function paintDelBar() {
+  const n = [...picked].filter((id) => shown.some((r) => r.id === id)).length;
+  $('#delBar').hidden = !shown.length;
+  $('#delSelected').disabled = !n;
+  $('#delSelected').textContent = n ? `Borrar seleccionados (${n})` : 'Borrar seleccionados';
+}
 async function showVideos(highlight = new Set()) {
   urls.forEach((u) => URL.revokeObjectURL(u));
   urls = [];
   const list = await videos.all();
   shown = list;
+  picked = new Set([...picked].filter((id) => list.some((r) => r.id === id)));
   const box = $('#videoList');
   box.innerHTML = '';
   $('#videosInfo').textContent = list.length ? `${list.length} ${list.length === 1 ? 'video guardado' : 'videos guardados'} en este teléfono. Cada botón de red copia el texto y abre el menú para publicar; el ✓ marca dónde ya lo publicaste.` : 'Aún no hay videos. Pega guiones y pulsa «Crear videos».';
@@ -346,8 +354,16 @@ async function showVideos(highlight = new Set()) {
       v.className = 'vthumb';
       thumb.replaceWith(v);
     });
+    const head = document.createElement('label');
+    head.className = 'vhead';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = picked.has(rec.id);
+    card.classList.toggle('sel', cb.checked);
+    cb.addEventListener('change', () => { cb.checked ? picked.add(rec.id) : picked.delete(rec.id); card.classList.toggle('sel', cb.checked); paintDelBar(); });
     const h = document.createElement('h3');
     h.textContent = rec.title;
+    head.append(cb, h);
     const meta = document.createElement('div');
     meta.className = 'meta';
     meta.textContent = `${new Date(rec.created).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${rec.duration} s · ${rec.lang === 'en' ? 'English' : 'Español'}${rec.song ? ' · ♪ ' + rec.song : ' · ♪ música de la app'}`;
@@ -373,7 +389,7 @@ async function showVideos(highlight = new Set()) {
     const dl = document.createElement('button'); dl.textContent = 'Descargar';
     dl.addEventListener('click', () => shareFiles([file]));
     const del = document.createElement('button'); del.textContent = 'Borrar';
-    del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); card.remove(); refreshHome(); } });
+    del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); picked.delete(rec.id); showVideos(); refreshHome(); } });
     acts.append(dl, del);
     const det = document.createElement('details');
     det.innerHTML = '<summary>Ver textos para publicar</summary><pre></pre>';
@@ -383,11 +399,31 @@ async function showVideos(highlight = new Set()) {
     un.textContent = 'Quitar las marcas ✓';
     un.addEventListener('click', () => { rec.posted = {}; videos.update(rec.id, { posted: {} }); nets.querySelectorAll('button').forEach((x) => x.classList.remove('done')); });
     det.appendChild(un);
-    card.append(thumb, h, meta, nets, acts, det);
+    card.append(thumb, head, meta, nets, acts, det);
     box.appendChild(card);
   }
+  paintDelBar();
   open('#videosSheet');
 }
+$('#delSelected').addEventListener('click', async () => {
+  const ids = [...picked].filter((id) => shown.some((r) => r.id === id));
+  if (!ids.length) return;
+  if (!confirm(`¿Borrar ${ids.length} ${ids.length === 1 ? 'video' : 'videos'} del teléfono? No se puede deshacer.`)) return;
+  for (const id of ids) await videos.del(id);
+  picked.clear();
+  toast(`${ids.length} ${ids.length === 1 ? 'video borrado' : 'videos borrados'}.`);
+  await showVideos();
+  refreshHome();
+});
+$('#delAll').addEventListener('click', async () => {
+  if (!shown.length) return;
+  if (!confirm(`¿Borrar TODOS los videos (${shown.length}) de «Mis videos»? No se puede deshacer.`)) return;
+  await videos.clear();
+  picked.clear();
+  toast('Se borraron todos los videos.');
+  await showVideos();
+  refreshHome();
+});
 $('#openVideos').addEventListener('click', () => showVideos());
 $('#saveAll').addEventListener('click', async () => {
   await shareFiles(shown.map(fileOf), allTexts(shown));
