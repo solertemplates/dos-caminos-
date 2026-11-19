@@ -7,11 +7,12 @@ export const RED = '#E5484D';
 let NEUTRAL = 0;
 export function setNeutral(v) { NEUTRAL = v; }
 function neutralPose(pose) {
-  const chair = pose.fl1 > 0.8 && pose.fl2 > -0.6 && pose.fl2 < 0.6 && pose.tr < 0.5;
+  const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
   return chair ? POSES.sit : POSES.stand;
 }
 function drawFigure(ctx, o) {
-  if (NEUTRAL > 0.001) o = { ...o, pose: lerpPose(o.pose, neutralPose(o.pose), NEUTRAL) };
+  // o.neutral: 'stand' fuerza de pie al inicio; 'none' no cambia la pose (p. ej. acostados en la cama)
+  if (NEUTRAL > 0.001 && o.neutral !== 'none') o = { ...o, pose: lerpPose(o.pose, o.neutral === 'stand' ? POSES.stand : neutralPose(o.pose), NEUTRAL) };
   return rawFigure(ctx, o);
 }
 export const GOLD = '#F4A259';
@@ -164,6 +165,51 @@ function workPose(ph, t, high = false) {
 }
 
 function resultBlend(S, a = 0, b = 0.45) { return smooth((S.r - a) / (b - a)); }
+
+const PHONE_ACTS = new Set(['celular', 'phone', 'ignorar']);
+const SIT_ACTS = new Set(['descansar', 'sentarse', 'dormir', 'rest', 'sit']);
+// Dibuja a un personaje secundario con su propia acción, en la posición dada.
+// kindOf: 'work' (agacharse a colocar), 'drop' (echar algo), 'read' (leer sentado), 'stand'.
+export function companion(ctx, S, pe, x, facing, opts = {}) {
+  const { F, t } = S;
+  const act = pe.act;
+  const cy = cycle(S.p, S.C);
+  const ph = cy.done ? 1 : frac(cy.ph + (opts.phase ?? 0.5));
+  let pose, prop = null, chair = false, y = opts.y || 0;
+  if (PHONE_ACTS.has(act)) { pose = breathe(opts.sit ? POSES.sitPhone : POSES.phone, t + 1); chair = !!opts.sit; prop = 'phone'; }
+  else if (SIT_ACTS.has(act)) { pose = breathe(act === 'dormir' ? { ...POSES.floor, hd: 0.9 } : POSES.floorPhone, t + 1); prop = act === 'dormir' ? null : 'phone'; }
+  else if (opts.kind === 'read') { pose = { ...breathe(POSES.read, t + 1), fa2: POSES.read.fa2 + 0.25 * bump(ph, 0.45, 0.6, 0.05) }; chair = true; prop = 'book'; }
+  else if (opts.kind === 'work' && !cy.done) { pose = workPose(ph, t, false); prop = ph < 0.62 || ph > 0.93 ? 'brick' : null; }
+  else if (opts.kind === 'drop' && !cy.done) { const up = smooth(ph / 0.4) * (1 - smooth((ph - 0.62) / 0.3)); pose = lerpPose(breathe(POSES.stand, t), POSES.drop, up); prop = ph < 0.5 ? 'coin' : null; }
+  else if (opts.kind === 'water' && !cy.done) { const pour = bump(ph, 0.3, 0.75, 0.12); pose = lerpPose(POSES.water, { ...POSES.water, fa1: 1.25, fa2: 1.9 }, pour); prop = 'can'; }
+  else pose = breathe(POSES.stand, t + 1);
+  if (S.r > 0) {
+    const good = opts.good ?? S.good;
+    if (good) pose = lerpPose(pose, chair ? POSES.sitReach : S.r > 0.6 ? POSES.armsUp : POSES.look, resultBlend(S, 0.05, 0.6));
+    else pose = lerpPose(pose, chair ? POSES.sitSlump : SIT_ACTS.has(act) ? { ...POSES.floor, hd: 0.9 } : POSES.slump, resultBlend(S));
+    if (S.r > 0.3) prop = null;
+  }
+  if (chair) {
+    const H = figureSize(pe.kind, F);
+    const seatY = -0.245 * H * 0.98;
+    setLine(ctx, F, 0.6, 0.7);
+    line(ctx, x - F * 0.11, seatY, x + F * 0.11, seatY);
+    line(ctx, x - facing * F * 0.11, seatY, x - facing * F * 0.11, seatY - F * 0.3);
+    line(ctx, x - F * 0.09, seatY, x - F * 0.09, 0);
+    line(ctx, x + F * 0.09, seatY, x + F * 0.09, 0);
+  }
+  const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+  if (NEUTRAL < 0.5 && prop) {
+    const h = fig.fh;
+    setLine(ctx, F, 1, 0.75);
+    if (prop === 'phone') phoneAt(ctx, h, F);
+    else if (prop === 'book') { ctx.beginPath(); ctx.moveTo(h[0] - F * 0.07, h[1] - F * 0.04); ctx.lineTo(h[0], h[1]); ctx.lineTo(h[0] + F * 0.07, h[1] - F * 0.04); ctx.stroke(); }
+    else if (prop === 'brick') ctx.strokeRect(h[0] - F * 0.08, h[1] - F * 0.05, F * 0.16, F * 0.07);
+    else if (prop === 'coin') { ctx.beginPath(); ctx.arc(h[0], h[1], F * 0.03, 0, Math.PI * 2); ctx.stroke(); }
+    else if (prop === 'can') { ctx.strokeRect(h[0] - F * 0.02 * facing, h[1] - F * 0.01, F * 0.08 * facing, F * 0.07); }
+  }
+  return fig;
+}
 
 // ===================================================================
 // ESCENAS
@@ -610,6 +656,7 @@ SCENES.alcancia = {
     } else pose = breathe(POSES.stand, t);
     if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.look, resultBlend(S)) : lerpPose(pose, POSES.slump, resultBlend(S));
     const fig = drawFigure(ctx, { x: px, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, jx + F * (0.45 + j * 0.4), -1, { kind: p2.act === 'gastar' ? 'stand' : 'drop', phase: 0.5 }));
     if (S.good) S.focus = S.focus || [jx, -jh - F * 0.6];
     if (NEUTRAL > 0.5) coin = null;
     if (idle && S.r < 0.5) phoneAt(ctx, fig.fh, F);
@@ -660,7 +707,7 @@ SCENES.casa = {
     groundLine(ctx, F, -w / 2, w / 2);
     const { bpc, total, cols, rows } = this.plan(S);
     const bw = F * 0.19, bh = Math.min(F * 0.1, (F * 0.75) / rows);
-    const wx = w * 0.14, wl = wx - (cols * bw) / 2;
+    const wx = w * (S.people.length > 1 ? 0.02 : 0.14), wl = wx - (cols * bw) / 2;
     const pe = S.people[0] || { kind: 'hombre', act: 'construir' };
     const share = this.built(S, pe);
     const C = S.C;
@@ -735,6 +782,8 @@ SCENES.casa = {
       else if (pe.act === 'descansar' || pe.act === 'rest') pose = lerpPose(pose, { ...POSES.floor, hd: 0.9 }, resultBlend(S));
       else pose = lerpPose(pose, POSES.slump, resultBlend(S));
     }
+    const wr = wl + cols * bw + bw * 0.25;
+    S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, wr + F * (0.32 + j * 0.42), -1, { kind: BUILD.has(p2.act) && (share >= 1 || !S.good) ? 'work' : 'stand' }));
     const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
     if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.75); ctx.strokeRect(fig.fh[0] - bw / 2 + F * 0.03, fig.fh[1] - bh * 0.6, bw - 3, bh - 3); }
     if ((pe.act === 'celular' || pe.act === 'descansar' || pe.act === 'gastar') && !working && S.r < 0.4) phoneAt(ctx, fig.fh, F);
@@ -1040,14 +1089,19 @@ SCENES.camino = {
     if (S.good && S.r > 0.3) { ctx.fillStyle = RED; ctx.globalAlpha = smooth((S.r - 0.3) / 0.3); ctx.fill(); }
     ctx.restore();
     ctx.stroke();
-    // caminante
-    const pe = S.people[0] || { kind: 'hombre', act: 'caminar' };
+    // caminantes (el segundo va un poco detrás)
+    const list = S.people.length ? S.people.slice(0, 3) : [{ kind: 'hombre', act: 'caminar' }];
+    for (let j = list.length - 1; j >= 0; j--) this.walker(ctx, S, list[j], j, hill, xe);
+  },
+  walker(ctx, S, pe, j, hill, xe) {
+    const { w, F, t } = S;
     const act = pe.act;
     const run = act === 'correr' || act === 'levantarse' || act === 'caer';
-    const start = -w * 0.42, end = xe + w * 0.03;
+    const lag = j * F * 0.38;
+    const start = -w * 0.42 + (j ? F * 0.05 : 0), end = xe + w * 0.03 - lag;
     let x, pose;
     if (act === 'sentarse' || act === 'descansar' || act === 'celular') {
-      x = start + F * 0.1;
+      x = start + F * 0.1 + j * F * 0.3;
       pose = breathe(POSES.floorPhone, t);
       if (S.r > 0.3) pose = lerpPose(pose, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0.3, 0.7));
       const fig = drawFigure(ctx, { x, y: 0, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
@@ -1148,6 +1202,10 @@ SCENES.libros = {
       line(ctx, cx - F * 0.1, seatY, cx - F * 0.1, 0);
       line(ctx, cx + F * 0.1, seatY, cx + F * 0.1, 0);
     }
+    S.people.slice(1, 3).forEach((p2, j) => {
+      const r2 = p2.act === 'leer' || p2.act === 'read' || p2.act === 'estudiar';
+      companion(ctx, S, p2, sx + F * (0.5 + j * 0.45), -1, { kind: r2 ? 'read' : 'stand', sit: true });
+    });
     const fig = drawFigure(ctx, { x, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
     if (reads && NEUTRAL < 0.5 && !(S.good && S.r > 0.1)) {
       // libro abierto en las manos, o volando a la pila
@@ -1237,3 +1295,5 @@ SCENES.abrazo = {
 };
 
 export const SCENE_NAMES = Object.keys(SCENES);
+// herramientas compartidas con las escenas nuevas (scenes2.js)
+export const kit = { setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral: () => NEUTRAL, BUILD };

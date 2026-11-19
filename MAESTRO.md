@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 19 nov 2026 (nuevo tipo DIVISION: tiempo — HOY / EN UN MES / EN UN AÑO).
+Última actualización: 19 nov 2026 (15 escenas nuevas, 6 finales nuevos, todas las escenas dibujan a todos los personajes).
 
 ---
 
@@ -102,64 +102,102 @@ PREGUNTA_EN: Where do you want to be a year from now?
 
 ## 6. Vocabulario completo que entiende el formato
 
-### Escenas (lugares)
+Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2; 3 en `mesa`), bien colocados y con el mismo sello. Cada escena tiene un decorado propio que se reconoce desde el primer segundo, para que los videos no parezcan repetidos.
 
-| Escena | Qué se ve | Acciones que entiende | Ejemplo de línea |
+### Escenas (25)
+
+| Escena | Qué se ve | Acciones | Ejemplo de línea |
 |---|---|---|---|
-| `puente` | Dos orillas con un precipicio; pilas de tablas; ponen tablas hasta encontrarse | construir, esperar, celular, descansar | `A: LOS DOS CONSTRUYEN \| DÍA {1-90} \| puente \| hombre+mujer \| construir+construir \| se unen` |
-| `arbol` | Un arbolito que se riega o se cuida; crece y da frutos rojos o pierde las hojas | regar, cuidar, celular, dormir, orar, orar-domingo | `B: RIEGA SU SUEÑO \| DÍA {1-100} \| arbol \| mujer \| regar \| crece` |
-| `alcancia` | Un frasco de monedas que se llena (brote naranja) o se vacía en bolsas de compras | ahorrar, gastar, celular | `A: GASTA TODO EL VIERNES \| SEMANA {1-52} \| alcancia \| hombre \| gastar \| se vacía` |
-| `casa` | Muro de ladrillos: bien alineado, con techo y ventana encendida; o con ladrillos rectos pero cada vez más desalineados (arriba/abajo) hasta caerse | construir, descansar, celular | `B: SIN BASE \| MES {1-24} \| casa \| hombre \| construir \| se cae` |
+| `puente` | Dos orillas, un precipicio y pilas de tablas | construir, esperar, celular, descansar | `A: LOS DOS CONSTRUYEN \| DÍA {1-90} \| puente \| hombre+mujer \| construir+construir \| se unen` |
+| `arbol` | Un arbolito que crece con frutos rojos o pierde las hojas | regar, cuidar, celular, dormir, orar, orar-domingo | `A: RIEGA SU SUEÑO \| DÍA {1-100} \| arbol \| mujer+nina \| regar+regar \| crece` |
+| `alcancia` | Frasco de monedas que se llena o se vacía en bolsas | ahorrar, gastar, celular | `B: GASTA TODO \| SEMANA {1-52} \| alcancia \| hombre \| gastar \| se vacía` |
+| `casa` | Muro de ladrillos rectos: alineado con techo y ventana, o desalineado hasta caerse | construir, descansar, celular | `B: SIN BASE \| MES {1-24} \| casa \| hombre+nino \| construir+construir \| se cae` |
 | `escalera` | Siete escalones y una luz arriba | subir, sentarse | `A: UN ESCALÓN AL DÍA \| DÍA {1-60} \| escalera \| mujer \| subir \| llega` |
-| `mesa` | Mesa con lámpara cálida; conversan o miran el móvil y se van separando | hablar, celular | `B: CADA UNO EN SU PANTALLA \| NOCHE {1-200} \| mesa \| hombre+mujer+nino \| celular+celular+celular \| se aleja` |
-| `fogata` | Un fuego que se alimenta o se apaga hasta quedar en humo | cuidar, celular, alejarse | `A: LO CUIDAN CADA DÍA \| AÑO {1-10} \| fogata \| hombre+mujer \| cuidar+cuidar \| crece` |
-| `camino` | Una colina con bandera en la cima; al llegar sale el sol | caminar, correr, levantarse, caer, sentarse | `B: SE CAE Y SE LEVANTA \| INTENTO {1-30} \| camino \| mujer \| levantarse \| llega` |
-| `libros` | Lee y la pila de libros crece hasta subirse en ella | leer, celular | `A: APAGA EL MÓVIL \| HORAS {1-500} \| libros \| mujer \| leer \| crece` |
-| `abrazo` | Dos personas separadas con un corazón en medio: se acercan o se dan la espalda | acercarse, alejarse | `B: SE OLVIDAN \| AÑO {1-5} \| abrazo \| hombre+hombre \| alejarse+alejarse \| se alejan` |
+| `mesa` | Mesa con lámpara; conversan o miran el móvil y se separan | hablar, celular | `B: CADA UNO EN SU PANTALLA \| NOCHE {1-200} \| mesa \| hombre+mujer+nino \| celular+celular+celular \| se aleja` |
+| `fogata` | Un fuego que se alimenta o se apaga en humo | cuidar, celular, alejarse | `A: LO CUIDAN \| AÑO {1-10} \| fogata \| hombre+mujer \| cuidar+cuidar \| crece` |
+| `camino` | Una colina con bandera; al llegar sale el sol | caminar, correr, levantarse, caer, sentarse | `A: SE LEVANTA \| INTENTO {1-30} \| camino \| mujer \| levantarse \| llega` |
+| `libros` | Lee y la pila de libros crece hasta subirse en ella | leer, celular | `A: LEEN JUNTOS \| NOCHE {1-100} \| libros \| mujer+nina \| leer+leer \| crece` |
+| `abrazo` | Dos personas con un corazón en medio | acercarse, alejarse | `B: SE OLVIDAN \| AÑO {1-5} \| abrazo \| hombre+hombre \| alejarse+alejarse \| se alejan` |
+| `cocina` | Mueble con fogones, olla y utensilios colgados; vapor o humo de comida quemada | cocinar, celular (2.º personaje: espera sentado para comer) | `A: COCINA CON CALMA \| CENA {1-30} \| cocina \| mujer+nino \| cocinar+hablar \| crece` |
+| `oficina` | Escritorio con pantalla y una gráfica en la pared que sube o baja | trabajar, dormir, celular | `B: SE DUERME EN LA MESA \| SEMANA {1-12} \| oficina \| hombre \| dormir \| pierden` |
+| `parque` | Árbol redondo, banco y columpio; juegan con una pelota | jugar, caminar, celular | `A: JUEGA CON SU HIJA \| TARDE {1-50} \| parque \| hombre+nina \| jugar+jugar \| se abrazan` |
+| `coche` | Coche en la carretera: llega a casa o se choca con un cono | conducir, celular (2.º: hablar o celular) | `B: MIRA EL MÓVIL \| KM {1-90} \| coche \| hombre \| celular \| se cae` |
+| `gimnasio` | Estante de pesas, banco y barra que acaba sobre la cabeza | entrenar, sentarse | `A: ENTRENA CADA DÍA \| DÍA {1-90} \| gimnasio \| mujer \| entrenar \| crece` |
+| `cama` | Cama y ventana con luna que se vuelve sol | dormir, celular, levantarse | `A: SE ACUESTA TEMPRANO \| NOCHE {1-30} \| cama \| hombre \| dormir \| se despiertan` |
+| `sofa` | Sofá, alfombra y lámpara de pie cálida | hablar, celular, abrazar | `A: SE CUENTAN EL DÍA \| NOCHE {1-100} \| sofa \| hombre+mujer \| hablar+abrazar \| se abrazan` |
+| `huerto` | Cerca, surcos y plantas que dan frutos naranjas | sembrar, regar, descansar, celular | `A: SIEMBRA CADA MAÑANA \| DÍA {1-60} \| huerto \| mujer+nina \| sembrar+sembrar \| crece` |
+| `montana` | Montaña escarpada con nieve, tienda de campaña y bandera naranja en la cima | escalar, sentarse, caer | `B: SE RINDE ABAJO \| DÍA {1-20} \| montana \| hombre \| sentarse \| se queda` |
+| `lluvia` | Nubes y lluvia; paraguas; al final sale el sol o crece el charco | paraguas, mojarse, compartir | `A: COMPARTE SU PARAGUAS \| DÍA {1-7} \| lluvia \| mujer+nino \| compartir+paraguas \| se secan` |
+| `tienda` | Puesto con toldo a rayas, productos y monedas | vender, esperar (2.º: el cliente) | `A: ATIENDE CON GANAS \| MES {1-12} \| tienda \| hombre+mujer \| vender+vender \| ganan` |
+| `carta` | Mesita para escribir, buzón y la puerta de quien recibe | escribir, olvidar (2.º: esperar) | `A: LE ESCRIBE \| SEMANA {1-20} \| carta \| mujer+hombre \| escribir+esperar \| se unen` |
+| `reloj` | Reloj grande en la pared; tareas que pasan de una pila a otra | aprovechar, perder | `B: DEJA PASAR LAS HORAS \| HORA {1-24} \| reloj \| hombre \| perder \| pierden` |
+| `telefono` | Dos casas; ondas de una llamada; al final una línea naranja las une | llamar, ignorar | `B: NO CONTESTA \| LLAMADA {1-15} \| telefono \| mujer+hombre \| llamar+ignorar \| pierden` |
+| `regalo` | Caja con lazo (rojo solo al abrirla) y estante de regalos guardados | dar, guardar (2.º: esperar) | `A: LO DA A TIEMPO \| DÍA {1-30} \| regalo \| hombre+nina \| dar+esperar \| se unen` |
 
 ### Personajes
 
 | Palabra | Quién | Ejemplo |
 |---|---|---|
-| `hombre` | adulto (también entiende: papa, padre, esposo, abuelo) | `hombre` |
+| `hombre` | adulto (también: papa, padre, esposo, abuelo) | `hombre` |
 | `mujer` | adulta con moñito y sayita (también: mama, madre, esposa, abuela) | `hombre+mujer` |
 | `nino` | niño, más pequeño (también: hijo) | `hombre+nino` |
 | `nina` | niña, con moñito y sayita (también: hija) | `mujer+nina` |
 
-Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mismo orden que los personajes: `hombre+mujer | construir+esperar`.
+Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mismo orden que los personajes: `hombre+mujer | construir+esperar`. Si hay menos acciones que personajes, se repite la última.
 
 ### Acciones
 
 | Acción | Qué hace | Ejemplo |
 |---|---|---|
 | `construir` | Pone tablas o ladrillos, uno por uno | `puente \| hombre+mujer \| construir+construir` |
-| `esperar` | Espera de pie con un corazón rojo en las manos | `puente \| hombre+mujer \| construir+esperar` |
+| `esperar` | Espera de pie (en el puente, con un corazón rojo; en la carta, junto a su puerta; en la tienda, sentado) | `puente \| hombre+mujer \| construir+esperar` |
 | `celular` | Mira el móvil con la cabeza baja | `mesa \| hombre+mujer \| celular+celular` |
-| `descansar` | Empieza un poco y lo deja; se sienta | `casa \| mujer \| descansar` |
-| `regar` / `cuidar` | Riega el árbol (cuidar en la fogata: echa leña) | `arbol \| hombre+nino \| regar+regar` |
-| `dormir` | Se queda sentado dormido | `arbol \| mujer \| dormir` |
-| `ahorrar` | Echa una moneda al frasco | `alcancia \| hombre \| ahorrar` |
-| `gastar` | Saca monedas y llena bolsas de compras | `alcancia \| hombre \| gastar` |
-| `subir` | Sube escalón por escalón | `escalera \| mujer \| subir` |
-| `sentarse` | Se sienta en el suelo con el móvil | `escalera \| hombre \| sentarse` |
-| `hablar` | Conversa sentado a la mesa | `mesa \| hombre+mujer \| hablar+hablar` |
-| `alejarse` | Da la espalda y se va | `abrazo \| hombre+hombre \| alejarse+alejarse` |
-| `acercarse` | Da pasos hacia el otro | `abrazo \| mujer+nina \| acercarse+acercarse` |
+| `descansar` | Empieza un poco y lo deja; se sienta | `huerto \| mujer \| descansar` |
+| `regar` / `cuidar` | Riega (en la fogata, cuidar = echar leña) | `arbol \| hombre+nino \| regar+regar` |
+| `dormir` | Duerme (en la cama, acostado; en la oficina, sobre la mesa) | `cama \| hombre \| dormir` |
+| `ahorrar` / `gastar` | Echa monedas al frasco / las gasta en bolsas | `alcancia \| hombre \| ahorrar` |
+| `subir` / `sentarse` | Sube escalones / se sienta en el suelo con el móvil | `escalera \| mujer \| subir` |
+| `hablar` | Conversa sentado | `sofa \| hombre+mujer \| hablar+hablar` |
+| `acercarse` / `alejarse` | Da pasos hacia el otro / le da la espalda y se va | `abrazo \| mujer+nina \| acercarse+acercarse` |
 | `leer` | Lee sentado; cada libro va a la pila | `libros \| hombre \| leer` |
-| `caminar` / `correr` | Sube la colina caminando o corriendo | `camino \| hombre \| correr` |
-| `levantarse` | Corre, se cae a mitad y se levanta | `camino \| mujer \| levantarse` |
-| `caer` | Corre, se cae y se queda en el suelo | `camino \| mujer \| caer` |
+| `caminar` / `correr` | Sube la colina o pasea | `camino \| hombre \| correr` |
+| `levantarse` | En el camino: se cae y se levanta. En la cama: se levanta temprano | `cama \| mujer \| levantarse` |
+| `caer` | Se cae y se queda en el suelo (camino, montaña) | `montana \| hombre \| caer` |
+| `cocinar` | Remueve la olla; salen vapor y platos | `cocina \| mujer \| cocinar` |
+| `trabajar` | Teclea en el escritorio (en casa y puente, = construir) | `oficina \| hombre \| trabajar` |
+| `jugar` | Se pasan una pelota | `parque \| hombre+nina \| jugar+jugar` |
+| `conducir` | Maneja con las manos en el volante | `coche \| hombre \| conducir` |
+| `entrenar` | Levanta pesas; cada vez más discos | `gimnasio \| mujer \| entrenar` |
+| `abrazar` | Sentado, rodea al otro con el brazo | `sofa \| hombre+mujer \| hablar+abrazar` |
+| `sembrar` | Se agacha y planta surco por surco | `huerto \| mujer+nina \| sembrar+sembrar` |
+| `escalar` | Trepa la montaña con cuerda | `montana \| hombre+nino \| escalar+escalar` |
+| `paraguas` | Se cubre con su paraguas | `lluvia \| mujer \| paraguas` |
+| `mojarse` | Sin paraguas, tiembla bajo la lluvia | `lluvia \| mujer+nino \| paraguas+mojarse` |
+| `compartir` | Cubre a los dos con un solo paraguas | `lluvia \| mujer+nino \| compartir+paraguas` |
+| `vender` | Atiende el puesto; el cliente compra | `tienda \| hombre+mujer \| vender+vender` |
+| `escribir` / `olvidar` | Escribe cartas que llegan / deja la carta sin escribir | `carta \| mujer+hombre \| escribir+esperar` |
+| `aprovechar` / `perder` | Termina tareas una a una / mira el móvil mientras el reloj corre | `reloj \| hombre \| aprovechar` |
+| `llamar` / `ignorar` | Llama o contesta / deja sonar el teléfono | `telefono \| mujer+hombre \| llamar+llamar` |
+| `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |
 
 ### Finales
 
 | Tipo | Palabras | Qué se ve | Ejemplo |
 |---|---|---|---|
-| Bueno | `crece`, `florece`, `se unen`, `se llena`, `llega` | Lo construido se completa + **corazón grande y brillante** | `... \| construir+construir \| se unen` |
-| Se apaga | `se seca`, `se apaga`, `se vacía` | Hojas que caen, fuego en humo, frasco vacío | `... \| celular \| se seca` |
-| Se queda | `se queda`, `se queda atrás`, `nunca se completa` | Queda a medias; el personaje se sienta, abatido | `... \| construir+esperar \| nunca se completa` |
-| Se cae | `se cae` | Ladrillos o tablas se vienen abajo | `... \| construir \| se cae` |
-| Se alejan | `se alejan` | La distancia crece, el suelo se parte, el corazón se rompe | `... \| alejarse+alejarse \| se alejan` |
+| Bueno | `crece`, `florece`, `se unen`, `se llena`, `llega`, `ganan`, `se abrazan`, `se despiertan`, `se secan` (solo en `lluvia`) | Lo construido se completa + **corazón grande y brillante** | `... \| sofa \| hombre+mujer \| hablar+abrazar \| se abrazan` |
+| Se apaga | `se seca`, `se apaga`, `se vacía`, `se mojan`, `pierden` | Hojas que caen, humo, frasco vacío, charco, gráfica que baja | `... \| oficina \| hombre \| dormir \| pierden` |
+| Se queda | `se queda`, `se queda atrás`, `nunca se completa` | Queda a medias; el personaje se sienta, abatido | `... \| montana \| hombre \| sentarse \| se queda` |
+| Se cae | `se cae` | Ladrillos o tablas se vienen abajo; el coche choca | `... \| coche \| hombre \| celular \| se cae` |
+| Se alejan | `se alejan` | La distancia crece y el otro se va | `... \| carta \| mujer+hombre \| olvidar+esperar \| se alejan` |
+
+Ejemplos de cada final nuevo:
+- `se mojan` → `B: SIN PARAGUAS \| DÍA {1-7} \| lluvia \| mujer+nino \| paraguas+mojarse \| se mojan`
+- `se secan` → `A: COMPARTE SU PARAGUAS \| DÍA {1-7} \| lluvia \| mujer+nino \| compartir+paraguas \| se secan`
+- `se abrazan` → `A: JUEGA CON ELLA \| TARDE {1-50} \| parque \| hombre+nina \| jugar+jugar \| se abrazan`
+- `ganan` → `A: ATIENDE CON GANAS \| MES {1-12} \| tienda \| hombre+mujer \| vender+vender \| ganan`
+- `pierden` → `B: DEJA PASAR LAS HORAS \| HORA {1-24} \| reloj \| hombre \| perder \| pierden`
+- `se despiertan` → `A: SE ACUESTA TEMPRANO \| NOCHE {1-30} \| cama \| hombre \| dormir \| se despiertan`
 
 ## 7. Pantalla y zona segura
 
@@ -191,7 +229,8 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `js/examples.js` | Solo el guion de ejemplo del puente |
 | `js/format.js` | Instrucciones para Claude |
 | `js/figure.js` | Muñequitos y poses |
-| `js/scenes.js` | Las 10 escenas |
+| `js/scenes.js` | Las 10 primeras escenas y herramientas comunes |
+| `js/scenes2.js` | Las 15 escenas nuevas |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |

@@ -38,6 +38,13 @@ export const POSES = {
   sitSlump:{ tr: 0.34, hd: 0.75, fa1: 0.45, fa2: 0.55, ba1: 0.4, ba2: 0.5, ...LEGS_SIT },
   read:    { tr: 0.06, hd: 0.45, fa1: 0.55, fa2: 1.95, ba1: 0.5, ba2: 1.85, ...LEGS_SIT },
   floor:   { tr: 0.38, hd: 0.65, fa1: 0.45, fa2: 0.5, ba1: 0.35, ba2: 0.4, ...LEGS_FLOOR },
+  lie:     { tr: 1.57, hd: -0.05, fa1: -1.3, fa2: -1.45, ba1: -1.25, ba2: -1.4, fl1: -1.52, fl2: -1.55, bl1: -1.5, bl2: -1.5 },
+  liePhone:{ tr: 1.5, hd: -0.25, fa1: 0.2, fa2: 1.6, ba1: 0.1, ba2: 1.5, fl1: -1.52, fl2: -1.55, bl1: -1.5, bl2: -1.5 },
+  phoneEar:{ tr: 0.02, hd: 0.1, fa1: 1.6, fa2: 3.4, ba1: -0.05, ba2: 0.05, ...LEGS_STAND },
+  umbrella:{ tr: 0.0, hd: 0.0, fa1: 2.5, fa2: 2.9, ba1: -0.05, ba2: 0.05, ...LEGS_STAND },
+  typing:  { tr: 0.1, hd: 0.3, fa1: 1.0, fa2: 1.5, ba1: 0.95, ba2: 1.45, ...LEGS_SIT },
+  drive:   { tr: -0.05, hd: 0.0, fa1: 1.0, fa2: 1.65, ba1: 0.95, ba2: 1.6, ...LEGS_SIT },
+  stretch: { tr: -0.05, hd: -0.2, fa1: 2.8, fa2: 3.0, ba1: 2.7, ba2: 2.95, ...LEGS_FLOOR },
   floorPhone:{ tr: 0.3, hd: 0.7, fa1: 0.5, fa2: 2.0, ba1: 0.45, ba2: 1.9, ...LEGS_FLOOR },
 };
 

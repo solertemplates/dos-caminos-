@@ -26,6 +26,21 @@ const SCENE_ALIAS = {
   camino: 'camino', colina: 'camino', montana: 'camino', path: 'camino', hill: 'camino',
   libros: 'libros', libro: 'libros', biblia: 'libros', books: 'libros', estudio: 'libros',
   abrazo: 'abrazo', distancia: 'abrazo', hug: 'abrazo', encuentro: 'abrazo',
+  cocina: 'cocina', kitchen: 'cocina', cocinar: 'cocina',
+  oficina: 'oficina', office: 'oficina', escritorio: 'oficina',
+  parque: 'parque', park: 'parque', columpio: 'parque',
+  coche: 'coche', carro: 'coche', auto: 'coche', car: 'coche', manejar: 'coche',
+  gimnasio: 'gimnasio', gym: 'gimnasio', pesas: 'gimnasio',
+  cama: 'cama', bed: 'cama', dormitorio: 'cama', habitacion: 'cama',
+  sofa: 'sofa', couch: 'sofa', sillon: 'sofa', salon: 'sofa',
+  huerto: 'huerto', garden: 'huerto', jardin: 'huerto', siembra: 'huerto',
+  montana: 'montana', mountain: 'montana', cumbre: 'montana', pico: 'montana',
+  lluvia: 'lluvia', rain: 'lluvia', tormenta: 'lluvia', paraguas: 'lluvia',
+  tienda: 'tienda', shop: 'tienda', store: 'tienda', puesto: 'tienda', negocio: 'tienda',
+  carta: 'carta', letter: 'carta', cartas: 'carta', buzon: 'carta',
+  reloj: 'reloj', clock: 'reloj', tiempo: 'reloj',
+  telefono: 'telefono', llamada: 'telefono', call: 'telefono',
+  regalo: 'regalo', gift: 'regalo', present: 'regalo',
 };
 
 const PERSON_ALIAS = {
@@ -53,18 +68,47 @@ const ACT_ALIAS = {
   leer: 'leer', read: 'leer', estudiar: 'leer', study: 'leer',
   caminar: 'caminar', walk: 'caminar', correr: 'correr', run: 'correr',
   levantarse: 'levantarse', 'get-up': 'levantarse', caer: 'caer', fall: 'caer',
+  cocinar: 'cocinar', cook: 'cocinar',
+  jugar: 'jugar', play: 'jugar',
+  conducir: 'conducir', manejar: 'conducir', drive: 'conducir',
+  entrenar: 'entrenar', train: 'entrenar', ejercitarse: 'entrenar',
+  abrazar: 'abrazar',
+  escalar: 'escalar', climb: 'escalar',
+  paraguas: 'paraguas', umbrella: 'paraguas', mojarse: 'mojarse', 'get-wet': 'mojarse', compartir: 'compartir', share: 'compartir',
+  vender: 'vender', sell: 'vender',
+  escribir: 'escribir', write: 'escribir', olvidar: 'olvidar', forget: 'olvidar',
+  aprovechar: 'aprovechar', perder: 'perder', waste: 'perder',
+  llamar: 'llamar', 'call': 'llamar',
+  dar: 'dar', give: 'dar', regalar: 'dar', guardar: 'guardar', keep: 'guardar',
 };
 
-const GOOD = ['crece', 'une', 'unen', 'florece', 'llena', 'llega', 'brilla', 'completa', 'fuerte', 'sube', 'gana', 'enciende', 'arde', 'abraza', 'grow', 'join', 'meet', 'full', 'reach', 'shine', 'complete', 'strong', 'win', 'bloom'];
+const SCENE_ACTS = {
+  oficina: ['trabajar', 'dormir', 'celular'],
+  telefono: ['llamar', 'ignorar'],
+  huerto: ['sembrar', 'regar', 'descansar', 'celular'],
+  montana: ['escalar', 'sentarse', 'caer'],
+  cama: ['dormir', 'celular', 'levantarse'],
+  sofa: ['hablar', 'celular', 'abrazar'],
+  parque: ['jugar', 'caminar', 'celular'],
+};
+function resolveAct(raw, scene) {
+  const a = raw.replace(/\s+/g, '-');
+  if (SCENE_ACTS[scene]?.includes(a)) return a;
+  return ACT_ALIAS[a] || ACT_ALIAS[raw] || a;
+}
+
+const GOOD = ['crece', 'une', 'unen', 'florece', 'llena', 'llega', 'brilla', 'completa', 'fuerte', 'sube', 'gana', 'enciende', 'arde', 'abraza', 'grow', 'join', 'meet', 'full', 'reach', 'shine', 'complete', 'strong', 'win', 'bloom', 'despierta', 'wake', 'abrazan', 'hug', 'dry'];
 const BAD = {
-  decay: ['seca', 'apaga', 'vacia', 'enfria', 'marchita', 'muere', 'pierde', 'dry', 'fade', 'empty', 'cold', 'die', 'wither', 'out'],
+  decay: ['moja', 'wet', 'pierde', 'lose', 'seca', 'apaga', 'vacia', 'enfria', 'marchita', 'muere', 'pierde', 'dry', 'fade', 'empty', 'cold', 'die', 'wither', 'out'],
   fall: ['cae', 'rompe', 'derrumba', 'fall', 'break', 'collapse', 'crumble'],
   apart: ['aleja', 'separa', 'distancia', 'apart', 'drift'],
   stall: ['queda', 'atras', 'nunca', 'incompleto', 'detiene', 'stuck', 'behind', 'never', 'stays', 'stops'],
 };
 
-export function classifyResult(res) {
+export function classifyResult(res, scene) {
   const r = norm(res);
+  // en la lluvia, «se secan» es el final feliz
+  if (scene === 'lluvia' && /seca|dry/.test(r)) return { good: true, bad: null };
   for (const k of ['fall', 'apart', 'decay', 'stall']) if (BAD[k].some((w) => r.includes(w))) return { good: false, bad: k };
   if (GOOD.some((w) => r.includes(w))) return { good: true, bad: null };
   if (/\bno\b|\bnot\b/.test(r)) return { good: false, bad: 'stall' };
@@ -103,10 +147,10 @@ function parseSide(val, theme, errs, label) {
   }
   let kinds = splitPeople(peopleRaw).map((p) => PERSON_ALIAS[p] || (p.startsWith('muj') ? 'mujer' : p.startsWith('ni') ? 'nino' : 'hombre'));
   if (!kinds.length) kinds = scene === 'puente' || scene === 'abrazo' ? ['hombre', 'mujer'] : ['hombre'];
-  let acts = norm(actsRaw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => ACT_ALIAS[a] || ACT_ALIAS[a.replace(/\s+/g, '-')] || a);
+  let acts = norm(actsRaw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => resolveAct(a, scene));
   if (!acts.length) acts = ['construir'];
   const people = kinds.slice(0, 4).map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)] }));
-  const cls = classifyResult(resRaw);
+  const cls = classifyResult(resRaw, scene);
   return { title, sub, scene, people, result: resRaw, ...cls };
 }
 

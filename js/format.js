@@ -55,9 +55,8 @@ REGLAS DEL TEXTO
 - FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
-- escena: puente, arbol, alcancia, casa, escalera, mesa, fogata, camino, libros, abrazo
-- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa)
-- acciones, una por personaje, unidas con +:
+- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla.
+- escena y sus acciones (una acción por personaje, unidas con +):
   puente: construir, esperar, celular, descansar
   arbol: regar, cuidar, celular, dormir, orar, orar-domingo
   alcancia: ahorrar, gastar, celular
@@ -68,8 +67,24 @@ VOCABULARIO (usa solo estas palabras)
   camino: caminar, correr, levantarse, caer, sentarse
   libros: leer, celular
   abrazo: acercarse, alejarse
-- final bueno: crece, florece, se unen, se llena, llega
-- final malo: se seca, se apaga, se vacía, se queda, se queda atrás, nunca se completa, se cae, se alejan
+  cocina: cocinar, celular (el 2.º personaje puede hablar o esperar sentado)
+  oficina: trabajar, dormir, celular
+  parque: jugar, caminar, celular
+  coche: conducir, celular (el 2.º va de copiloto: hablar o celular)
+  gimnasio: entrenar, sentarse
+  cama: dormir, celular, levantarse
+  sofa: hablar, celular, abrazar
+  huerto: sembrar, regar, descansar
+  montana: escalar, sentarse, caer
+  lluvia: paraguas, mojarse, compartir
+  tienda: vender, esperar (el 2.º personaje es el cliente)
+  carta: escribir, olvidar (el 2.º personaje espera la carta: esperar)
+  reloj: aprovechar, perder
+  telefono: llamar, ignorar
+  regalo: dar, guardar (el 2.º personaje recibe: esperar)
+- final bueno: crece, florece, se unen, se llena, llega, ganan, se abrazan, se despiertan, se secan (solo en lluvia)
+- final malo: se seca, se apaga, se vacía, se mojan, pierden, se queda, se queda atrás, nunca se completa, se cae, se alejan
+- Varía las escenas: que cada guion use una escena distinta para que los videos no se repitan.
 
 EJEMPLO
 TITULO: El puente

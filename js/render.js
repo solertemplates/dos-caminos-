@@ -1,6 +1,7 @@
 // Dos Caminos — composición del video: fondo de estrellas, división, textos, escenas y línea de tiempo.
 import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral } from './scenes.js';
 import { WHITE } from './figure.js';
+import './scenes2.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
