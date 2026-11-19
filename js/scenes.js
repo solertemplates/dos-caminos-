@@ -688,13 +688,11 @@ SCENES.casa = {
         ctx.translate(-(bx + bw / 2), -(by + bh / 2));
       }
       if (!S.good) {
-        // cada ladrillo nuevo queda un poco más torcido: la diferencia crece
+        // ladrillos rectos pero desalineados: unos un poco más arriba y otros más abajo,
+        // cada vez más desparejos (la diferencia crece) hasta que la pared se cae
         const q = i / Math.max(1, total - 1);
-        const tilt = q * (0.12 + 0.22 * R()) * (i % 2 ? 1 : -1);
-        const lean = row * row * bw * 0.06 * q;
-        ctx.translate(bx + bw / 2 + lean, by + bh / 2);
-        ctx.rotate(tilt);
-        ctx.translate(-(bx + bw / 2), -(by + bh / 2));
+        const dir = (i + row) % 2 ? 1 : -1;
+        ctx.translate(0, dir * q * bh * (0.18 + 0.17 * R()));
       }
       ctx.strokeRect(bx + 1.5, by + 1.5, bw - 3, bh - 3);
       ctx.restore();

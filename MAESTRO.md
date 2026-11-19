@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 19 nov 2026.
+Última actualización: 19 nov 2026 (ladrillos de la casa sin base: rectos y desalineados, no torcidos).
 
 ---
 
@@ -33,7 +33,7 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 
 1. **Igualdad al inicio:** los dos caminos empiezan iguales (misma escena, mismos personajes, de pie, sin objetos, contador en 1).
 2. **Momento de la elección** en los primeros segundos (≈ 2,2–2,6 s): cada uno elige distinto y se nota (uno toma la tabla, el otro saca el móvil). La línea divisoria late y suena una nota que se separa en dos.
-3. **La diferencia crece poco a poco** en el dibujo: ladrillos rectos frente a ladrillos cada vez más torcidos hasta que el muro se cae; árbol verde frente a árbol que pierde hojas; corazón que se va apagando; mesa que se separa.
+3. **La diferencia crece poco a poco** en el dibujo: pared bien alineada frente a pared de ladrillos desalineados (siempre rectos y limpios, nunca torcidos: unos un poco más arriba y otros más abajo, cada vez más desparejos) hasta que se cae; árbol verde frente a árbol que pierde hojas; corazón que se va apagando; mesa que se separa.
 4. Al final uno **crece / se une / llega** y el otro **se seca / se queda atrás / se cae**.
 5. **Temas:** universales — pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil, la constancia. **Fe casi nunca**: como mucho un guion de vez en cuando, sutil, con un mensaje que entienda cualquiera. **Cada guion, de un tema distinto.**
 6. Los guiones los escribe el usuario (con Claude). La app **no inventa guiones con plantillas**. El único ejemplo incluido es el del puente.
@@ -87,7 +87,7 @@ PREGUNTA_EN: closing question in natural US English
 | `puente` | Dos orillas con un precipicio; pilas de tablas; ponen tablas hasta encontrarse | construir, esperar, celular, descansar | `A: LOS DOS CONSTRUYEN \| DÍA {1-90} \| puente \| hombre+mujer \| construir+construir \| se unen` |
 | `arbol` | Un arbolito que se riega o se cuida; crece y da frutos rojos o pierde las hojas | regar, cuidar, celular, dormir, orar, orar-domingo | `B: RIEGA SU SUEÑO \| DÍA {1-100} \| arbol \| mujer \| regar \| crece` |
 | `alcancia` | Un frasco de monedas que se llena (brote naranja) o se vacía en bolsas de compras | ahorrar, gastar, celular | `A: GASTA TODO EL VIERNES \| SEMANA {1-52} \| alcancia \| hombre \| gastar \| se vacía` |
-| `casa` | Muro de ladrillos: recto y con techo y ventana encendida, o torcido hasta caerse | construir, descansar, celular | `B: SIN BASE \| MES {1-24} \| casa \| hombre \| construir \| se cae` |
+| `casa` | Muro de ladrillos: bien alineado, con techo y ventana encendida; o con ladrillos rectos pero cada vez más desalineados (arriba/abajo) hasta caerse | construir, descansar, celular | `B: SIN BASE \| MES {1-24} \| casa \| hombre \| construir \| se cae` |
 | `escalera` | Siete escalones y una luz arriba | subir, sentarse | `A: UN ESCALÓN AL DÍA \| DÍA {1-60} \| escalera \| mujer \| subir \| llega` |
 | `mesa` | Mesa con lámpara cálida; conversan o miran el móvil y se van separando | hablar, celular | `B: CADA UNO EN SU PANTALLA \| NOCHE {1-200} \| mesa \| hombre+mujer+nino \| celular+celular+celular \| se aleja` |
 | `fogata` | Un fuego que se alimenta o se apaga hasta quedar en humo | cuidar, celular, alejarse | `A: LO CUIDAN CADA DÍA \| AÑO {1-10} \| fogata \| hombre+mujer \| cuidar+cuidar \| crece` |
