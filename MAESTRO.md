@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (acciones con objetos: el personaje usa el objeto en la mano o en el cuerpo; montar-bici, caer de la bici).
+Última actualización: 20 nov 2026 (REGLA FIJA de movimiento real: pedaleo hacia delante, pasos según la distancia, objetos orientados).
 
 ---
 
@@ -42,7 +42,30 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 6. **Títulos de arriba bajados** para que no los tapen la flecha ni los botones de YouTube/Instagram/TikTok. Todo lo importante va dentro de la zona segura (ver §7).
 7. Texto en pantalla: pocas palabras, letras pequeñas y elegantes, arriba, nunca encima de los personajes. Se cuenta con acciones, no con carteles.
 
+8. **REGLA FIJA DE MOVIMIENTO: todos los movimientos son como los de una persona real.** Piernas, brazos, manos y objetos se mueven coordinados y en la dirección correcta (ver «Movimiento real» abajo). **Toda acción nueva debe cumplir esta regla y probarse en los dos lados de la división antes de subirla.**
+
 Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` (composición, estrellas, textos, zona segura).
+
+### Movimiento real (cómo está hecho y qué hay que comprobar)
+
+| Movimiento | Cómo debe verse | Cómo lo cumple la app |
+|---|---|---|
+| Caminar / correr | Brazo contrario a la pierna; la rodilla se dobla al adelantar la pierna; mira hacia donde va; los pies no patinan | La zancada depende de la **distancia recorrida** (medio paso ≈ 0,4·F caminando, 0,55·F corriendo); si no avanza, queda quieto; mira en la dirección del movimiento (`walkMove`, `walkDist`) |
+| Subir escaleras | Un pie por escalón | Medio paso por escalón |
+| Escalar | Pasos cortos y brazos que alternan hacia arriba | Zancada según lo que sube, brazos al ritmo de los pasos |
+| Montar en bici | **Pedalea hacia delante**; cada pie sigue su pedal; rodillas hacia delante; ruedas apoyadas en el suelo; si no avanza, no pedalea | Piernas calculadas desde la cadera hasta el pedal (cinemática inversa); la biela gira según lo recorrido; radios que giran en el sentido de la marcha; la bici se inclina con la pendiente |
+| Caer de la bici | Se cae al lado y la bici queda tumbada | — |
+| Construir / sembrar | Lleva la pieza, se agacha, la coloca y avanza **lo que mide** la pieza | El paso tras colocar mide lo mismo que la tabla o el ladrillo |
+| Lanzar y atrapar | Estira los brazos al soltar y al recibir, cuando la pelota sale o llega | Cada uno estira los brazos solo cuando la pelota está en sus manos |
+| Beber / comer | Lleva el recipiente a la boca, inclina la cabeza y la taza o botella hacia la cara | Taza y botella se inclinan al beber |
+| Tocar la guitarra | El mástil apunta a la mano que pisa las cuerdas; la otra rasguea sobre la caja | El mástil se orienta hacia esa mano |
+| Martillar | Agachado, golpea un clavo en una tabla; el mango sale de la mano siguiendo el antebrazo | Tabla y clavo bajo el golpe; martillo alineado con el antebrazo |
+| Escribir | La punta del lápiz sobre la libreta | Lápiz apoyado e inclinado hacia delante |
+| Llevar la maleta | Va detrás, tirada del asa extendida | Maleta con ruedas detrás y asa hasta la mano |
+| Conducir | Manos en el volante; las ruedas giran en el sentido de la marcha; la carretera pasa hacia atrás | Sí |
+| Regar | Inclina la regadera hacia la planta y el agua cae delante | Sí; al regar varias plantas camina de una a otra |
+
+**Antes de subir una acción nueva:** comprobarla en imágenes en el lado de arriba y el de abajo (arriba-abajo) y en el izquierdo y el derecho (lados), con un adulto y con un niño, al principio, a la mitad y al final del video.
 
 ## 3. Regla de los guiones (historia)
 
@@ -282,7 +305,7 @@ El personaje **usa el objeto como lo haría una persona**: el objeto va **en su 
 | `contar-monedas` | moneda | Lanza una moneda al aire y la recoge | `alcancia \| nina \| contar-monedas \| se llena` |
 | `usar-llave` | llave | Abre con la llave (gira la mano) | `casa \| hombre \| usar-llave \| crece` |
 | `dar-anillo` | anillo | De rodillas, ofrece un anillo | `abrazo \| hombre+mujer \| dar-anillo+acercarse \| se unen` |
-| `montar-bici` | bicicleta | Va montado en bicicleta | `camino \| nina \| montar-bici \| llega` |
+| `montar-bici` | bicicleta | Va montado en bicicleta, pedaleando hacia delante (solo pedalea mientras avanza, como en el camino) | `camino \| nina \| montar-bici \| llega` |
 | `dar-regalo` | regalo | Ofrece un regalo con las dos manos | `regalo \| hombre+nina \| dar-regalo+esperar \| se unen` |
 | `llevar-maleta` | maleta | Lleva la maleta de la mano | `camino \| mujer \| llevar-maleta \| llega` |
 | `encender-vela` | vela | Sostiene una vela encendida | `mesa \| hombre+mujer \| encender-vela+hablar \| crece` |

@@ -52,7 +52,11 @@ export function lerpPose(a, b, k) {
   if (k <= 0) return a;
   if (k >= 1) return b;
   const o = {};
-  for (const key in a) o[key] = a[key] + (b[key] - a[key]) * k;
+  for (const key in a) {
+    if (b[key] === undefined) { if (k < 0.5) o[key] = a[key]; continue; } // p. ej. fixLow de la bici
+    o[key] = a[key] + (b[key] - a[key]) * k;
+  }
+  for (const key in b) if (a[key] === undefined && k >= 0.5) o[key] = b[key];
   return o;
 }
 
@@ -109,7 +113,8 @@ export function solveFigure(pose, H, facing, kind) {
   const fh = add(fe, d(pose.fa2, L.fa));
   const be = add(shoulder, d(pose.ba1, L.ua));
   const bh = add(be, d(pose.ba2, L.fa));
-  const low = Math.max(hip[1] + 0.02 * H, fk[1], ff[1], bk[1], bf[1]);
+  // fixLow: altura fija de la cadera (p. ej. en bici, para que no rebote al pedalear)
+  const low = pose.fixLow != null ? pose.fixLow * H : Math.max(hip[1] + 0.02 * H, fk[1], ff[1], bk[1], bf[1]);
   const pts = { hip, fk, ff, bk, bf, shoulder, head, fe, fh, be, bh };
   for (const k in pts) pts[k] = [pts[k][0], pts[k][1] - low];
   pts.r = L.r;
@@ -190,5 +195,5 @@ export function drawFigure(ctx, o) {
   }
   ctx.restore();
   const w = (p) => [p[0] + x, p[1] + y];
-  return { fh: w(P.fh), bh: w(P.bh), head: w(P.head), hip: w(P.hip), shoulder: w(P.shoulder), ff: w(P.ff), bf: w(P.bf), r: P.r, H };
+  return { fh: w(P.fh), bh: w(P.bh), head: w(P.head), hip: w(P.hip), shoulder: w(P.shoulder), ff: w(P.ff), bf: w(P.bf), fe: w(P.fe), r: P.r, H };
 }

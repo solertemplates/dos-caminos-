@@ -18,9 +18,9 @@ function neutralPose(pose) {
 function drawFigure(ctx, o) {
   // acción de uso real de un objeto (tocar-guitarra, beber-cafe…): pose propia y el objeto en la mano o el cuerpo
   const use = o.pe && USES[o.pe.act];
-  const k = CUR ? { t: CUR.t, p: CUR.p, r: CUR.r, good: CUR.good, F: o.F } : { t: 0, p: 0, r: 0, good: true, F: o.F };
+  const k = { ...(CUR ? { t: CUR.t, p: CUR.p, r: CUR.r, good: CUR.good } : { t: 0, p: 0, r: 0, good: true }), F: o.F, H: figureSize(o.kind, o.F), travel: o.travel };
   if (use) {
-    o = { ...o, pose: usePose(use, o.pose, k), y: (o.y || 0) - useLift(use, o.F) };
+    o = { ...o, pose: usePose(use, o.pose, k), y: (o.y || 0) - useLift(use, figureSize(o.kind, o.F)) };
     if (CUR && CUR.object === use.obj) CUR.objHand = true;
   }
   // o.neutral: 'stand' fuerza de pie al inicio; 'none' no cambia la pose (p. ej. acostados en la cama)
@@ -28,7 +28,7 @@ function drawFigure(ctx, o) {
   const fig = rawFigure(ctx, o);
   if (use && NEUTRAL < 0.5) {
     const st = CUR ? objState(CUR) : {};
-    drawUseProp(ctx, use, fig, { ...o, y: (o.y || 0) + useLift(use, o.F) }, k, st);
+    drawUseProp(ctx, use, fig, { ...o, y: (o.y || 0) + useLift(use, figureSize(o.kind, o.F)) }, k, st);
   }
   return fig;
 }
@@ -188,15 +188,27 @@ function cycle(p, n) {
 }
 
 // pose de trabajo (agacharse a colocar algo) según la fase
-function workPose(ph, t, high = false) {
+function workPose(ph, t, high = false, stepF = 0.12) {
   const low = high ? POSES.reachUp : POSES.crouch;
   if (ph < 0.38) return breathe(POSES.carry, t);
   if (ph < 0.6) return lerpPose(POSES.carry, low, smooth((ph - 0.38) / 0.22));
   if (ph < 0.8) return lerpPose(low, POSES.stand, smooth((ph - 0.6) / 0.2));
-  return lerpPose(walkPose((ph - 0.8) * 5 * Math.PI * 2), POSES.carry, smooth((ph - 0.9) / 0.1));
+  return lerpPose(walkPose((stepF / 0.4) * Math.PI * smooth((ph - 0.8) / 0.2)), POSES.carry, smooth((ph - 0.9) / 0.1));
 }
 
 function resultBlend(S, a = 0, b = 0.45) { return smooth((S.r - a) / (b - a)); }
+
+// Pasos reales: la fase de la zancada depende de la distancia recorrida (sin patinar),
+// medio paso ≈ 0.4·F caminando y 0.55·F corriendo.
+export function stepPhase(dist, F, run = false) { return (dist / (F * (run ? 0.55 : 0.4))) * Math.PI; }
+export function walkDist(dist, F, run = false) { return walkPose(stepPhase(Math.abs(dist), F, run), run); }
+// Caminar entre dos posiciones: mira hacia donde va y solo mueve las piernas si avanza.
+export function walkMove(xNow, xPrev, F, run = false) {
+  const dx = xNow - xPrev;
+  const facing = dx >= 0 ? 1 : -1;
+  const moving = smooth(Math.abs(dx) / (F * 0.0025));
+  return { pose: lerpPose(POSES.stand, walkPose(stepPhase(facing * xNow, F, run), run), moving), facing, moving };
+}
 
 const PHONE_ACTS = new Set(['celular', 'phone', 'ignorar']);
 const SIT_ACTS = new Set(['descansar', 'sentarse', 'dormir', 'rest', 'sit']);
@@ -352,13 +364,14 @@ SCENES.puente = {
       if (builds && tgt) {
         const edgeCount = cy.done ? tgt : cy.k + smooth((cy.ph - 0.8) / 0.2);
         x = edge0 - side * (edgeCount * pw) + side * F * 0.16;
-        pose = cy.done ? breathe(POSES.stand, t) : workPose(cy.ph, t);
+        pose = cy.done ? breathe(POSES.stand, t) : workPose(cy.ph, t, false, pw / F);
         holding = !cy.done && (cy.ph < 0.62 || cy.ph > 0.93);
         if (S.r > 0) {
           if (meet) {
             const mk = smooth(S.r / 0.45);
+            const x0 = x;
             x = lerp(x, side * F * 0.12, mk);
-            pose = S.r < 0.45 ? walkPose(S.r * 18) : lerpPose(POSES.stand, POSES.hug, smooth((S.r - 0.45) / 0.2));
+            pose = S.r < 0.45 ? walkDist(x - x0, F) : lerpPose(POSES.stand, POSES.hug, smooth((S.r - 0.45) / 0.2));
           } else if (S.bad === 'fall') {
             pose = lerpPose(POSES.stand, POSES.slump, rb);
           } else {
@@ -881,7 +894,7 @@ SCENES.escalera = {
         y = -sh * (kk + smooth((frac(sNow) - 0.55) / 0.35));
         if (sNow >= K) y = -K * sh;
         if (x < x0) y = 0;
-        pose = S.p >= 1 ? breathe(POSES.stand, t) : walkPose(s * Math.PI * 2);
+        pose = S.p >= 1 ? breathe(POSES.stand, t) : walkPose(s * Math.PI);
         void ph;
         if (S.r > 0) pose = S.good ? lerpPose(POSES.stand, POSES.armsUp, resultBlend(S, 0.1, 0.5)) : lerpPose(POSES.stand, S.r > 0.5 ? POSES.slump : POSES.lookBack, resultBlend(S));
         if (!S.good && S.r > 0.3) facing = -1;
@@ -1061,7 +1074,7 @@ SCENES.fogata = {
         if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.sitReach, resultBlend(S)) : lerpPose(pose, POSES.sitSlump, resultBlend(S));
       } else if (act === 'alejarse') {
         x = fx + side * (F * 0.6 + smooth(S.p) * (w * 0.5 - F * 0.75));
-        pose = S.p < 1 ? walkPose(S.p * 30) : POSES.stand;
+        pose = S.p < 1 ? walkDist(smooth(S.p) * (w * 0.5 - F * 0.75), F) : POSES.stand;
         if (S.r > 0) pose = lerpPose(POSES.stand, POSES.cold, resultBlend(S));
         drawFigure(ctx, { x, pose, F, facing: side, kind: pe.kind, pe: pe, alpha: personDim(S) * (1 - 0.35 * smooth(S.p)) });
         return;
@@ -1179,10 +1192,18 @@ SCENES.camino = {
         if (S.r > 0) pose = lerpPose({ ...POSES.floor, hd: 0.5 }, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0, 0.6));
         drawFigure(ctx, { x: x - F * 0.05, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
       } else {
-        // montado en la bici (al final feliz, levanta un brazo sin bajarse)
+        // montado en la bici: las dos ruedas apoyadas en la colina (la bici se inclina con la pendiente)
+        // y los pedales giran según lo que avanza
+        const H = figureSize(pe.kind, F);
+        const xr = x - H * 0.33, xf = x + H * 0.42;
+        const yr = hill(xr), yf = hill(xf);
+        const ang = Math.atan2(yf - yr, xf - xr);
+        const yHip = yr + (yf - yr) * (0.33 / 0.75);
         const rider = { ...pe, act: 'montar-bici' };
-        const fig = drawFigure(ctx, { x, y, pose: POSES.stand, F, facing: 1, kind: pe.kind, pe: rider, alpha: personDim(S) });
-        void fig;
+        ctx.save();
+        ctx.translate(x, yHip); ctx.rotate(ang); ctx.translate(-x, -yHip);
+        drawFigure(ctx, { x, y: yHip, pose: POSES.stand, F, facing: 1, kind: pe.kind, pe: rider, alpha: personDim(S), travel: dist });
+        ctx.restore();
       }
       return;
     }
@@ -1325,7 +1346,7 @@ SCENES.abrazo = {
       if (act === 'acercarse' || act === 'perdonar') {
         const endX = S.good ? F * 0.12 : F * 0.6;
         x = side * lerp(startX, endX, stepK / S.C);
-        pose = walking ? walkPose(cy.ph * 4 * Math.PI) : breathe(POSES.stand, t);
+        pose = walking ? walkDist(startX - Math.abs(x), F) : breathe(POSES.stand, t);
         if (S.r > 0) {
           if (S.good) pose = lerpPose(POSES.stand, POSES.hug, resultBlend(S, 0.05, 0.3));
           else pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S));
@@ -1333,7 +1354,7 @@ SCENES.abrazo = {
       } else if (act === 'alejarse' || act === 'espalda') {
         facing = NEUTRAL > 0.5 ? -side : side;
         x = side * lerp(startX, w * 0.47, stepK / S.C);
-        pose = walking ? walkPose(cy.ph * 4 * Math.PI) : breathe(POSES.stand, t);
+        pose = walking ? walkDist(Math.abs(x) - startX, F) : breathe(POSES.stand, t);
         if (S.r > 0) pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S));
       } else {
         x = side * startX;
@@ -1368,4 +1389,4 @@ SCENES.abrazo = {
 
 export const SCENE_NAMES = Object.keys(SCENES);
 // herramientas compartidas con las escenas nuevas (scenes2.js)
-export const kit = { obj, objState, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral: () => NEUTRAL, BUILD };
+export const kit = { obj, objState, walkMove, walkDist, stepPhase, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral: () => NEUTRAL, BUILD };

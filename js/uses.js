@@ -15,7 +15,7 @@ const wave = (t, sp = 1, ph = 0) => 0.5 + 0.5 * Math.sin(t * sp + ph);
 export const USES = {
   'tocar-guitarra': { obj: 'guitarra', es: 'Toca la guitarra', pose: ({ t }) => ({ tr: 0.05, hd: 0.25, fa1: 0.55, fa2: 1.15 + 0.3 * wave(t, 10), ba1: 1.1, ba2: 2.1 }), prop: 'guitar', size: 0.42 },
   'leer-libro': { obj: 'libro', es: 'Lee un libro con las dos manos', pose: () => ({ tr: 0.06, hd: 0.45, fa1: 0.55, fa2: 1.95, ba1: 0.5, ba2: 1.85 }), prop: 'hands', size: 0.15 },
-  'beber-cafe': { obj: 'taza', es: 'Bebe de su taza de café', pose: ({ t }) => { const k = bump(frac(t / 3), 0.3, 0.65); return { tr: 0.02, hd: 0.1 - 0.3 * k, fa1: 0.35 + 0.25 * k, fa2: 1.3 + 1.35 * k, ba1: -0.05, ba2: 0.05 }; }, prop: 'hand', size: 0.1 },
+  'beber-cafe': { obj: 'taza', tilt: 0.8, es: 'Bebe de su taza de café', pose: ({ t }) => { const k = bump(frac(t / 3), 0.3, 0.65); return { tr: 0.02, hd: 0.1 - 0.3 * k, fa1: 0.35 + 0.25 * k, fa2: 1.3 + 1.35 * k, ba1: -0.05, ba2: 0.05 }; }, prop: 'hand', size: 0.1 },
   'dar-flor': { obj: 'flor', es: 'Ofrece una flor con la mano', pose: ({ t }) => ({ tr: 0.08, hd: 0.05, fa1: 1.35 + 0.05 * Math.sin(t * 2), fa2: 1.55, ba1: 0.1, ba2: 0.2 }), prop: 'hand', size: 0.2, up: 0.7 },
   'lanzar-pelota': { obj: 'pelota', es: 'Lanza la pelota hacia arriba y la atrapa', pose: ({ t }) => { const ph = frac(t / 1.6); const k = ph < 0.25 ? ph / 0.25 : ph > 0.8 ? 1 - (ph - 0.8) / 0.2 : 1; return { tr: 0.03, hd: -0.3 * k, fa1: 0.4 + 2.0 * k, fa2: 0.9 + 1.9 * k, ba1: 0.1, ba2: 0.2 }; }, prop: 'throw', size: 0.13 },
   'escribir-lapiz': { obj: 'lapiz', es: 'Escribe con un lápiz en su libreta', pose: ({ t }) => ({ tr: 0.1, hd: 0.5, fa1: 0.75, fa2: 1.6 + 0.12 * Math.sin(t * 9), ba1: 0.6, ba2: 1.75 }), prop: 'write', size: 0.14 },
@@ -30,7 +30,7 @@ export const USES = {
   'dar-anillo': { obj: 'anillo', es: 'De rodillas, ofrece un anillo', pose: () => ({ tr: 0, hd: -0.15, fa1: 1.55, fa2: 1.9, ba1: 0.3, ba2: 0.6 }), legs: 'kneel', prop: 'hand', size: 0.12, up: 0.5 },
   'montar-bici': { obj: 'bicicleta', es: 'Va montado en bicicleta', pose: () => ({ tr: 0.3, hd: -0.1, fa1: 1.15, fa2: 1.35, ba1: 1.1, ba2: 1.3 }), legs: 'ride', prop: 'bike', size: 0 },
   'dar-regalo': { obj: 'regalo', es: 'Ofrece un regalo con las dos manos', pose: () => ({ tr: 0.06, hd: 0.05, fa1: 1.2, fa2: 1.55, ba1: 1.1, ba2: 1.5 }), prop: 'hands', size: 0.2, up: 0.3 },
-  'llevar-maleta': { obj: 'maleta', es: 'Lleva la maleta de la mano', pose: () => ({ tr: 0.05, hd: 0, fa1: 0.25, fa2: 0.15, ba1: -0.15, ba2: 0.05 }), prop: 'beside', size: 0.3 },
+  'llevar-maleta': { obj: 'maleta', es: 'Tira de su maleta con ruedas', pose: () => ({ tr: 0.05, hd: 0, fa1: -0.35, fa2: -0.45, ba1: 0.15, ba2: 0.25 }), prop: 'beside', size: 0.3 },
   'encender-vela': { obj: 'vela', es: 'Sostiene una vela encendida', pose: () => ({ tr: 0.03, hd: 0.3, fa1: 0.55, fa2: 1.85, ba1: 0.5, ba2: 1.8 }), prop: 'hands', size: 0.17, up: 0.2 },
   'atarse-zapatos': { obj: 'zapatos', es: 'Se ata los zapatos', pose: ({ t }) => ({ tr: 1.0, hd: 0.3, fa1: 0.25 + 0.08 * Math.sin(t * 6), fa2: 0.1, ba1: 0.2, ba2: 0.1 }), legs: 'crouch', prop: 'feet', size: 0.16 },
   'mirar-foto': { obj: 'foto', es: 'Mira una foto entre las manos', pose: () => ({ tr: 0.05, hd: 0.45, fa1: 0.75, fa2: 2.0, ba1: 0.7, ba2: 1.95 }), prop: 'hands', size: 0.18, up: 0.4 },
@@ -38,13 +38,13 @@ export const USES = {
   'sostener-globo': { obj: 'globo', es: 'Sostiene un globo del hilo', pose: () => ({ tr: 0, hd: -0.25, fa1: 0.9, fa2: 1.4, ba1: 0, ba2: 0.1 }), prop: 'hand', size: 0.55, up: 0 },
   'volar-cometa': { obj: 'cometa', es: 'Vuela una cometa', pose: ({ t }) => ({ tr: -0.05, hd: -0.4, fa1: 2.1 + 0.08 * Math.sin(t * 1.5), fa2: 2.35, ba1: 0.1, ba2: 0.2 }), prop: 'kite', size: 0.28 },
   'ponerse-gafas': { obj: 'gafas', es: 'Lleva gafas puestas (y se las ajusta)', pose: ({ t }) => { const k = bump(frac(t / 4), 0.2, 0.4); return { tr: 0, hd: 0.05, fa1: 0.15 + 1.6 * k, fa2: 0.2 + 2.6 * k, ba1: -0.05, ba2: 0.05 }; }, prop: 'glasses', size: 0 },
-  'beber-agua': { obj: 'botella', es: 'Bebe agua de una botella', pose: ({ t }) => { const k = bump(frac(t / 3), 0.3, 0.65); return { tr: 0.02, hd: 0.1 - 0.4 * k, fa1: 0.35 + 0.3 * k, fa2: 1.3 + 1.5 * k, ba1: -0.05, ba2: 0.05 }; }, prop: 'hand', size: 0.16 },
+  'beber-agua': { obj: 'botella', tilt: 1.6, es: 'Bebe agua de una botella', pose: ({ t }) => { const k = bump(frac(t / 3), 0.3, 0.65); return { tr: 0.02, hd: 0.1 - 0.4 * k, fa1: 0.35 + 0.3 * k, fa2: 1.3 + 1.5 * k, ba1: -0.05, ba2: 0.05 }; }, prop: 'hand', size: 0.16 },
   'servir-plato': { obj: 'plato', es: 'Lleva un plato de comida con las dos manos', pose: () => ({ tr: 0.05, hd: 0.25, fa1: 1.0, fa2: 1.55, ba1: 0.95, ba2: 1.5 }), prop: 'hands', size: 0.22, up: 0.1 },
   'comer-manzana': { obj: 'manzana', es: 'Come una manzana', pose: ({ t }) => { const k = bump(frac(t / 2.6), 0.3, 0.6); return { tr: 0.02, hd: 0.15 - 0.15 * k, fa1: 0.35 + 0.3 * k, fa2: 1.4 + 1.25 * k, ba1: 0, ba2: 0.1 }; }, prop: 'hand', size: 0.11 },
   'llevar-pastel': { obj: 'pastel', es: 'Lleva un pastel con la vela encendida', pose: () => ({ tr: 0.05, hd: 0.25, fa1: 1.0, fa2: 1.55, ba1: 0.95, ba2: 1.5 }), prop: 'hands', size: 0.22, up: 0.05 },
   'abrazar-osito': { obj: 'osito', es: 'Abraza un osito de peluche', pose: () => ({ tr: 0.05, hd: 0.35, fa1: 0.7, fa2: 2.25, ba1: 0.65, ba2: 2.2 }), prop: 'chest', size: 0.24 },
   'llevar-planta': { obj: 'maceta', es: 'Lleva una plantita en maceta', pose: () => ({ tr: 0.04, hd: 0.25, fa1: 0.8, fa2: 1.7, ba1: 0.75, ba2: 1.65 }), prop: 'hands', size: 0.24, up: 0.25 },
-  martillar: { obj: 'martillo', es: 'Martilla un clavo', pose: ({ t }) => { const k = wave(t, 6); return { tr: 0.3, hd: 0.4, fa1: 0.8 + 1.6 * k, fa2: 1.0 + 1.6 * k, ba1: 0.6, ba2: 0.6 }; }, prop: 'hammer', size: 0.3 },
+  martillar: { obj: 'martillo', es: 'Agachado, martilla un clavo en una tabla', pose: ({ t }) => { const k = Math.pow(wave(t, 5), 1.5); return { tr: 0.9, hd: 0.35, fa1: 0.25 + 1.5 * k, fa2: 0.15 + 1.9 * k, ba1: 0.35, ba2: 0.2 }; }, legs: 'crouch', prop: 'hammer', size: 0.22 },
   'escribir-cuaderno': { obj: 'cuaderno', es: 'Escribe en su cuaderno', pose: ({ t }) => ({ tr: 0.1, hd: 0.5, fa1: 0.75, fa2: 1.6 + 0.12 * Math.sin(t * 9), ba1: 0.6, ba2: 1.75 }), prop: 'notebook', size: 0.18 },
   'levantar-trofeo': { obj: 'trofeo', es: 'Levanta un trofeo con las dos manos', pose: () => ({ tr: -0.04, hd: -0.3, fa1: 2.75, fa2: 2.9, ba1: 2.6, ba2: 2.85 }), prop: 'hands', size: 0.22, up: 0.1 },
   'escuchar-musica': { obj: 'auriculares', es: 'Escucha música con auriculares', pose: ({ t }) => ({ tr: 0.02, hd: 0.1 * Math.sin(t * 6), fa1: 0.15, fa2: 0.3, ba1: -0.05, ba2: 0.1 }), prop: 'headphones', size: 0 },
@@ -63,6 +63,22 @@ export const USE_ALIAS = {
   'oir-musica': 'escuchar-musica', 'escuchar': 'escuchar-musica', 'sembrar-semillas': 'sembrar-semilla', 'dar-regalos': 'dar-regalo', 'llevar-maceta': 'llevar-planta',
 };
 
+// Bici: biela centrada un poco delante y por debajo de la cadera (en unidades de altura H).
+export const CRANK = { u: 0.05, v: 0.38, r: 0.075, w: 7 };
+// Pierna de dos segmentos desde la cadera hasta un punto (u adelante, v abajo): ángulos del muslo y la espinilla.
+export function legIK(u, v) {
+  const L1 = 0.245, L2 = 0.245;
+  const d = Math.min(Math.hypot(u, v), L1 + L2 - 1e-4);
+  const phi = Math.atan2(u, v);
+  const A = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+  const a1 = phi + A; // la rodilla apunta hacia delante, como en la vida real
+  const kx = Math.sin(a1) * L1, ky = Math.cos(a1) * L1;
+  return [a1, Math.atan2(u - kx, v - ky)];
+}
+// ángulo de la biela: crece con el tiempo = pedales hacia delante (arriba avanza en el sentido de la marcha)
+export const crankAngle = (travel, H) => travel / (H * 0.2) / 2;
+function pedal(theta) { return [CRANK.u + CRANK.r * Math.cos(theta), CRANK.v + CRANK.r * Math.sin(theta)]; }
+
 const KNEEL = { fl1: 0.12, fl2: -1.5, bl1: 0.0, bl2: -1.6 };
 const CROUCH = { fl1: 1.25, fl2: -0.2, bl1: 1.05, bl2: -0.35 };
 const STAND = { fl1: 0.06, fl2: 0.02, bl1: -0.06, bl2: -0.05 };
@@ -75,8 +91,11 @@ export function usePose(use, base, k) {
   if (use.legs === 'kneel') legs = KNEEL;
   else if (use.legs === 'crouch') legs = CROUCH;
   else if (use.legs === 'ride') {
-    const ph = k.t * 7;
-    legs = { fl1: 1.15 + 0.35 * Math.sin(ph), fl2: 0.15 + 0.4 * Math.sin(ph + 1.2), bl1: 1.15 + 0.35 * Math.sin(ph + Math.PI), bl2: 0.15 + 0.4 * Math.sin(ph + Math.PI + 1.2) };
+    // la biela gira según lo recorrido (rueda 0.2·H, desarrollo 2:1): si no avanza, no pedalea
+    const th = k.travel != null ? crankAngle(k.travel, k.H) : 0.9;
+    const [f1, f2] = legIK(...pedal(th));
+    const [b1, b2] = legIK(...pedal(th + Math.PI));
+    legs = { fl1: f1, fl2: f2, bl1: b1, bl2: b2, fixLow: CRANK.v + CRANK.r };
   } else {
     const seated = base.fl1 > 0.8 && base.fl2 > -0.1 && base.fl2 < 0.6;
     const onFloor = base.fl2 > 1;
@@ -91,12 +110,13 @@ export function usePose(use, base, k) {
 }
 
 // Altura extra para que los pies vayan sobre los pedales.
-export function useLift(use, F) { return use.legs === 'ride' ? F * 0.13 : 0; }
+// Ruedas de radio 0.2·H con el eje a la altura de la biela; con fixLow la cadera queda fija.
+export function useLift(use, H) { return use.legs === 'ride' ? H * (0.2 - CRANK.r) : 0; }
 
-function bike(ctx, fig, F, facing, groundY, st) {
-  const wr = F * 0.17, cy = groundY - wr;
-  const rx = fig.hip[0] - facing * F * 0.3, fx = fig.hip[0] + facing * F * 0.36;
-  const crank = [fig.hip[0] + facing * F * 0.04, cy];
+function bike(ctx, fig, F, facing, groundY, st, t) {
+  const H = fig.H, wr = H * 0.2, cy = groundY - wr;
+  const rx = fig.hip[0] - facing * H * 0.33, fx = fig.hip[0] + facing * H * 0.42;
+  const crank = [fig.hip[0] + facing * H * CRANK.u, fig.hip[1] + H * CRANK.v];
   ctx.save();
   ctx.globalAlpha = 1 - 0.5 * (st.fade || 0);
   ctx.strokeStyle = WHITE;
@@ -104,7 +124,16 @@ function bike(ctx, fig, F, facing, groundY, st) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   const L = (...p) => { ctx.beginPath(); ctx.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) ctx.lineTo(p[i], p[i + 1]); ctx.stroke(); };
-  for (const x of [rx, fx]) { ctx.beginPath(); ctx.arc(x, cy, wr, 0, Math.PI * 2); ctx.stroke(); }
+  for (const x of [rx, fx]) {
+    ctx.beginPath(); ctx.arc(x, cy, wr, 0, Math.PI * 2); ctx.stroke();
+    // radios: giran en el sentido de la marcha (horario si va a la derecha)
+    const a = facing * (t.travel || 0) / wr;
+    ctx.save(); ctx.globalAlpha *= 0.5; ctx.lineWidth = Math.max(1.2, F * 0.008);
+    for (let i = 0; i < 3; i++) { const b = a + (i * Math.PI) / 3; L(x - Math.cos(b) * wr, cy - Math.sin(b) * wr, x + Math.cos(b) * wr, cy + Math.sin(b) * wr); }
+    ctx.restore();
+  }
+  // bielas y pedales: cada pedal bajo su pie
+  for (const ft of [fig.ff, fig.bf]) { L(crank[0], crank[1], ft[0], ft[1]); L(ft[0] - F * 0.03, ft[1], ft[0] + F * 0.03, ft[1]); }
   const seat = [fig.hip[0] - facing * F * 0.02, fig.hip[1] + F * 0.03];
   const bar = [fig.fh[0], fig.fh[1]];
   L(rx, cy, seat[0], seat[1], crank[0], crank[1], rx, cy);
@@ -124,16 +153,26 @@ export function drawUseProp(ctx, use, fig, o, k, st) {
   const at = (x, y, size = s, extra = {}) => drawObject(ctx, use.obj, x, y, size, { ...st, ...extra });
   const groundY = (o.y || 0);
   switch (use.prop) {
-    case 'hand': return at(h[0], h[1] + s * (use.up ?? 0.45));
+    case 'hand': {
+      if (use.tilt) {
+        const kk = bump(frac(k.t / 3), 0.3, 0.65);
+        return at(h[0], h[1] + s * (use.up ?? 0.45), s, { rot: -f * use.tilt * kk });
+      }
+      return at(h[0], h[1] + s * (use.up ?? 0.45));
+    }
     case 'hands': return at(mid[0], mid[1] + s * (use.up ?? 0.45));
-    case 'guitar': return at(fig.hip[0] + f * F * 0.08, fig.hip[1] + F * 0.12, s, { rot: -f * 0.95 });
+    case 'guitar': {
+      const base = [fig.hip[0] + f * F * 0.02, fig.hip[1] + F * 0.06];
+      const dx = b[0] - base[0], dy = b[1] - base[1];
+      return at(base[0], base[1], Math.hypot(dx, dy) * 0.95, { rot: Math.atan2(dy, dx) + Math.PI / 2, pivot: 'bottom' });
+    }
     case 'throw': {
       const ph = frac(k.t / 1.6);
       const air = ph > 0.25 && ph < 0.8 ? Math.sin(((ph - 0.25) / 0.55) * Math.PI) : 0;
       return at(h[0], h[1] + s * 0.5 - air * F * 0.45);
     }
-    case 'write': drawObject(ctx, 'cuaderno', b[0], b[1] + F * 0.07, F * 0.12, st); return at(h[0], h[1] + s * 0.6, s, { rot: f * 0.5 });
-    case 'notebook': at(b[0], b[1] + s * 0.4); return drawObject(ctx, 'lapiz', h[0], h[1] + F * 0.06, F * 0.1, { ...st, rot: f * 0.5 });
+    case 'write': drawObject(ctx, 'cuaderno', b[0], b[1] + F * 0.07, F * 0.12, st); return at(h[0] + f * F * 0.01, h[1] + F * 0.03, s, { rot: f * 0.45, pivot: 'bottom' });
+    case 'notebook': at(b[0], b[1] + s * 0.4); return drawObject(ctx, 'lapiz', h[0] + f * F * 0.01, h[1] + F * 0.03, F * 0.1, { ...st, rot: f * 0.45, pivot: 'bottom' });
     case 'back': return at(fig.shoulder[0] - f * r * 1.2, fig.shoulder[1] + s * 0.95);
     case 'hat': {
       const k2 = 1 - sm(k.p * 6);
@@ -154,7 +193,13 @@ export function drawUseProp(ctx, use, fig, o, k, st) {
       return at(h[0], h[1] + s * 0.4 - air * F * 0.45);
     }
     case 'key': return at(h[0] + f * s * 0.3, h[1] + s * 0.45, s, { rot: Math.sin(k.t * 3) * 0.6 });
-    case 'beside': return at(h[0] + f * F * 0.08, groundY + 0, s);
+    case 'beside': {
+      const mx = h[0] - f * F * 0.32;
+      at(mx, groundY, s);
+      ctx.save(); ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(2, F * 0.014); ctx.globalAlpha = 1 - 0.5 * (st.fade || 0);
+      ctx.beginPath(); ctx.moveTo(mx + f * s * 0.3, groundY - s * 0.62); ctx.lineTo(h[0], h[1]); ctx.stroke(); ctx.restore();
+      return;
+    }
     case 'feet': return at(fig.ff ? (fig.ff[0] + (fig.bf || fig.ff)[0]) / 2 : h[0], groundY, s);
     case 'kite': {
       const kx = h[0] + f * F * 0.55 + Math.sin(k.t * 1.3) * F * 0.05, ky = h[1] - F * 0.75 + Math.cos(k.t * 1.1) * F * 0.04;
@@ -164,13 +209,16 @@ export function drawUseProp(ctx, use, fig, o, k, st) {
     }
     case 'chest': return at(fig.shoulder[0] + f * r * 0.9, fig.shoulder[1] + s * 1.05);
     case 'hammer': {
-      const ang = Math.atan2(h[1] - fig.shoulder[1], h[0] - fig.shoulder[0]);
-      at(h[0], h[1] + s * 0.2, s, { rot: ang + Math.PI / 2 });
-      ctx.save(); ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(2, F * 0.016); ctx.globalAlpha = 0.8;
-      ctx.beginPath(); ctx.moveTo(fig.hip[0] + f * F * 0.45, groundY); ctx.lineTo(fig.hip[0] + f * F * 0.45, groundY - F * 0.08); ctx.stroke(); ctx.restore();
-      return;
+      // tabla y clavo en el suelo, justo donde baja el golpe
+      const nx = fig.hip[0] + f * fig.H * 0.42;
+      ctx.save(); ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(2, F * 0.014); ctx.globalAlpha = 0.8 * (1 - 0.5 * (st.fade || 0));
+      ctx.strokeRect(nx - F * 0.14, groundY - F * 0.04, F * 0.28, F * 0.04);
+      ctx.beginPath(); ctx.moveTo(nx, groundY - F * 0.04); ctx.lineTo(nx, groundY - F * 0.09); ctx.stroke(); ctx.restore();
+      const el = fig.fe || fig.shoulder;
+      const ang = Math.atan2(h[1] - el[1], h[0] - el[0]);
+      return at(h[0], h[1], s, { rot: ang + Math.PI / 2, pivot: 'bottom' });
     }
     case 'ground': return at(h[0] + f * F * 0.04, groundY, s);
-    case 'bike': return bike(ctx, fig, F, f, groundY, st);
+    case 'bike': return bike(ctx, fig, F, f, groundY, st, k);
   }
 }

@@ -4,7 +4,7 @@
 import { SCENES, RED, GOLD, AMBER, FLAME, COLD, clamp, smooth, lerp, glow, heart, star, kit } from './scenes.js';
 import { POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
-const { obj, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral } = kit;
+const { obj, walkMove, walkDist, stepPhase, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral } = kit;
 const ORANGE = '#F4A259';
 const THROWABLE = new Set(['pelota', 'manzana', 'osito', 'flor', 'globo', 'pan', 'llave', 'moneda', 'carta', 'libro', 'sombrero', 'zapatos', 'regalo']);
 const isPhone = (a) => a === 'celular' || a === 'phone' || a === 'ignorar';
@@ -211,17 +211,20 @@ SCENES.parque = {
     list.forEach((pe, i) => {
       let x = xs[i], pose, facing = i ? -1 : 1, y = 0;
       if (pe.act === 'jugar') {
-        const ph = frac(t / 1.3 + i * 0.5);
-        pose = lerpPose(breathe(POSES.stand, t), POSES.reach, bump(ph, 0.35, 0.65, 0.12));
+        // la pelota sale de la mano de 0 en ph = 0 y llega a 1 en ph = 0.5: cada uno estira los brazos al lanzar/atrapar
+        const ph = frac(t / 1.3 + (i ? 0.5 : 0) + 0.5);
+        pose = lerpPose(breathe(POSES.stand, t), POSES.reach, bump(ph, 0.36, 0.64, 0.1));
       } else if (pe.act === 'caminar') {
-        x = xs[i] + Math.sin(S.p * Math.PI * 2) * F * 0.25;
-        pose = walkPose(S.p * 40 + i);
+        const px = (q) => xs[i] + Math.sin(q * Math.PI * 2) * F * 0.25;
+        x = px(S.p);
+        const wm = walkMove(x, px(S.p - 0.003), F);
+        pose = wm.pose; facing = wm.facing;
       } else if (isPhone(pe.act)) {
         x = bx + (i ? 0.12 : -0.12) * F; facing = 1;
         pose = breathe(POSES.sitPhone, t + i);
       } else pose = breathe(POSES.stand, t);
       if (S.r > 0) {
-        if (S.good) { x = lerp(x, (i ? 1 : -1) * F * 0.12 - w * 0.08, smooth(S.r / 0.4)); facing = i ? -1 : 1; pose = S.r < 0.4 ? walkPose(S.r * 20) : lerpPose(POSES.stand, POSES.hug, smooth((S.r - 0.4) / 0.2)); }
+        if (S.good) { const x0 = x; x = lerp(x, (i ? 1 : -1) * F * 0.12 - w * 0.08, smooth(S.r / 0.4)); facing = x0 > x ? -1 : 1; pose = S.r < 0.4 ? walkDist(x - x0, F) : lerpPose(POSES.stand, POSES.hug, smooth((S.r - 0.4) / 0.2)); }
         else pose = isPhone(pe.act) ? lerpPose(pose, POSES.sitSlump, resultBlend(S)) : lerpPose(pose, { ...POSES.floor, hd: 0.8 }, resultBlend(S));
       }
       const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
@@ -513,19 +516,23 @@ SCENES.huerto = {
     if (S.good) S.focus = [x0 + gap * 2, -F * 1.05];
     // persona: siembra mound a mound, riega o descansa
     const cy = cycle(S.p, S.C);
-    let x, pose, can = false;
+    let x, pose, can = false, facing = 1;
     if (pe.act === 'sembrar') {
       const idx = Math.min(N - 1, Math.floor(S.p * N * 1.25));
       x = x0 + idx * gap - F * 0.28;
       pose = cy.done ? breathe(POSES.stand, t) : workPose(cy.ph, t);
     } else if (pe.act === 'regar') {
-      x = x0 + ((S.p * 2) % 1) * gap * (N - 1) - F * 0.45;
+      const px = (q) => x0 - F * 0.45 + (1 - Math.abs(2 * frac(q) - 1)) * gap * (N - 1);
+      x = px(S.p * 1.5);
+      const wm = walkMove(x, px(S.p * 1.5 - 0.002), F);
+      facing = wm.facing;
       const pour = cy.done ? 0 : bump(cy.ph, 0.3, 0.75, 0.12);
-      pose = lerpPose(POSES.water, { ...POSES.water, fa1: 1.25, fa2: 1.9 }, pour); can = true;
+      const up = lerpPose(POSES.water, { ...POSES.water, fa1: 1.25, fa2: 1.9 }, pour);
+      pose = { ...up, fl1: wm.pose.fl1, fl2: wm.pose.fl2, bl1: wm.pose.bl1, bl2: wm.pose.bl2 }; can = true;
     } else { x = -w * 0.33; pose = breathe(isPhone(pe.act) ? POSES.floorPhone : { ...POSES.floor, hd: 0.8 }, t); }
     pose = fin(S, pose, POSES.look, pe.act === 'descansar' || isPhone(pe.act) ? { ...POSES.floor, hd: 0.9 } : POSES.slump);
-    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
-    if (can && neutral < 0.5 && S.r < 0.3) { setLine(ctx, F, 0.95, 0.8); rect(ctx, fig.fh[0] - F * 0.02, fig.fh[1] - F * 0.01, F * 0.09, F * 0.08); line(ctx, fig.fh[0] + F * 0.07, fig.fh[1] + F * 0.01, fig.fh[0] + F * 0.16, fig.fh[1] - F * 0.04); }
+    const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
+    if (can && neutral < 0.5 && S.r < 0.3) { const h = fig.fh, f = facing; setLine(ctx, F, 0.95, 0.8); rect(ctx, h[0] - (f > 0 ? F * 0.02 : F * 0.07), h[1] - F * 0.01, F * 0.09, F * 0.08); line(ctx, h[0] + f * F * 0.07, h[1] + F * 0.01, h[0] + f * F * 0.16, h[1] - F * 0.04); }
     if (pe.act !== 'sembrar' && pe.act !== 'regar' && isPhone(pe.act) && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     const p2 = S.people[1];
     if (p2) this._c(ctx, S, p2, x0 - F * 0.75);
@@ -572,7 +579,7 @@ SCENES.montana = {
         x = lerp(bx - F * 0.25, px - F * 0.04, prog);
         y = x < bx ? 0 : slopeY(x);
         const fell = act === 'caer' && S.p > 0.45;
-        pose = fell ? lerpPose(walkPose(0), { ...POSES.floor, hd: 0.6 }, smooth((S.p - 0.45) / 0.1)) : lerpPose(walkPose(prog * 50), { ...POSES.reachUp, tr: 0.35 }, 0.35 + 0.25 * Math.sin(prog * 50));
+        pose = fell ? lerpPose(walkPose(0), { ...POSES.floor, hd: 0.6 }, smooth((S.p - 0.45) / 0.1)) : lerpPose(walkPose(stepPhase(prog * (px - bx + F * 0.21) * 1.4, F)), { ...POSES.reachUp, tr: 0.35 }, 0.35 + 0.25 * Math.sin(stepPhase(prog * (px - bx + F * 0.21) * 1.4, F)));
         if (S.p >= 1 && !fell) pose = breathe(POSES.stand, t);
         if (S.r > 0) pose = S.good && !fell ? lerpPose(POSES.stand, POSES.armsUp, resultBlend(S, 0.1, 0.5)) : lerpPose(pose, { ...POSES.floor, hd: 0.9 }, resultBlend(S));
         // cuerda desde la base
@@ -704,13 +711,15 @@ SCENES.tienda = {
       const ph = frac(S.p * S.C);
       let x2, pose2, facing2 = -1;
       if (sells && !getNeutral()) {
-        const k = ph < 0.4 ? ph / 0.4 : ph < 0.7 ? 1 : 1 - (ph - 0.7) / 0.3;
-        x2 = lerp(w * 0.46, sx + sw / 2 + F * 0.1, smooth(k));
+        const kk = (q) => (q < 0.4 ? q / 0.4 : q < 0.7 ? 1 : 1 - (q - 0.7) / 0.3);
+        const px = (q) => lerp(w * 0.46, sx + sw / 2 + F * 0.1, smooth(kk(q)));
+        x2 = px(ph);
+        const wm = walkMove(x2, px(Math.max(0, ph - 0.004)), F);
         facing2 = ph < 0.7 ? -1 : 1;
-        pose2 = ph > 0.4 && ph < 0.7 ? lerpPose(POSES.stand, POSES.reach, bump(ph, 0.45, 0.65, 0.05)) : walkPose(S.p * 60);
+        pose2 = ph > 0.4 && ph < 0.7 ? lerpPose(POSES.stand, POSES.reach, bump(ph, 0.45, 0.65, 0.05)) : wm.pose;
       } else {
         x2 = lerp(w * 0.46, -w * 0.46, frac(S.p * 2 + 0.2));
-        pose2 = walkPose(S.p * 60);
+        pose2 = walkDist(w * 0.46 - x2, F);
       }
       if (S.r > 0) { x2 = sx + sw / 2 + F * 0.2; facing2 = -1; pose2 = S.good ? lerpPose(POSES.stand, POSES.look, resultBlend(S)) : POSES.stand; if (!S.good) x2 = w * 0.47; }
       const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, pe: p2, alpha: personDim(S) });
@@ -766,7 +775,7 @@ SCENES.carta = {
     const p2 = S.people[1] || { kind: 'hombre', act: 'esperar' };
     let x2 = rx - F * 0.42, pose2, facing2 = -1;
     if (writes) { pose2 = received > 0 ? { ...breathe(POSES.heart, t), fa2: 2.0 } : breathe(POSES.stand, t); }
-    else { const look = bump(frac(S.p * 3), 0.2, 0.6, 0.1); x2 = lerp(rx - F * 0.3, mx + F * 0.3, look); pose2 = lerpPose(breathe(POSES.stand, t), POSES.reach, look * 0.6); }
+    else { const px = (q) => lerp(rx - F * 0.3, mx + F * 0.3, bump(frac(q * 3), 0.2, 0.6, 0.1)); x2 = px(S.p); const wm = walkMove(x2, px(S.p - 0.002), F); facing2 = wm.moving > 0.2 ? wm.facing : -1; const atBox = bump(frac(S.p * 3), 0.3, 0.5, 0.05); pose2 = lerpPose(wm.pose, POSES.reach, atBox * 0.6); }
     if (S.r > 0) { if (S.good) pose2 = lerpPose(pose2, POSES.heart, resultBlend(S)); else { facing2 = 1; x2 = lerp(x2, rx + F * 0.05, resultBlend(S)); pose2 = lerpPose(pose2, POSES.slump, resultBlend(S)); } }
     const f2 = S.people[1] ? drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, pe: p2, alpha: personDim(S) }) : null;
     if (f2 && writes && received > 0 && getNeutral() < 0.5) {
@@ -817,9 +826,11 @@ SCENES.reloj = {
     let x, pose, facing = 1;
     if (uses && !cy.done) {
       const k = cy.ph;
-      x = lerp(lx + F * 0.25, rx2 - F * 0.3, k < 0.5 ? smooth(k * 2) : 1 - smooth((k - 0.5) * 2));
+      const px = (q) => lerp(lx + F * 0.25, rx2 - F * 0.3, q < 0.5 ? smooth(q * 2) : 1 - smooth((q - 0.5) * 2));
+      x = px(k);
+      const wm = walkMove(x, px(Math.max(0, k - 0.004)), F);
       facing = k < 0.5 ? 1 : -1;
-      pose = k < 0.45 ? lerpPose(walkPose(k * 20), POSES.carry, 0.6) : walkPose(k * 20);
+      pose = k < 0.45 ? lerpPose(wm.pose, POSES.carry, 0.6) : wm.pose;
     } else if (uses) { x = rx2 - F * 0.35; pose = breathe(POSES.stand, t); }
     else { x = -w * 0.12; pose = breathe(POSES.floorPhone, t); }
     pose = fin(S, pose, POSES.armsUp, { ...POSES.floor, hd: -0.3 });
@@ -929,13 +940,15 @@ SCENES.regalo = {
     let x, pose, facing = 1, holding = gives;
     if (gives) {
       x = lerp(-w * 0.2, recX - F * 0.45, smooth(S.p));
-      pose = S.p < 1 ? lerpPose(walkPose(S.p * 30), POSES.carry, 0.7) : POSES.carry;
+      pose = S.p < 1 ? lerpPose(walkDist(x + w * 0.2, F), POSES.carry, 0.7) : POSES.carry;
       if (S.r > 0) { pose = lerpPose(POSES.carry, POSES.reach, resultBlend(S, 0, 0.3)); holding = S.r < 0.3; }
     } else {
       const k = frac(S.p * S.C);
-      x = lerp(-w * 0.2, shx + F * 0.35, bump(k, 0.15, 0.7, 0.15));
-      facing = k > 0.15 && k < 0.45 ? -1 : 1;
-      pose = lerpPose(walkPose(S.p * 40), POSES.carry, 0.6);
+      const px = (q) => lerp(-w * 0.2, shx + F * 0.35, bump(q, 0.15, 0.7, 0.15));
+      x = px(k);
+      const wm = walkMove(x, px(Math.max(0, k - 0.004)), F);
+      facing = wm.moving > 0.2 ? wm.facing : k > 0.3 && k < 0.6 ? -1 : 1;
+      pose = lerpPose(wm.pose, POSES.carry, 0.6);
       holding = k < 0.5 && neutral < 0.5;
       if (S.r > 0) { pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S)); holding = false; facing = 1; }
     }
