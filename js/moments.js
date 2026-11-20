@@ -35,9 +35,9 @@ export const MOMENTS = {
   rie:      { kind: 'fig', sfx: 'ping', words: ['se rie', 'se rien', 'rie', 'rien', 'risa', 'sonrie', 'sonrien', 'carcajada', 'feliz', 'felices', 'laugh', 'laughs', 'smile'] },
   celebra:  { kind: 'fig', legs: true, sfx: 'chime', words: ['celebra', 'celebran', 'salta', 'saltan', 'festeja', 'festejan', 'gana', 'ganan', 'baila', 'bailan', 'lo logra', 'lo logran', 'celebrates', 'jumps', 'dances'] },
   saluda:   { kind: 'fig', sfx: 'blip', words: ['saluda', 'saludan', 'se despide', 'despide', 'hola', 'adios', 'waves'] },
-  movil:    { kind: 'fig', sfx: 'blip', words: ['no lo ve', 'no la ve', 'no los ve', 'no las ve', 'ignora', 'no mira', 'no escucha', 'no contesta', 'mira el movil', 'mira el celular', 'celular', 'movil', 'telefono', 'pantalla', 'phone', "doesn't see"] },
+  movil:    { kind: 'fig', sfx: 'blip', words: ['no lo ve', 'no la ve', 'no los ve', 'no las ve', 'no mira', 'no escucha', 'mira el movil', 'mira el celular', 'celular', 'movil', 'telefono', 'pantalla', 'phone', "doesn't see"] },
   mira:     { kind: 'fig', sfx: null, words: ['mira', 'miran', 'observa', 'busca', 'voltea', 'levanta la vista', 'contempla', 'looks', 'watches'] },
-  llora:    { kind: 'fig', sfx: 'low', words: ['llora', 'lloran', 'triste', 'lagrima', 'lagrimas', 'cries', 'sad'] },
+  llora:    { kind: 'fig', sfx: 'low', words: ['llora', 'lloran', 'lagrima', 'lagrimas', 'cries', 'sad'] },
   cansa:    { kind: 'fig', sfx: null, words: ['se cansa', 'se cansan', 'cansado', 'cansada', 'suspira', 'agotado', 'agotada', 'suda', 'no puede', 'tired', 'sighs'] },
   sorpresa: { kind: 'fig', sfx: 'ping', words: ['se sorprende', 'sorprende', 'asombra', 'descubre', 'se asusta', 'sorpresa', 'de repente', 'surprised'] },
   piensa:   { kind: 'fig', sfx: null, words: ['piensa', 'duda', 'recuerda', 'imagina', 'se pregunta', 'extrana', 'thinks', 'remembers'] },
@@ -46,6 +46,18 @@ export const MOMENTS = {
   acerca:   { kind: 'fig', move: true, legs: true, sfx: 'step', words: ['se acerca', 'se acercan', 'vuelve', 'regresa', 'corre hacia', 'va hacia', 'comes back', 'comes closer'] },
   cubre:    { kind: 'fig', sfx: null, words: ['se cubre', 'se cubren', 'cubre', 'cubren', 'se tapa', 'se protege', 'paraguas', 'covers'] },
   duerme:   { kind: 'fig', sfx: null, words: ['duerme', 'duermen', 'bosteza', 'se duerme', 'dormido', 'sleeps', 'yawns'] },
+  // REGLA FIJA DE EMOCIONES: gestos que cuentan la historia (cada uno con un significado claro)
+  ansiedad:  { kind: 'fig', emo: true, legs: true, sfx: 'low', words: ['ansiedad', 'ansioso', 'ansiosa', 'nervioso', 'nerviosa', 'se agobia', 'agobiada', 'agobiado', 'se preocupa', 'preocupada', 'preocupado', 'anxious', 'worried'] },
+  ilusion:   { kind: 'fig', emo: true, face: 'target', sfx: 'ping', words: ['espera con ilusion', 'esperar con ilusion', 'esperar-con-ilusion', 'con ilusion', 'ilusionada', 'ilusionado', 'ilusion', 'de puntillas', 'emocionada', 'emocionado', 'hopeful', 'excited'] },
+  tristeza:  { kind: 'fig', emo: true, legs: true, sfx: 'low', words: ['tristeza', 'se pone triste', 'triste', 'baja la cabeza', 'se sienta despacio', 'hombros caidos', 'sadness'] },
+  distraido: { kind: 'fig', emo: true, face: 'away', sfx: 'blip', words: ['distraido', 'distraida', 'esta en otra cosa', 'en otra cosa', 'se rie con la pantalla', 'de espaldas', 'mira a otro lado', 'no hace caso', 'ignora', 'no contesta', 'distracted', 'ignores'] },
+  'dar-corazon':     { kind: 'fig', emo: true, face: 'target', approach: 0.62, sfx: 'shimmer', words: ['dar corazon', 'da un corazon', 'le da un corazon', 'le da su corazon', 'entrega un corazon', 'le entrega un corazon', 'pasa un corazon', 'le pasa un corazon', 'gives a heart'] },
+  'recibir-corazon': { kind: 'fig', emo: true, face: 'target', sfx: 'chime', words: ['recibir corazon', 'recibe el corazon', 'recibe un corazon', 'coge el corazon', 'toma el corazon', 'guarda el corazon', 'lo guarda en el pecho', 'receives the heart'] },
+  'estoy-contigo':   { kind: 'fig', emo: true, face: 'target', approach: 0.42, sfx: 'ping', words: ['estoy contigo', 'mano en el hombro', 'le pone la mano en el hombro', 'la acompana', 'lo acompana', 'le acompana', "i'm with you"] },
+  pedir:     { kind: 'fig', emo: true, face: 'target', sfx: null, words: ['pedir', 'pide', 'le pide', 'pide atencion', 'pide con las manos', 'le tiende las manos', 'suplica', 'asks', 'begs'] },
+  alegria:   { kind: 'fig', emo: true, legs: true, sfx: 'chime', words: ['alegria', 'con alegria', 'aplaude', 'aplauden', 'salta de alegria', 'se alegra', 'se alegran', 'joy', 'claps'] },
+  'abrazo-largo':    { kind: 'fig', emo: true, face: 'target', approach: 'mid', sfx: 'shimmer', words: ['abrazo largo', 'un abrazo largo', 'se abrazan largo', 'abrazo-largo', 'se mecen', 'long hug'] },
+  contraste: { kind: 'pair', words: [] }, // lado malo: uno pide o espera con ilusión y el otro está distraído
   reaccion: { kind: 'fig', sfx: 'ping', words: [] }, // frase que no se reconoce: el personaje reacciona (gira la cabeza y rayitas de atención)
   insiste:  { kind: 'fig', sfx: 'tock', words: ['sigue', 'siguen', 'insiste', 'lo intenta', 'otra vez', 'se esfuerza', 'trabaja', 'construye', 'keeps going', 'tries again'] },
 };
@@ -93,7 +105,7 @@ export function classifyMoment(text, people) {
   // «él llega» con un personaje que ya está = se acerca; «llega alguien / su hijo» = alguien nuevo
   if (type === 'llega' && (kinds.includes(subj) || (plural && !subj)) && !/alguien|amigo|amiga|vecino|vecina|someone|friend/.test(n) && kinds.length) type = 'acerca';
   const M = MOMENTS[type];
-  if (M && M.kind === 'fig' && who < 0) who = plural || ['abraza', 'rie', 'celebra', 'cubre'].includes(type) && kinds.length > 1 ? 'all' : 0;
+  if (M && M.kind === 'fig' && who < 0) who = plural || ['abraza', 'rie', 'celebra', 'cubre', 'abrazo-largo', 'alegria'].includes(type) && kinds.length > 1 ? 'all' : 0;
   if (M && M.kind === 'fig' && plural && who !== 'all' && !/\b(la|lo|le|a ella|a el)\b/.test(n)) who = 'all';
   const target = typeof who === 'number' && kinds.length > 1 ? (who === 0 ? 1 : 0) : -1;
   // si llega alguien nuevo: de qué tipo (el que nombre la frase y no esté ya en escena)
@@ -116,14 +128,20 @@ function rng(seed) {
   let s = seed >>> 0;
   return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
+// «Nada de moverse por moverse»: la app solo elige sucesos con significado.
+// Lado bueno: cuando no hay otro suceso se pasan corazoncitos. Lado malo: contraste (uno pide o espera, el otro distraído).
 const POOL = {
-  good: ['contador', 'enciende', 'corazon', 'rie', 'pajaro', 'mira', 'saluda', 'insiste', 'viento', 'fugaz', 'llega', 'sol', 'celebra'],
-  bad: ['contador', 'apaga', 'cansa', 'movil', 'viento', 'cae', 'piensa', 'mira', 'llueve', 'noche', 'llora', 'rayo'],
-  goodLate: ['corazon', 'celebra', 'enciende', 'rie', 'abraza', 'fugaz'],
-  badLate: ['llora', 'apaga', 'cansa', 'noche', 'viento', 'piensa'],
-  light: { good: ['contador', 'corazon', 'enciende', 'pajaro', 'rie', 'mira'], bad: ['contador', 'cansa', 'apaga', 'viento', 'piensa', 'mira'] },
+  good: ['dar-corazon', 'alegria', 'rie', 'corazon', 'enciende', 'contador', 'viento', 'fugaz', 'sol', 'llega', 'celebra'],
+  bad: ['contraste', 'tristeza', 'ansiedad', 'cansa', 'apaga', 'contador', 'viento', 'llueve', 'noche', 'cae', 'rayo'],
+  goodLate: ['dar-corazon', 'abrazo-largo', 'alegria', 'corazon', 'celebra', 'enciende'],
+  badLate: ['contraste', 'tristeza', 'llora', 'apaga', 'noche', 'cansa'],
+  light: { good: ['dar-corazon', 'corazon', 'enciende', 'contador', 'rie'], bad: ['contraste', 'cansa', 'tristeza', 'apaga', 'contador'] },
+  first: { good: ['dar-corazon', 'enciende', 'contador'], bad: ['contraste', 'contador', 'apaga'] },
 };
-const ONCE = new Set(['llega', 'sol', 'noche', 'llueve', 'nieva', 'fugaz', 'rayo', 'celebra', 'abraza']);
+const ONCE = new Set(['llega', 'sol', 'noche', 'llueve', 'nieva', 'fugaz', 'rayo', 'celebra', 'abraza', 'abrazo-largo']);
+// quien está «en otra cosa» en el lado malo
+const CONTRAST = new Set(['distraido', 'pedir', 'ilusion', 'contraste']);
+const DISTRACT = new Set(['celular', 'phone', 'ignorar', 'olvidar', 'perder', 'guardar', 'dormir']);
 
 function autoPick(R, pool, ctx) {
   const ok = pool.filter((t) => {
@@ -132,8 +150,9 @@ function autoPick(R, pool, ctx) {
     if (t === ctx.prev || t === ctx.next) return false;
     if (ONCE.has(t) && ctx.used.has(t)) return false;
     if (M.out && ctx.indoor) return false;
-    if (M.kind === 'fig' && ctx.noFig) return false;
-    if (t === 'abraza' && ctx.n < 2) return false;
+    if ((M.kind === 'fig' || M.kind === 'pair') && ctx.noFig) return false;
+    if ((t === 'abraza' || t === 'abrazo-largo' || t === 'dar-corazon') && ctx.n < 2) return false;
+    if (t === 'contraste' && (!ctx.pair || CONTRAST.has(ctx.prev) || CONTRAST.has(ctx.next))) return false;
     if (t === 'llega' && ctx.n >= 2) return false;
     if (t === 'sol' && !ctx.used.has('llueve') && !ctx.used.has('noche') && R() < 0.5) return false;
     return true;
@@ -149,18 +168,29 @@ function autoPick(R, pool, ctx) {
   return t;
 }
 
-function autoMoment(type, R, people) {
+function autoMoment(type, R, people, ctx) {
   const n = people.length;
   const M = MOMENTS[type];
+  // en el lado malo, la tristeza, la ansiedad o el cansancio son de quien pide o espera (no del distraído)
+  if (ctx.pair && ['tristeza', 'ansiedad', 'cansa', 'llora', 'pedir', 'ilusion'].includes(type)) return { type, who: ctx.pair.ask, target: ctx.pair.dis, auto: true, x: R() };
+  if (type === 'contraste') return { type, ask: ctx.pair.ask, dis: ctx.pair.dis, askType: R() < 0.5 ? 'pedir' : 'ilusion', auto: true };
   let who = 0;
-  if (M.kind === 'fig') who = n > 1 && ['rie', 'celebra', 'abraza'].includes(type) ? 'all' : Math.floor(R() * Math.max(1, n));
+  if (type === 'dar-corazon') {
+    ctx.giver = ctx.giver == null ? (R() < 0.5 ? 0 : 1) : (ctx.giver + 1) % n;
+    // si el siguiente suceso del guion es otro corazón, este lo da el otro (se lo devuelven)
+    if (ctx.next === 'dar-corazon' && typeof ctx.nextWho === 'number' && ctx.giver === ctx.nextWho) ctx.giver = (ctx.giver + 1) % n;
+    who = ctx.giver;
+  }
+  else if (M.kind === 'fig') who = n > 1 && ['rie', 'celebra', 'abraza', 'abrazo-largo', 'alegria'].includes(type) ? 'all' : Math.floor(R() * Math.max(1, n));
   return { type, who, target: typeof who === 'number' && n > 1 ? (who ? 0 : 1) : -1, newcomer: type === 'llega' ? (people.some((p) => /nin/.test(p.kind)) ? 'hombre' : 'nino') : null, auto: true, x: R() };
 }
 
 // plan de un lado: lista ordenada de { type, who, t0, t1, ... }
 function sidePlan({ user, T0, T1, seed, role, people, scene, arcWin, late0 }) {
   const R = rng(seed);
-  const ctx = { prev: null, used: new Set(), count: {}, indoor: INDOOR.has(scene), n: people.length, noFig: false };
+  const di = people.findIndex((p) => DISTRACT.has(p.act));
+  const ai = people.findIndex((p, i) => i !== di && !DISTRACT.has(p.act));
+  const ctx = { prev: null, used: new Set(), count: {}, indoor: INDOOR.has(scene), n: people.length, noFig: false, pair: di >= 0 && ai >= 0 ? { ask: ai, dis: di } : null };
   const span = T1 - T0;
   const out = [];
   const roleKey = role === 'bad' ? 'bad' : 'good';
@@ -169,6 +199,13 @@ function sidePlan({ user, T0, T1, seed, role, people, scene, arcWin, late0 }) {
     // durante el arco (caída común y rendirse) los personajes ya hacen lo suyo: el suceso se queda en un símbolo
     if (fig && arcWin && t1 > arcWin[0] && t0 < arcWin[1]) m = { ...m, iconOnly: true };
     if (m.type === 'llega') m = { ...m, fromLeft: R() < 0.5 };
+    if (m.type === 'contraste') {
+      // los dos a la vez: uno pide (o espera con ilusión) mirando al otro; el otro, distraído y de espaldas
+      const inArc = !!(arcWin && t1 > arcWin[0] && t0 < arcWin[1]);
+      out.push({ type: m.askType, who: m.ask, target: m.dis, auto: true, iconOnly: inArc, t0, t1 });
+      out.push({ type: 'distraido', who: m.dis, target: m.ask, auto: true, iconOnly: inArc, t0, t1 });
+      return;
+    }
     out.push({ ...m, t0, t1 });
   };
   let list = user.slice();
@@ -180,12 +217,15 @@ function sidePlan({ user, T0, T1, seed, role, people, scene, arcWin, late0 }) {
     const part = slot / parts;
     list.forEach((m, j) => {
       const s0 = T0 + j * slot;
-      ctx.prev = m.type; ctx.used.add(m.type); ctx.next = list[j + 1]?.type;
+      ctx.prev = m.type; ctx.used.add(m.type); ctx.next = list[j + 1]?.type; ctx.nextWho = list[j + 1]?.who;
+      if (m.type === 'dar-corazon' && typeof m.who === 'number') ctx.giver = m.who; // el siguiente corazón lo da el otro
       put(m, s0, s0 + part);
       for (let q = 1; q < parts; q++) {
         const ts = s0 + q * part;
         ctx.noFig = !!(arcWin && ts + part > arcWin[0] && ts < arcWin[1]);
-        put(autoMoment(autoPick(R, POOL.light[roleKey], ctx), R, people), ts, ts + part);
+        // lado bueno: cuando no hay otro suceso se pasan corazoncitos; lado malo: el contraste
+        const filler = !ctx.noFig && roleKey === 'good' && ctx.n >= 2 ? 'dar-corazon' : !ctx.noFig && roleKey === 'bad' && ctx.pair && !CONTRAST.has(ctx.prev) && !CONTRAST.has(ctx.next) ? 'contraste' : autoPick(R, POOL.light[roleKey], ctx);
+        put(autoMoment(filler, R, people, ctx), ts, ts + part);
       }
     });
   } else {
@@ -196,7 +236,9 @@ function sidePlan({ user, T0, T1, seed, role, people, scene, arcWin, late0 }) {
       const late = ts >= late0;
       ctx.noFig = !!(arcWin && ts + slot > arcWin[0] && ts < arcWin[1]);
       const pool = late ? POOL[roleKey + 'Late'] : POOL[roleKey];
-      put(autoMoment(autoPick(R, j === 0 ? ['contador', 'mira', 'pajaro', 'enciende'] : pool, ctx), R, people), ts, ts + slot);
+      // uno de cada dos: corazoncitos (bueno) o contraste (malo), si hay dos personas
+      const every = j % 2 === 1 && !ctx.noFig && (roleKey === 'good' ? (ctx.n >= 2 ? 'dar-corazon' : null) : ctx.pair ? 'contraste' : null);
+      put(autoMoment(every || autoPick(R, j === 0 ? POOL.first[roleKey] : pool, ctx), R, people, ctx), ts, ts + slot);
     }
   }
   return out;
@@ -242,18 +284,24 @@ export function momentsNow(plan, t) {
   const act = [];
   let weather = null, weatherPrev = null;
   const moves = [];
+  const lastFig = {};
   for (const e of plan || []) {
     if (e.t0 > t) break;
     const M = MOMENTS[e.type] || {};
+    if (M.kind === 'fig' && !M.move) { if (e.who === 'all') { for (const k in lastFig) lastFig[k] = null; lastFig.all = e; } else { lastFig[e.who] = e; } }
     if (M.weather) { weatherPrev = weather; weather = e; }
-    if (M.move) moves.push(e);
+    if (M.move || M.approach) moves.push(e);
     if (t <= e.t1) {
       const k = clamp((t - e.t0) / (e.t1 - e.t0));
       const env = smooth((t - e.t0) / 0.3) * (1 - smooth((t - e.t1 + 0.32) / 0.32));
       act.push({ ...e, k, env, lt: t - e.t0, dur: e.t1 - e.t0 });
     }
   }
-  return { act, weather, weatherPrev, moves, t };
+  // posiciones de cada personaje en el fotograma anterior (para mirar, acercarse o dar el corazón al otro)
+  const pos = plan ? plan.pos || (plan.pos = {}) : {};
+  // la tristeza se queda: sigue sentado y cabizbajo hasta su siguiente gesto
+  const hold = Object.values(lastFig).filter((e) => e && e.type === 'tristeza' && t > e.t1 && !e.iconOnly);
+  return { act, weather, weatherPrev, moves, t, pos, hold };
 }
 
 // ---------------------------------------------------------------------------
@@ -457,11 +505,12 @@ function sparkles(ctx, x, y, rad, lt, a, color = WHITE) {
 const UPPER = ['tr', 'hd', 'fa1', 'fa2', 'ba1', 'ba2'];
 // acciones en las que la escena une una herramienta a la mano (cuchara, regadera, tabla, volante…):
 // esos personajes reaccionan con la cabeza, el torso y el símbolo, sin soltar la herramienta
-export const BUSY_ACTS = new Set(['construir', 'trabajar', 'build', 'work', 'regar', 'cuidar', 'cocinar', 'sembrar', 'escribir', 'vender', 'ahorrar', 'gastar', 'entrenar', 'conducir', 'escalar', 'aprovechar', 'dar', 'leer', 'subir', 'orar', 'orar-domingo', 'llamar']);
+export const BUSY_ACTS = new Set(['construir', 'trabajar', 'build', 'work', 'regar', 'cuidar', 'cocinar', 'sembrar', 'escribir', 'vender', 'ahorrar', 'gastar', 'entrenar', 'conducir', 'escalar', 'aprovechar', 'dar', 'leer', 'subir', 'orar', 'orar-domingo']);
 const upperOf = (base, p) => { const o = { ...base }; for (const k of UPPER) if (p[k] !== undefined) o[k] = p[k]; return o; };
 
 function poseFor(type, base, lt, e, standing) {
   const sw = (f, a = 1) => Math.sin(lt * f) * a;
+  const k = e.k ?? 0;
   switch (type) {
     case 'corazon': return { ...base, ...pick(POSES.heart) };
     case 'tropieza': {
@@ -486,10 +535,43 @@ function poseFor(type, base, lt, e, standing) {
     case 'duerme': return { ...base, hd: 0.75, tr: (base.tr || 0) + 0.06 };
     case 'insiste': return { ...base, tr: 0.32 + sw(5, 0.08), hd: 0.2, fa1: 1.2 + sw(5, 0.2), fa2: 1.4, ba1: 1.05 + sw(5, 0.2), ba2: 1.3 };
     case 'reaccion': return { ...base, hd: (base.hd || 0) - 0.15 + sw(6, 0.05) };
+    // ---- emociones ----
+    case 'ansiedad': {
+      // mano en la cabeza → vueltecita (la hace figureMoments) → mira el móvil → suspira
+      const head = { tr: 0.12, hd: 0.35, fa1: 2.15, fa2: 3.75, ba1: 0.1, ba2: 0.15 };
+      const phone = pick(POSES.phone);
+      const sigh = { tr: 0.24 + 0.05 * Math.max(0, Math.sin(lt * 2.6)), hd: 0.72, fa1: 0.1, fa2: 0.05, ba1: 0.06, ba2: 0.03 };
+      let q = lerpPose(base, { ...base, ...head }, smooth(k / 0.1));
+      q = lerpPose(q, { ...base, ...phone }, smooth((k - 0.56) / 0.08));
+      return lerpPose(q, { ...base, ...sigh }, smooth((k - 0.8) / 0.08));
+    }
+    case 'ilusion': return { ...base, tr: -0.03, hd: -0.2, fa1: 0.35, fa2: 1.9, ba1: 0.3, ba2: 1.85 };
+    case 'tristeza': {
+      const low = { ...base, tr: 0.24, hd: 0.85, fa1: 0.05, fa2: 0.03, ba1: 0.04, ba2: 0.02 };
+      if (!standing) return { ...low, tr: (base.tr || 0) + 0.25 };
+      // baja la cabeza, deja caer los hombros y se sienta despacio en el suelo
+      return lerpPose(low, { ...POSES.floor, tr: 0.45, hd: 0.95, fa1: 0.4, fa2: 0.3, ba1: 0.35, ba2: 0.25 }, smooth((k - 0.3) / 0.45));
+    }
+    case 'distraido': { const b = Math.abs(Math.sin(lt * 13)); return { ...base, ...pick(POSES.phone), tr: 0.04 - 0.04 * b, hd: 0.5 - 0.1 * b }; }
+    case 'dar-corazon': {
+      const offer = { ...base, tr: 0.1, hd: 0.1, fa1: 1.2, fa2: 1.5, ba1: 1.1, ba2: 1.45 };
+      return lerpPose(lerpPose(base, offer, smooth((k - 0.12) / 0.15)), base, smooth((k - 0.82) / 0.12));
+    }
+    case 'recibir-corazon': {
+      const take = { ...base, ...pick(POSES.reach), tr: 0.08 };
+      const keep = { ...base, ...pick(POSES.heart), hd: 0.18 };
+      return lerpPose(lerpPose(base, take, smooth((k - 0.42) / 0.15)), keep, smooth((k - 0.7) / 0.1));
+    }
+    case 'estoy-contigo': return { ...base, tr: 0.05, hd: 0.15, fa1: e.lowShoulder ? 1.2 : 1.7, fa2: e.lowShoulder ? 1.35 : 1.8, ba1: 0.1, ba2: 0.15 };
+    case 'pedir': return { ...base, tr: 0.14, hd: -0.04, fa1: 1.05 + sw(5, 0.12), fa2: 1.5, ba1: 0.95 + sw(5 + 0.5, 0.12), ba2: 1.45 };
+    case 'alegria': { const q = 0.5 + 0.5 * Math.sin(lt * 13); return { ...base, tr: -0.02, hd: -0.2, fa1: 1.25, fa2: 1.75 + 0.35 * q, ba1: 1.2, ba2: 1.75 - 0.35 * q }; }
+    case 'abrazo-largo': return { ...base, ...pick(POSES.hug), tr: 0.06 + 0.05 * Math.sin(lt * 2.4) };
     default: return null;
   }
 }
 const pick = (p) => { const o = {}; for (const k of UPPER) o[k] = p[k]; return o; };
+// en qué momento del suceso se dibuja ya el corazón en el pecho de quien lo recibe
+const HEART_ARRIVES = 0.72;
 
 // o: opciones de la figura (x, pose, F, kind, facing…), idx: índice del personaje; devuelve { o, icons: [...] }
 export function figureMoments(o, idx, now, info = {}) {
@@ -499,11 +581,31 @@ export function figureMoments(o, idx, now, info = {}) {
   const sitting = o.pose.fl1 > 0.8 || o.pose.bl1 > 0.8;
   const standing = !lying && !sitting && !info.riding && (o.pose.tr || 0) < 0.6;
   const hits = (e) => e.who === 'all' || e.who === idx;
-  // movimientos que se quedan: se aleja / se acerca (camina de verdad: pasos según lo recorrido)
+  const partner = (e) => (e.target >= 0 && e.target !== idx ? e.target : idx === 0 ? 1 : 0);
+  const P = now.pos || {};
+  const walkLegs = (pose, d, kk) => lerpPose(pose, { ...pose, ...legsOf(walkPose(Math.abs(d) / (o.F * 0.4) * Math.PI)) }, smooth(Math.min(kk, 1 - kk) * 8));
+  // movimientos que se quedan: se aleja / se acerca, y acercarse al otro para darle el corazón, la mano en el hombro o el abrazo
   for (const e of now.moves) {
-    if (e.type === 'llega' || !hits(e) || !standing || e.iconOnly) continue;
+    if (e.type === 'llega' || !hits(e) || !standing || e.iconOnly || info.busy || info.apart) continue;
+    const M = MOMENTS[e.type];
+    if (M.approach) {
+      const tp = P[partner(e)];
+      if (!tp) continue;
+      const me = P[idx];
+      const gap = M.approach === 'mid' ? 0.13 : M.approach;
+      let dest;
+      if (M.approach === 'mid') { const b0 = me ? me.bx : o.x; dest = (b0 + tp.bx) / 2 - Math.sign(tp.bx - b0) * gap * o.F; }
+      else dest = tp.x - Math.sign(tp.x - o.x) * gap * o.F;
+      let D = dest - o.x;
+      // demasiado lejos (otra casa, otra orilla): no cruza paredes ni precipicios; el gesto se hace desde su sitio
+      if (Math.abs(tp.x - o.x) > 1.7 * o.F || Math.sign(D) !== Math.sign(tp.x - o.x)) D = 0;
+      if (Math.abs(D) < 0.03 * o.F) continue;
+      const kw = clamp((now.t - e.t0) / Math.min(1.2, (e.t1 - e.t0) * 0.38));
+      const d = D * smooth(kw);
+      o = { ...o, x: o.x + d, facing: kw < 1 ? Math.sign(D) : o.facing, pose: kw > 0 && kw < 1 ? walkLegs(o.pose, d, kw) : o.pose };
+      continue;
+    }
     const k = clamp((now.t - e.t0) / Math.max(0.8, (e.t1 - e.t0) * 0.85));
-    if (info.busy) continue;
     const away = e.type === 'aleja';
     const dirOut = Math.sign(o.x) || (idx ? 1 : -1);
     const dir = away ? dirOut : -dirOut;
@@ -512,9 +614,30 @@ export function figureMoments(o, idx, now, info = {}) {
     const walking = k > 0 && k < 1;
     o = { ...o, x: o.x + dir * d, facing: walking ? dir : away ? dir : o.facing, pose: walking ? lerpPose(o.pose, walkPose(d / (o.F * 0.4) * Math.PI), smooth(Math.min(k, 1 - k) * 8)) : o.pose, alpha: (o.alpha ?? 1) * (away ? 1 - 0.35 * smooth(k) : 1) };
   }
-  for (const e of now.act) {
-    const M = MOMENTS[e.type];
-    if (!M || M.kind !== 'fig' || !hits(e) || M.move) continue;
+  for (const e of now.hold || []) {
+    if (!hits(e) || lying || info.busy) continue;
+    let target = poseFor('tristeza', o.pose, now.t - e.t0, { ...e, k: 1 }, standing);
+    if (!standing || info.riding) target = upperOf(o.pose, target);
+    o = { ...o, pose: target };
+  }
+  for (const e0 of now.act) {
+    const M = MOMENTS[e0.type];
+    if (!M || M.kind !== 'fig' || M.move) continue;
+    // quien recibe el corazón que le dan: lo coge y lo guarda en el pecho
+    let e = e0, role = 'do';
+    if (!hits(e0)) {
+      if (e0.type === 'dar-corazon' && e0.target === idx) { e = { ...e0, type: 'recibir-corazon', target: e0.who }; role = 'recv'; }
+      else continue;
+    }
+    const tp = P[partner(e)];
+    // mirar hacia el otro (o darle la espalda)
+    const face = role === 'recv' ? 'target' : M.face;
+    // (también sentado: se gira en el asiento; acostado o en bici, no)
+    if (face && tp && !lying && !info.riding && !info.busy && !e.iconOnly && Math.abs(tp.x - o.x) > 0.05 * o.F) {
+      const dir = Math.sign(tp.x - o.x) * (face === 'away' ? -1 : 1);
+      if (e.env > 0.5) o = { ...o, facing: dir };
+    }
+    if (e.type === 'estoy-contigo' && tp) e = { ...e, lowShoulder: tp.H < o.F * 0.8 };
     const allowPose = !lying && !e.iconOnly && !(info.riding && M.legs && e.type !== 'celebra');
     if (allowPose) {
       let target = poseFor(e.type, o.pose, e.lt, e, standing);
@@ -522,21 +645,51 @@ export function figureMoments(o, idx, now, info = {}) {
         if (!standing || info.riding) target = upperOf(o.pose, target);
         if (info.busy) target = { ...o.pose, tr: target.tr ?? o.pose.tr, hd: target.hd ?? o.pose.hd };
         o = { ...o, pose: lerpPose(o.pose, target, e.env) };
-        if (e.type === 'celebra' && standing && !info.busy) o = { ...o, y: (o.y || 0) - o.F * 0.07 * Math.abs(Math.sin(e.lt * 7)) * e.env };
-        if (e.type === 'rie' && standing) o = { ...o, y: (o.y || 0) - o.F * 0.01 * Math.abs(Math.sin(e.lt * 16)) * e.env };
+        const free = standing && !info.busy;
+        if (e.type === 'celebra' && free) o = { ...o, y: (o.y || 0) - o.F * 0.07 * Math.abs(Math.sin(e.lt * 7)) * e.env };
+        if (e.type === 'rie' && free) o = { ...o, y: (o.y || 0) - o.F * 0.01 * Math.abs(Math.sin(e.lt * 16)) * e.env };
+        // de puntillas, ilusionado
+        if (e.type === 'ilusion' && free) o = { ...o, y: (o.y || 0) - o.F * 0.03 * (0.55 + 0.45 * Math.sin(e.lt * 5)) * e.env };
+        // saltitos de alegría
+        if (e.type === 'alegria' && free) o = { ...o, y: (o.y || 0) - o.F * 0.04 * Math.abs(Math.sin(e.lt * 6.5)) * e.env };
+        // abrazo largo: se mecen
+        if (e.type === 'abrazo-largo' && free) o = { ...o, x: o.x + Math.sin(e.lt * 2.4) * o.F * 0.02 * e.env };
+        // ansiedad: da una vueltecita (se gira, unos pasitos, y vuelve)
+        if (e.type === 'ansiedad' && free && e.k > 0.32 && e.k < 0.56) {
+          const q = (e.k - 0.32) / 0.24;
+          o = { ...o, facing: q < 0.5 ? -(o.facing || 1) : (o.facing || 1), pose: { ...o.pose, ...legsOf(walkPose(q * Math.PI * 4)) } };
+        }
       }
     }
-    icons.push(e);
+    icons.push({ ...e, role, apart: !!info.apart });
   }
   return { o, icons };
 }
+// escenas en las que cada uno está en su sitio (otra casa, otra orilla): nadie cruza paredes ni el precipicio
+export const APART_SCENES = new Set(['telefono', 'puente', 'carta']);
+const legsOf = (p) => ({ fl1: p.fl1, fl2: p.fl2, bl1: p.bl1, bl2: p.bl2 });
+
+// guarda dónde quedó cada personaje (para el siguiente fotograma)
+export function recordFigure(now, idx, bx, o, fig) {
+  if (!now || !now.pos) return;
+  now.pos[idx] = { bx, x: o.x, H: fig.H, head: fig.head, chest: [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3], hands: [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2] };
+}
+
+// corazoncito rojo (el que se entregan)
+function smallHeart(ctx, x, y, F, a, beat = 0) {
+  glow(ctx, x, y, F * 0.26, RED, 0.6 * a);
+  heart(ctx, x, y, F * 0.085 * (1 + 0.08 * beat), RED, a);
+}
 
 // símbolos sobre el personaje (después de dibujarlo)
-export function drawFigureIcons(ctx, fig, o, icons) {
+export function drawFigureIcons(ctx, fig, o, icons, now) {
+  const P = (now && now.pos) || {};
   for (const e of icons) {
     const a = e.env, F = o.F;
     const [hx, hy] = fig.head;
     const top = hy - F * 0.2;
+    const hands = [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2];
+    const chest = [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3];
     ctx.save();
     ctx.strokeStyle = WHITE; ctx.fillStyle = WHITE; ctx.lineCap = 'round'; ctx.lineWidth = Math.max(1.5, F * 0.012);
     switch (e.type) {
@@ -546,19 +699,57 @@ export function drawFigureIcons(ctx, fig, o, icons) {
         heart(ctx, hx, top - rise, F * 0.07 * (0.8 + 0.2 * Math.sin(e.lt * 8)), RED, a);
         break;
       }
+      case 'abrazo-largo': { if (e.who === 'all' && e.role === 'do' && e.who !== 1) { const k2 = smooth((e.k - 0.35) / 0.2); if (k2 > 0) { glow(ctx, hx, top, F * 0.25, RED, 0.5 * a * k2); heart(ctx, hx, top - F * 0.04 * Math.sin(e.lt * 2.4), F * 0.08 * k2, RED, a); } } break; }
+      case 'dar-corazon': {
+        // el corazón está en sus manos; cerca, pasa a las manos del otro; lejos (otra casa), vuela hasta su pecho
+        const tp = P[e.target];
+        const busy = Math.hypot(hands[0] - chest[0], hands[1] - chest[1]) < F * 0.12;
+        const from = busy ? [chest[0], chest[1] - F * 0.15] : [hands[0], hands[1] - F * 0.03];
+        if (e.k < 0.12) break;
+        const appear = smooth((e.k - 0.12) / 0.1);
+        if (!tp || e.k < 0.45) { smallHeart(ctx, from[0], from[1], F, a * appear, Math.sin(e.lt * 8)); break; }
+        if (e.k >= HEART_ARRIVES) break; // ya lo tiene el otro
+        const q = smooth((e.k - 0.45) / (HEART_ARRIVES - 0.45));
+        const far = e.apart || Math.abs(tp.x - o.x) > 1.7 * F;
+        const to = far ? tp.chest : tp.hands || tp.chest;
+        const arc = (far ? F * 0.6 : F * 0.12) * Math.sin(q * Math.PI);
+        smallHeart(ctx, from[0] + (to[0] - from[0]) * q, from[1] + (to[1] - from[1]) * q - arc, F, a);
+        break;
+      }
+      case 'recibir-corazon': {
+        // lo coge y lo guarda en el pecho: el corazón late en su pecho
+        if (e.role === 'recv') { if (e.k >= HEART_ARRIVES) smallHeart(ctx, chest[0], chest[1], F, a, Math.sin(e.lt * 7)); break; }
+        const tp = P[e.target];
+        const from = tp ? [tp.chest[0], tp.chest[1] - F * 0.3] : [hx, top - F * 0.3];
+        if (e.k < 0.3) break;
+        if (e.k < HEART_ARRIVES) { const q = smooth((e.k - 0.3) / (HEART_ARRIVES - 0.3)); smallHeart(ctx, from[0] + (hands[0] - from[0]) * q, from[1] + (hands[1] - from[1]) * q - F * 0.25 * Math.sin(q * Math.PI), F, a * smooth((e.k - 0.3) / 0.1)); }
+        else smallHeart(ctx, chest[0], chest[1], F, a, Math.sin(e.lt * 7));
+        break;
+      }
+      case 'estoy-contigo': { if (e.k > 0.4) glow(ctx, fig.fh[0], fig.fh[1], F * 0.16, AMBER, 0.45 * a * smooth((e.k - 0.4) / 0.15)); break; }
+      case 'ilusion': { ctx.fillStyle = AMBER; for (let i = 0; i < 2; i++) { const q = (e.lt * 0.9 + i * 0.5) % 1; ctx.globalAlpha = a * (1 - q) * 0.8; ctx.beginPath(); ctx.arc(hx + (o.facing || 1) * F * (0.1 + 0.05 * i), top - q * F * 0.2, F * 0.012, 0, 7); ctx.fill(); } break; }
+      case 'pedir': { ctx.globalAlpha = 0.55 * a * (0.5 + 0.5 * Math.sin(e.lt * 5)); const s2 = o.facing || 1; for (let i = 0; i < 2; i++) { ctx.beginPath(); ctx.arc(hands[0] + s2 * F * 0.06, hands[1], F * (0.06 + i * 0.05), -0.5, 0.5); if (s2 < 0) { ctx.beginPath(); ctx.arc(hands[0] + s2 * F * 0.06, hands[1], F * (0.06 + i * 0.05), Math.PI - 0.5, Math.PI + 0.5); } ctx.stroke(); } break; }
+      case 'alegria': { if (Math.sin(e.lt * 13) > 0.85) sparkles(ctx, hands[0], hands[1], F * 0.12, e.lt, a, GOLD); break; }
+      case 'ansiedad': {
+        if (e.k < 0.56) { ctx.globalAlpha = 0.6 * a; ctx.beginPath(); for (let i = 0; i <= 24; i++) { const an = i * 0.55 + e.lt * 5, r2 = F * (0.015 + i * 0.0022); const x2 = hx + Math.cos(an) * r2, y2 = top - F * 0.06 + Math.sin(an) * r2 * 0.6; i ? ctx.lineTo(x2, y2) : ctx.moveTo(x2, y2); } ctx.stroke(); }
+        else if (e.k < 0.8) { const ph = [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2]; ctx.globalAlpha = a; ctx.fillStyle = '#9FB4C8'; ctx.fillRect(ph[0] - F * 0.025, ph[1] - F * 0.045, F * 0.05, F * 0.08); }
+        else { const q = (e.k - 0.8) / 0.2; ctx.globalAlpha = 0.5 * a * (1 - q); ctx.strokeStyle = '#BFC6CF'; const s2 = o.facing || 1; ctx.beginPath(); ctx.arc(hx + s2 * F * (0.1 + q * 0.08), hy + F * 0.03, F * (0.02 + q * 0.03), 0, 7); ctx.stroke(); }
+        break;
+      }
+      case 'distraido': { const ph = hands; ctx.globalAlpha = a; ctx.fillStyle = '#9FB4C8'; ctx.fillRect(ph[0] - F * 0.025, ph[1] - F * 0.045, F * 0.05, F * 0.08); glow(ctx, ph[0], ph[1], F * 0.12, '#9FB4C8', 0.4 * a); sparkles(ctx, ph[0], ph[1] - F * 0.06, F * 0.08, e.lt, 0.6 * a, WHITE); break; }
       case 'rie': case 'celebra': sparkles(ctx, hx, hy, F * 0.22, e.lt, a, e.type === 'celebra' ? GOLD : WHITE); break;
       case 'llora': for (let i = 0; i < 2; i++) { const q = (e.lt * 1.4 + i * 0.5) % 1; ctx.globalAlpha = a * (1 - q) * 0.9; ctx.fillStyle = '#AFC3D6'; ctx.beginPath(); ctx.arc(hx + (i ? 1 : -1) * F * 0.05, hy + F * 0.03 + q * F * 0.3, F * 0.014, 0, 7); ctx.fill(); } break;
       case 'cansa': { const q = (e.lt * 0.8) % 1; ctx.globalAlpha = a * (1 - q); ctx.fillStyle = '#AFC3D6'; ctx.beginPath(); ctx.arc(hx + F * 0.09, hy - F * 0.04 + q * F * 0.12, F * 0.016, 0, 7); ctx.fill(); break; }
       case 'sorpresa': { ctx.globalAlpha = a; ctx.strokeStyle = AMBER; ctx.lineWidth = F * 0.02; ctx.beginPath(); ctx.moveTo(hx, top - F * 0.16); ctx.lineTo(hx, top - F * 0.05); ctx.stroke(); ctx.fillStyle = AMBER; ctx.beginPath(); ctx.arc(hx, top, F * 0.012, 0, 7); ctx.fill(); break; }
       case 'piensa': for (let i = 0; i < 3; i++) { ctx.globalAlpha = a * clamp(e.lt * 2 - i * 0.4); ctx.beginPath(); ctx.arc(hx + F * (0.07 + i * 0.05), top - F * i * 0.06, F * (0.012 + i * 0.007), 0, 7); ctx.stroke(); } break;
       case 'duerme': { ctx.font = `300 ${Math.round(F * 0.09)}px system-ui, sans-serif`; for (let i = 0; i < 2; i++) { const q = (e.lt * 0.7 + i * 0.5) % 1; ctx.globalAlpha = a * (1 - q); ctx.fillText('z', hx + F * (0.08 + q * 0.1), top - q * F * 0.25); } break; }
-      case 'saluda': case 'mira': case 'reaccion': case 'insiste': { // dos rayitas de atención junto a la cabeza
+      case 'saluda': case 'mira': case 'reaccion': case 'insiste': {
         ctx.globalAlpha = 0.7 * a * (0.6 + 0.4 * Math.sin(e.lt * 9));
-        const s = (o.facing || 1);
-        for (let i = -1; i <= 1; i += 2) { ctx.beginPath(); ctx.moveTo(hx + s * F * 0.1, hy + i * F * 0.05); ctx.lineTo(hx + s * F * 0.16, hy + i * F * 0.08); ctx.stroke(); }
+        const s2 = (o.facing || 1);
+        for (let i = -1; i <= 1; i += 2) { ctx.beginPath(); ctx.moveTo(hx + s2 * F * 0.1, hy + i * F * 0.05); ctx.lineTo(hx + s2 * F * 0.16, hy + i * F * 0.08); ctx.stroke(); }
         break;
       }
-      case 'movil': { const [px, py] = [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2]; ctx.globalAlpha = a; ctx.fillStyle = '#9FB4C8'; ctx.fillRect(px - F * 0.025, py - F * 0.045, F * 0.05, F * 0.08); glow(ctx, px, py, F * 0.1, '#9FB4C8', 0.35 * a); break; }
+      case 'movil': { ctx.globalAlpha = a; ctx.fillStyle = '#9FB4C8'; ctx.fillRect(hands[0] - F * 0.025, hands[1] - F * 0.045, F * 0.05, F * 0.08); glow(ctx, hands[0], hands[1], F * 0.1, '#9FB4C8', 0.35 * a); break; }
       case 'tropieza': case 'caerse': case 'sienta': { const [fx, fy] = fig.ff; ctx.globalAlpha = 0.45 * a * (1 - e.k); for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(fx + (i - 1) * F * 0.06, fy - F * 0.02, F * (0.025 + 0.02 * e.k), Math.PI, 0); ctx.stroke(); } break; }
       case 'sujeta': { const [px, py] = fig.fh; glow(ctx, px, py, F * 0.16, AMBER, 0.45 * a); break; }
       case 'cubre': { const q = (e.lt * 2) % 1; ctx.globalAlpha = 0.5 * a; ctx.strokeStyle = '#BFC6CF'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(hx + i * F * 0.08, top - F * 0.25 + q * F * 0.12); ctx.lineTo(hx + i * F * 0.08 - F * 0.01, top - F * 0.2 + q * F * 0.12); ctx.stroke(); } break; }

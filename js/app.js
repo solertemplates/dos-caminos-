@@ -332,7 +332,7 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v22';
+const APP_VERSION = 'v23';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }

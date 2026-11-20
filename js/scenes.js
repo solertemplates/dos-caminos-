@@ -1,7 +1,7 @@
 // Dos Caminos — escenas. Cada escena se dibuja en coordenadas de escenario:
 // x desde -w/2 a w/2, y = 0 es el suelo, y negativo hacia arriba.
 import { drawObject } from './objects.js';
-import { figureMoments, drawFigureIcons, BUSY_ACTS } from './moments.js';
+import { figureMoments, drawFigureIcons, recordFigure, BUSY_ACTS, APART_SCENES } from './moments.js';
 import { USES, usePose, useLift, drawUseProp } from './uses.js';
 import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
@@ -82,14 +82,16 @@ function drawFigure(ctx, o) {
     }
   }
   // SUCESOS (regla de ritmo): reacciones del personaje (tropieza, se ríe, saluda, se aleja…) y su símbolo
-  let icons = null;
-  if (CUR && CUR.moments && NEUTRAL < 0.5 && o.pe) {
-    let idx = CUR.people.indexOf(o.pe);
-    if (idx < 0) idx = CUR.people.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
-    if (idx >= 0) { const r = figureMoments(o, idx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use }); o = r.o; icons = r.icons; }
+  let icons = null, mIdx = -1;
+  const bx = o.x;
+  if (CUR && CUR.moments && o.pe) {
+    mIdx = CUR.people.indexOf(o.pe);
+    if (mIdx < 0) mIdx = CUR.people.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
+    if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName) }); o = r.o; icons = r.icons; }
   }
   const fig = rawFigure(ctx, o);
-  if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons);
+  if (mIdx >= 0) recordFigure(CUR.moments, mIdx, bx, o, fig);
+  if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons, CUR.moments);
   if (offerHeart > 0) {
     const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
     const dim = 1 - 0.5 * smooth((CUR.r - 0.5) / 0.4);

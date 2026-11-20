@@ -95,7 +95,11 @@ En «se rinde», los sucesos de A y B antes de la caída deben ser los mismos. E
 SUCESOS QUE LA APP SABE DIBUJAR (usa estas palabras; di quién: él, ella, el niño, la niña, juntos):
 - tiempo y escenario: llueve, sale el sol, anochece, nieva, sopla el viento, trueno, pasa un pájaro, estrella fugaz, algo cae (cae una manzana…), llega alguien (llega su hijo…), se enciende, se apaga, el contador salta
 - personajes: corazón, tropieza, se cae, la sujeta / le da la mano, se abrazan, se ríen, celebra / salta / baila, saluda, no lo ve / mira el móvil, mira, llora, se cansa / suspira, se sorprende, piensa / recuerda, se sienta, se aleja, se acerca / vuelve, se cubre(n), duerme, sigue / lo intenta otra vez
-Si no escribes MOMENTOS, la app elige sucesos variados por su cuenta.
+- gestos de emoción: tiene ansiedad (mano en la cabeza, vueltecita, mira el móvil y suspira), espera con ilusión (de puntillas mirando al otro), se pone triste (cabeza baja y se sienta despacio), está distraído / no contesta / se ríe con la pantalla (de espaldas al otro), le da un corazón (se lo entrega con las dos manos), recibe el corazón (lo guarda en el pecho), estoy contigo (mano en el hombro), le pide (estira las manos pidiendo atención), aplaude / con alegría (saltitos y aplausos), un abrazo largo (se abrazan y se mecen)
+Si no escribes MOMENTOS, la app elige sucesos con significado por su cuenta: en el lado bueno se pasan corazoncitos; en el malo, uno pide o espera y el otro está distraído.
+
+REGLA FIJA DE EMOCIONES
+Los personajes ACTÚAN con gestos que cuentan la historia. Cada gesto tiene un significado claro y es un gancho para quien mira. Nada de moverse por moverse. Usa los gestos de emoción en A-MOMENTOS y B-MOMENTOS: en el lado bueno, corazones que se dan y se guardan, alegría, abrazo largo; en el malo, el contraste: uno pide o espera con ilusión y el otro está distraído, y después ansiedad y tristeza.
 
 REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.

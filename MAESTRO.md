@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA DE ORO DE GUIONES y ejemplo modelo «Espera, hijo, un momento»).
+Última actualización: 20 nov 2026 (REGLA FIJA DE EMOCIONES: 10 gestos de emoción, corazoncitos en el lado bueno y contraste en el malo).
 
 ---
 
@@ -77,6 +77,8 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 8. **REGLA FIJA DE MOVIMIENTO: todos los movimientos son como los de una persona real.** Piernas, brazos, manos y objetos se mueven coordinados y en la dirección correcta (ver «Movimiento real» abajo). **Toda acción nueva debe cumplir esta regla y probarse en los dos lados de la división antes de subirla.**
 
 9. **REGLA FIJA DE RITMO: en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos. Nunca más de 3 segundos de la misma acción repetida.** Lo cumplen los **sucesos** (ver «Ritmo y sucesos» en §4 y la lista en §6): los del guion (`A-MOMENTOS` / `B-MOMENTOS`) o, si no hay, los que elige la app para la escena.
+
+10. **REGLA FIJA DE EMOCIONES: los personajes ACTÚAN con gestos que cuentan la historia.** Cada gesto tiene un significado claro y es un gancho para quien mira. **Nada de moverse por moverse.** Ver «Gestos de emoción» en §6.
 
 Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` (composición, estrellas, textos, zona segura), `js/moments.js` (sucesos).
 
@@ -163,7 +165,7 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 - **Algo nuevo y visible cada 2–3 s; nunca más de 3 s de la misma acción repetida.**
 - 0–1,8 s: gancho (frase, estrella fugaz, latido). ~2,5 s: cada uno elige distinto. Desde ahí hasta el cierre, **un suceso detrás de otro**. Resultado: corazón grande. Cierre: frase (0,35 s), pregunta (1,5 s), corazoncito (2,1 s) y, en los cierres largos (30–60 s), una estrella fugaz como la del principio.
 - **Con MOMENTOS** (`A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen`): de 3 a 8 sucesos por lado, separados por `>`. Cada suceso dura lo mismo y se reparten desde la elección (~2,5 s) hasta el cierre. Si a un suceso le toca más de ~2,8 s (videos largos o pocos sucesos), ese hueco se completa con sucesos suaves de la app (el contador salta, un corazón, una luz, un pájaro, una reacción…) para que nunca pasen más de 3 s sin novedad. Si hay más de los que caben (cada uno necesita ≥ 1,6 s; en 15 s caben 5), se usan el primero, el último y los de en medio repartidos.
-- **Sin MOMENTOS:** la app inventa sucesos variados para la escena cada ~2,5 s: algo cae, alguien llega, cambia el tiempo, el contador salta, una reacción, un objeto que se enciende… En el lado bueno, sucesos cálidos (luz, corazón, risa, saludo, pájaros, sol, al final abrazo o celebración); en el malo, fríos (humo, cansancio, móvil, viento, lluvia, noche, al final lágrimas). Nunca repite el mismo seguido y usa primero los menos usados.
+- **Sin MOMENTOS:** la app pone sucesos **con significado** cada ~2,5 s (nada de moverse por moverse). En el lado bueno, uno de cada dos es **pasarse un corazoncito** (si hay dos personas) y el resto, cálidos: alegría, risa, luz, contador, al final abrazo largo o celebración. En el malo, uno de cada dos es el **contraste** (uno pide o espera con ilusión, el otro distraído) y el resto, fríos: tristeza, ansiedad, cansancio, humo, viento, lluvia, noche, al final lágrimas. Los huecos entre los MOMENTOS del guion se rellenan igual (corazoncitos en el bueno, contraste en el malo). Nunca repite el mismo seguido y usa primero los menos usados.
 - **Regla del arco («se rinde»):** antes del momento difícil los dos lados tienen **exactamente los mismos sucesos** (los del lado bueno), para que sigan idénticos píxel a píxel; durante la caída común y el rendirse, los sucesos de personaje se quedan en su símbolo (no cambian la pose del arco).
 - **Tipo «tiempo»:** los sucesos van a la franja que se está revelando en ese momento.
 - Cada suceso tiene un sonido suave (gotas, viento, pasos, campanita…), también CC0.
@@ -459,6 +461,50 @@ Se escriben en `A-MOMENTOS:` / `B-MOMENTOS:` con palabras sencillas; la app reco
 | `duerme` | duerme, bosteza | Cabeza caída y «z» |
 | `insiste` | sigue, lo intenta otra vez, se esfuerza | Se inclina con esfuerzo y rayitas de ánimo |
 | `reaccion` | (cualquier frase que no se reconoce) | El personaje gira la cabeza con rayitas de atención |
+
+### ⭐ Gestos de emoción (REGLA FIJA DE EMOCIONES)
+
+Los personajes **actúan**: cada gesto tiene un significado claro y es un gancho para quien mira. **Nada de moverse por moverse.** Mismo sello y movimiento realista (se giran hacia el otro, caminan con pasos según la distancia, nadie cruza paredes). Se usan en `A-MOMENTOS` / `B-MOMENTOS`, también con su nombre (`dar-corazon`, `esperar-con-ilusion`…).
+
+| Gesto | Se escribe (ejemplos) | Qué hace |
+|---|---|---|
+| `ansiedad` | mamá tiene ansiedad, se preocupa, nerviosa | Mano en la cabeza (con un garabato encima), da una vueltecita con pasitos, mira el móvil y suspira |
+| `esperar-con-ilusion` | espera con ilusión, de puntillas | Se gira hacia el otro, manos juntas al pecho y se pone de puntillas; chispitas ámbar |
+| `tristeza` | se pone triste, baja la cabeza, se sienta despacio | Baja la cabeza, hombros caídos y se sienta despacio en el suelo; **se queda sentado** hasta su siguiente gesto |
+| `distraido` | está distraído, no contesta, se ríe con la pantalla, ignora | Está en otra cosa: móvil iluminado, se ríe con la pantalla y **se pone de espaldas** al otro (también sentado) |
+| `dar-corazon` | le da un corazón, le pasa un corazón | Se gira, (si está cerca) camina hasta el otro y le entrega un **corazoncito rojo con las dos manos**; si están lejos (otra casa, otra orilla) el corazón vuela hasta el otro. Quien lo recibe **lo coge y lo guarda en el pecho** |
+| `recibir-corazon` | recibe el corazón, lo guarda en el pecho | Estira las manos, lo coge y se lo lleva al pecho, donde late |
+| `estoy-contigo` | estoy contigo, le pone la mano en el hombro | Camina hasta el otro y le pone la mano en el hombro (más baja si es un niño); luz cálida en la mano |
+| `pedir` | le pide, pide con las manos | Mirando al otro, estira las dos manos como pidiendo atención |
+| `alegria` | aplaude, con alegría, salta de alegría | Saltitos pequeños y aplausos con chispitas doradas |
+| `abrazo-largo` | un abrazo largo, se mecen | Caminan el uno hacia el otro, se abrazan y se mecen; corazón encima |
+
+- **Lado bueno:** cuando no hay otro suceso, **se van pasando corazoncitos** (uno se lo da al otro y el siguiente se lo devuelve).
+- **Lado malo:** que se vea el **contraste**: uno **pide** o **espera con ilusión** mirando al otro y el otro está **distraído** y de espaldas, a la vez. La tristeza, la ansiedad y el cansancio que pone la app son de quien pide o espera.
+- Quien trabaja con una herramienta (construir, cocinar, regar…) hace el gesto con la cabeza, el torso y el símbolo (el corazón sale de su pecho y vuela).
+- En `telefono`, `puente` y `carta` cada uno está en su sitio: nadie camina hasta el otro; los corazones viajan por el aire.
+
+Guion de prueba (probado en 15, 30, 45 y 60 s, arriba-abajo y lados):
+```
+TITULO: Mamá llamó tres veces
+FRASE: Contesta hoy. Un día ese teléfono ya no va a *sonar*.
+TEMA: familia
+EMOCION: triste
+DIVISION: arriba-abajo
+GANCHO: Tres llamadas perdidas.
+A: CONTESTA A MAMÁ | LLAMADA {1-3} | telefono | mujer+hombre | llamar+llamar | se unen
+B: AHORA NO, MAMÁ | LLAMADA {1-3} | telefono | mujer+hombre | llamar+ignorar | pierden
+A-MOMENTOS: mamá espera con ilusión > él contesta con alegría > mamá le da un corazón > se ríen > él le da un corazón > mamá aplaude > mamá le da un corazón > él guarda el corazón
+B-MOMENTOS: mamá espera con ilusión > él está distraído > mamá le pide > él se ríe con la pantalla > mamá tiene ansiedad > él no contesta > mamá se pone triste > anochece
+PREGUNTA: ¿Cuándo fue la última vez que la llamaste?
+TITULO_EN: Mom called three times
+GANCHO_EN: Three missed calls.
+A_EN: PICKS UP FOR MOM | CALL {1-3}
+B_EN: NOT NOW, MOM | CALL {1-3}
+FRASE_EN: Pick up today. One day that phone won't *ring*.
+PREGUNTA_EN: When did you last call her?
+---
+```
 
 Notas:
 - Si un personaje está trabajando con una herramienta que la escena le pone en la mano (construir, cocinar, regar, conducir…), reacciona con la **cabeza, el torso y el símbolo**, sin soltar la herramienta (REGLA DE MOVIMIENTO). Sentados mueven solo la parte de arriba; acostados o en bici, el símbolo.
