@@ -1,5 +1,6 @@
 // Dos Caminos — lectura de guiones en formato sencillo.
 import { SCENE_NAMES } from './scenes.js';
+import { findObject } from './objects.js';
 
 export const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
@@ -197,6 +198,11 @@ export function parseScripts(text) {
     const B = isTime ? A : parseSide(f.B, theme, errs, label + ' B');
     const lay = norm(f.layout);
     const layout = isTime ? 'time' : /lado|side|izq|vert/.test(lay) ? 'lr' : /arriba|abajo|top|bottom|horiz/.test(lay) ? 'ab' : null;
+    // objeto concreto: el que nombre el título o subtítulo de cada lado; si no, el del TITULO del guion
+    const enA = (f.en.A || '').split('|'), enB = (f.en.B || '').split('|');
+    const general = findObject(f.title, f.en.title);
+    A.object = findObject(A.title, A.sub, enA[0], enA[1]) || general;
+    if (B !== A) B.object = findObject(B.title, B.sub, enB[0], enB[1]) || general;
     const stagesOf = (v, def) => { const l = (v || '').split('|').map((x) => x.trim()).filter(Boolean); return l.length === 3 ? l : def; };
     const enSide = (v, base) => {
       if (!v) return null;

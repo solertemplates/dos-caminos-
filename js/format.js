@@ -85,6 +85,9 @@ VOCABULARIO (usa solo estas palabras)
 - final bueno: crece, florece, se unen, se llena, llega, ganan, se abrazan, se despiertan, se secan (solo en lluvia)
 - final malo: se seca, se apaga, se vacía, se mojan, pierden, se queda, se queda atrás, nunca se completa, se cae, se alejan
 - Varía las escenas: que cada guion use una escena distinta para que los videos no se repitan.
+- OBJETOS: si el TITULO o el título/subtítulo de un lado nombra uno de estos objetos, la escena lo dibuja en lugar del objeto genérico. Úsalos cuando le den sentido a la historia:
+  flor, carta, pan, pelota, libro, dinero, moneda, llave, anillo, taza (café), bicicleta, regalo, maleta, guitarra, vela, mochila, zapatos (tenis), foto, estrella, globo, cometa, sombrero, gafas (lentes), botella (agua), plato (comida, cena), manzana, pastel (cumpleaños), osito (peluche, juguete), maceta (planta), martillo, lápiz, cuaderno, trofeo (medalla), cámara, auriculares, candado, semilla, corona.
+  Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
 
 EJEMPLO
 TITULO: El puente

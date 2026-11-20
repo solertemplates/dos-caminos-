@@ -4,8 +4,9 @@
 import { SCENES, RED, GOLD, AMBER, FLAME, COLD, clamp, smooth, lerp, glow, heart, star, kit } from './scenes.js';
 import { POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
-const { setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral } = kit;
+const { obj, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral } = kit;
 const ORANGE = '#F4A259';
+const THROWABLE = new Set(['pelota', 'manzana', 'osito', 'flor', 'globo', 'pan', 'llave', 'moneda', 'carta', 'libro', 'sombrero', 'zapatos', 'regalo']);
 const isPhone = (a) => a === 'celular' || a === 'phone' || a === 'ignorar';
 const P = (S, i, def) => S.people[i] || (i === 0 ? def : null);
 
@@ -79,10 +80,11 @@ SCENES.cocina = {
     line(ctx, px + F * 0.11, pt + F * 0.03, px + F * 0.15, pt + F * 0.03);
     line(ctx, px - F * 0.12, pt, px + F * 0.12, pt);
     const neutral = getNeutral();
+    S.objSpot = [cx + cw * 0.3, -ch];
     if (cooks) {
       // vapor que crece y platos servidos
       smoke(ctx, F, px, pt, (0.3 + 0.7 * smooth(S.p)) * (1 - neutral), t, false);
-      const plates = Math.min(4, Math.floor(S.p * 4.99));
+      const plates = S.object ? 0 : Math.min(4, Math.floor(S.p * 4.99));
       setLine(ctx, F, 0.85, 0.7);
       for (let i = 0; i < plates; i++) { ctx.beginPath(); ctx.ellipse(cx + cw * 0.28, -ch - F * 0.012 - i * F * 0.022, F * 0.1, F * 0.012, 0, 0, Math.PI * 2); ctx.stroke(); }
       if (S.good && S.r > 0) glow(ctx, px, pt - F * 0.2, F * 0.8 * smooth(S.r), AMBER, 0.6);
@@ -147,7 +149,8 @@ SCENES.oficina = {
     line(ctx, dx + F * 0.07, -dh - F * 0.1, dx + F * 0.07, -dh);
     if (works && S.r < 0.5) glow(ctx, dx + F * 0.07, -dh - F * 0.2, F * 0.3, WHITE, 0.25 * (1 - neutral));
     // pila de hojas terminadas
-    const papers = works ? Math.min(8, Math.floor(S.p * (S.good ? 8.9 : 3))) : 1;
+    const papers = S.object ? 0 : works ? Math.min(8, Math.floor(S.p * (S.good ? 8.9 : 3))) : 1;
+    S.objSpot = [dx + dw * 0.38, -dh];
     setLine(ctx, F, 0.7, 0.6);
     for (let i = 0; i < papers; i++) line(ctx, dx + dw * 0.3, -dh - F * 0.012 * (i + 1), dx + dw * 0.45, -dh - F * 0.012 * (i + 1));
     // trabajador
@@ -231,14 +234,17 @@ SCENES.parque = {
       if (playing === 2 && figs.length === 2) {
         const ph = frac(t / 1.3), from = figs[ph < 0.5 ? 0 : 1].fh, to = figs[ph < 0.5 ? 1 : 0].fh;
         const k = (ph % 0.5) * 2;
-        circle(ctx, lerp(from[0], to[0], k), lerp(from[1], to[1], k) - Math.sin(k * Math.PI) * F * 0.45, F * 0.045);
+        const bx2 = lerp(from[0], to[0], k), by2 = lerp(from[1], to[1], k) - Math.sin(k * Math.PI) * F * 0.45;
+        if (S.object && THROWABLE.has(S.object)) obj(ctx, S, bx2, by2 + F * 0.07, F * 0.14); else circle(ctx, bx2, by2, F * 0.045);
       } else {
         const who = list.findIndex((p) => p.act === 'jugar');
         const bxp = (who >= 0 ? xs[who] : xs[1]) + F * 0.25;
-        circle(ctx, bxp, -F * 0.045 - Math.abs(Math.sin(t * 3)) * F * 0.25 * (who >= 0 ? 1 : 0), F * 0.045);
+        const by2 = -Math.abs(Math.sin(t * 3)) * F * 0.25 * (who >= 0 ? 1 : 0);
+        if (S.object && THROWABLE.has(S.object)) obj(ctx, S, bxp, by2, F * 0.16); else circle(ctx, bxp, by2 - F * 0.045, F * 0.045);
       }
     }
     if (S.good) S.focus = [-w * 0.08, -F * 1.35];
+    if (S.object && !S.objHand) S.objSpot = [w * 0.32 + F * 0.42, 0];
   },
 };
 
@@ -292,6 +298,7 @@ SCENES.coche = {
     ctx.lineTo(-L * 0.12, by - F * 0.5); ctx.lineTo(L * 0.2, by - F * 0.5); ctx.lineTo(L * 0.32, by - F * 0.24);
     ctx.lineTo(L / 2, by - F * 0.2); ctx.lineTo(L / 2, by); ctx.stroke();
     line(ctx, -L * 0.36, by, L * 0.36, by);
+    if (S.object) { line(ctx, -L * 0.1, by - F * 0.5, L * 0.18, by - F * 0.5); obj(ctx, S, L * 0.04, by - F * 0.51, F * 0.2, { always: true }); }
     for (const wx of [-L * 0.3, L * 0.3]) {
       circle(ctx, wx, -F * 0.1, F * 0.1);
       const a = t * 8 * speed;
@@ -328,6 +335,7 @@ SCENES.gimnasio = {
     [-0.25, -0.5, -0.72].forEach((y) => { line(ctx, rx - F * 0.18, y * F, rx + F * 0.18, y * F); for (const o of [-0.09, 0.09]) circle(ctx, rx + o * F, y * F - F * 0.035, F * 0.03); });
     // banco y barra
     const bx = w * 0.22;
+    S.objSpot = [bx, 0];
     setLine(ctx, F, 0.8, 0.9);
     line(ctx, bx - F * 0.35, -F * 0.2, bx + F * 0.35, -F * 0.2); line(ctx, bx - F * 0.28, -F * 0.2, bx - F * 0.28, 0); line(ctx, bx + F * 0.28, -F * 0.2, bx + F * 0.28, 0);
     line(ctx, bx + F * 0.3, -F * 0.2, bx + F * 0.3, -F * 0.62); line(ctx, bx + F * 0.38, -F * 0.2, bx + F * 0.38, -F * 0.62);
@@ -385,6 +393,7 @@ SCENES.cama = {
     if (morning > 0) { glow(ctx, wx + ww * 0.15, wy + wh * (0.9 - 0.5 * morning), F * 0.5, ORANGE, morning); ctx.globalAlpha = morning; ctx.fillStyle = ORANGE; circle(ctx, wx + ww * 0.15, wy + wh * (0.9 - 0.5 * morning), F * 0.07, true); }
     ctx.restore();
     const beds = S.people.length > 1 ? [[-w * 0.18, 1], [w * 0.2, 0.75]] : [[-w * 0.08, 1]];
+    S.objSpot = [beds[0][0] - F * 0.55 - F * 0.16, 0];
     const list = S.people.length ? S.people.slice(0, 2) : [{ kind: 'hombre', act: 'dormir' }];
     list.forEach((pe, i) => {
       const [bx, sc] = beds[i];
@@ -442,6 +451,7 @@ SCENES.sofa = {
     rect(ctx, -sw / 2 - F * 0.1, -F * 0.38, F * 0.12, F * 0.38); rect(ctx, sw / 2 - F * 0.02, -F * 0.38, F * 0.12, F * 0.38);
     line(ctx, -sw / 2, seat, sw / 2, seat);
     line(ctx, -sw / 2 + F * 0.05, seat, -sw / 2 + F * 0.05, 0); line(ctx, sw / 2 - F * 0.05, seat, sw / 2 - F * 0.05, 0);
+    if (S.object) { const tx = sw / 2 + F * 0.28; setLine(ctx, F, 0.7, 0.8); line(ctx, tx - F * 0.12, -F * 0.3, tx + F * 0.12, -F * 0.3); line(ctx, tx, -F * 0.3, tx, 0); line(ctx, tx - F * 0.08, 0, tx + F * 0.08, 0); S.objSpot = [tx, -F * 0.3]; }
     const list = S.people.length ? S.people.slice(0, 2) : [{ kind: 'hombre', act: 'hablar' }];
     const phones = list.filter((p) => isPhone(p.act)).length;
     const apart = !S.good ? (0.3 * smooth(S.p) + 0.7 * smooth(S.r / 0.6)) : 0;
@@ -475,6 +485,7 @@ SCENES.huerto = {
     for (let x = -w / 2 + F * 0.1; x < w / 2; x += F * 0.3) line(ctx, x, 0, x, -F * 0.35);
     line(ctx, -w / 2, -F * 0.28, w / 2, -F * 0.28);
     const pe = P(S, 0, { kind: 'mujer', act: 'sembrar' });
+    S.objSpot = [-w * 0.42, -F * 0.28];
     const N = 5, x0 = -w * 0.02, gap = Math.min(F * 0.42, (w * 0.46) / (N - 1));
     const tends = pe.act === 'sembrar' || pe.act === 'regar';
     const planted = pe.act === 'regar' ? N : tends ? Math.min(N, Math.floor(S.p * N * 1.25 + 0.3)) : 1;
@@ -574,8 +585,9 @@ SCENES.montana = {
       const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
       if (!(act === 'escalar' || act === 'caer') && S.r < 0.3) phoneAt(ctx, fig.fh, F);
     });
-    // bandera naranja en la cima al llegar
-    if (S.good && S.r > 0.2) {
+    // bandera naranja en la cima al llegar (o el objeto del guion, que espera allí desde el principio)
+    if (S.object) { obj(ctx, S, px + F * 0.16, -ph * 0.93, F * 0.22, { always: true }); if (S.good) S.focus = [px - F * 0.25, -ph - F * 1.35]; }
+    else if (S.good && S.r > 0.2) {
       const k = smooth((S.r - 0.2) / 0.3);
       setLine(ctx, F, 0.9, 0.8); line(ctx, px + F * 0.12, -ph, px + F * 0.12, -ph - F * 0.4 * k);
       ctx.save(); ctx.fillStyle = ORANGE; ctx.globalAlpha = k; ctx.beginPath(); ctx.moveTo(px + F * 0.12, -ph - F * 0.4 * k); ctx.lineTo(px + F * 0.28, -ph - F * 0.34 * k); ctx.lineTo(px + F * 0.12, -ph - F * 0.28 * k); ctx.fill(); ctx.restore();
@@ -638,6 +650,7 @@ SCENES.lluvia = {
       }
     });
     if (S.good) S.focus = [0, -F * 1.25];
+    S.objSpot = [w * 0.38, 0];
   },
 };
 
@@ -668,6 +681,7 @@ SCENES.tienda = {
     for (let i = 0; i < 6; i++) {
       const fx = sx - sw * 0.34 + i * sw * 0.13, fy = -ch - F * 0.04;
       ctx.save(); ctx.globalAlpha = 0.9 - 0.55 * dust; ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(1.5, F * 0.012);
+      if (S.object) { ctx.restore(); obj(ctx, S, fx, -ch, F * 0.11, { always: true, fade: dust }); continue; }
       if (i % 2) circle(ctx, fx, fy, F * 0.035 + R() * F * 0.01); else rect(ctx, fx - F * 0.035, fy - F * 0.03, F * 0.07, F * 0.07);
       ctx.restore();
     }
@@ -742,8 +756,11 @@ SCENES.carta = {
     if (writes && !cy.done && getNeutral() < 0.5 && cy.ph > 0.55) {
       const k = (cy.ph - 0.55) / 0.45;
       const ex = lerp(dx + F * 0.15, mx, k), ey = lerp(-dh - F * 0.05, -F * 0.62, k) - Math.sin(k * Math.PI) * F * 0.35;
-      setLine(ctx, F, 0.95, 0.7); rect(ctx, ex - F * 0.07, ey - F * 0.045, F * 0.14, F * 0.09);
-      ctx.beginPath(); ctx.moveTo(ex - F * 0.07, ey - F * 0.045); ctx.lineTo(ex, ey); ctx.lineTo(ex + F * 0.07, ey - F * 0.045); ctx.stroke();
+      if (S.object) obj(ctx, S, ex, ey + F * 0.06, F * 0.14);
+      else {
+        setLine(ctx, F, 0.95, 0.7); rect(ctx, ex - F * 0.07, ey - F * 0.045, F * 0.14, F * 0.09);
+        ctx.beginPath(); ctx.moveTo(ex - F * 0.07, ey - F * 0.045); ctx.lineTo(ex, ey); ctx.lineTo(ex + F * 0.07, ey - F * 0.045); ctx.stroke();
+      }
     }
     // quien recibe
     const p2 = S.people[1] || { kind: 'hombre', act: 'esperar' };
@@ -754,12 +771,16 @@ SCENES.carta = {
     const f2 = S.people[1] ? drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, alpha: personDim(S) }) : null;
     if (f2 && writes && received > 0 && getNeutral() < 0.5) {
       const hx = (f2.fh[0] + f2.bh[0]) / 2, hy = (f2.fh[1] + f2.bh[1]) / 2;
-      setLine(ctx, F, 0.95, 0.7); rect(ctx, hx - F * 0.07, hy - F * 0.045, F * 0.14, F * 0.09);
-      ctx.save(); ctx.fillStyle = RED; circle(ctx, hx, hy, F * 0.015, true); ctx.restore();
+      if (S.object) obj(ctx, S, hx, hy + F * 0.07, F * 0.15);
+      else {
+        setLine(ctx, F, 0.95, 0.7); rect(ctx, hx - F * 0.07, hy - F * 0.045, F * 0.14, F * 0.09);
+        ctx.save(); ctx.fillStyle = RED; circle(ctx, hx, hy, F * 0.015, true); ctx.restore();
+      }
       setLine(ctx, F, 0.6, 0.6);
       for (let i = 1; i < Math.min(received, 6); i++) rect(ctx, rx + F * 0.22, -F * 0.03 - i * F * 0.025, F * 0.14, F * 0.02);
     }
     if (S.good) S.focus = [lerp(mx, rx, 0.5), -F * 1.3];
+    if (S.object && !writes) { S.objHand = false; S.objSpot = [dx + F * 0.15, -dh]; }
   },
 };
 
@@ -803,7 +824,8 @@ SCENES.reloj = {
     else { x = -w * 0.12; pose = breathe(POSES.floorPhone, t); }
     pose = fin(S, pose, POSES.armsUp, { ...POSES.floor, hd: -0.3 });
     const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
-    if (uses && !cy.done && cy.ph < 0.45 && getNeutral() < 0.5) { setLine(ctx, F, 1, 0.8); rect(ctx, fig.fh[0] - bs / 2, fig.fh[1] - bs * 0.7, bs, bs * 0.9); }
+    if (uses && !cy.done && cy.ph < 0.45 && getNeutral() < 0.5) { if (S.object) { drawObjectHeld(ctx, S, fig.fh, F); } else { setLine(ctx, F, 1, 0.8); rect(ctx, fig.fh[0] - bs / 2, fig.fh[1] - bs * 0.7, bs, bs * 0.9); } }
+    S.objSpot = [rx2, -done * bs];
     if (!uses && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     const p2 = S.people[1];
     if (p2) {
@@ -815,6 +837,8 @@ SCENES.reloj = {
   },
 };
 
+function drawObjectHeld(ctx, S, h, F) { obj(ctx, S, h[0], h[1] + F * 0.06, F * 0.15); S.objHand = false; }
+
 // ---------------- TELÉFONO ----------------
 SCENES.telefono = {
   events(S) { return std(S, perCycle(S, 'blip', 0.3)); },
@@ -823,6 +847,7 @@ SCENES.telefono = {
     groundLine(ctx, F, -w / 2, w / 2);
     // dos casas: marco de ventana con techo, una a cada lado
     const rooms = [-w * 0.27, w * 0.27];
+    S.objSpot = [rooms[0] + F * 0.27, 0];
     for (const rx of rooms) {
       setLine(ctx, F, 0.55, 0.8);
       rect(ctx, rx - F * 0.42, -F * 1.15, F * 0.84, F * 1.15);
@@ -898,7 +923,7 @@ SCENES.regalo = {
     const gives = a.act === 'dar';
     const neutral = getNeutral();
     const stored = !gives ? Math.min(4, Math.floor(S.p * 4.9)) : 0;
-    for (let i = 0; i < stored; i++) gift(ctx, F, shx - F * 0.1 + (i % 2) * F * 0.2, i < 2 ? -F * 0.38 : -F * 0.75, F * 0.12);
+    for (let i = 0; i < stored; i++) { const gx = shx - F * 0.1 + (i % 2) * F * 0.2, gy = i < 2 ? -F * 0.38 : -F * 0.75; if (S.object) obj(ctx, S, gx, gy, F * 0.13, { always: true }); else gift(ctx, F, gx, gy, F * 0.12); }
     const recX = w * 0.3;
     const b = S.people[1];
     let x, pose, facing = 1, holding = gives;
@@ -915,14 +940,14 @@ SCENES.regalo = {
       if (S.r > 0) { pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S)); holding = false; facing = 1; }
     }
     const fa = drawFigure(ctx, { x, pose, F, facing, kind: a.kind, alpha: personDim(S) });
-    if (holding && neutral < 0.5) gift(ctx, F, fa.fh[0], fa.fh[1] + F * 0.06, F * 0.18);
+    if (holding && neutral < 0.5) { if (S.object) obj(ctx, S, fa.fh[0], fa.fh[1] + F * 0.08, F * 0.18); else gift(ctx, F, fa.fh[0], fa.fh[1] + F * 0.06, F * 0.18); }
     if (b) {
       let pb = breathe(POSES.stand, t + 1), fb = -1;
       if (gives) pb = lerpPose(pb, POSES.reach, smooth(S.p) * 0.4);
       else pb = lerpPose(pb, POSES.heart, 0.3 * (1 - smooth(S.p)));
       if (S.r > 0) { if (S.good) pb = lerpPose(POSES.reach, POSES.heart, resultBlend(S, 0.3, 0.6)); else { pb = lerpPose(pb, POSES.slump, resultBlend(S)); fb = 1; } }
       const fbf = drawFigure(ctx, { x: recX, pose: pb, F, facing: fb, kind: b.kind, alpha: personDim(S) });
-      if (gives && S.r >= 0.3) { const k = smooth((S.r - 0.3) / 0.4); gift(ctx, F, recX - F * 0.2, 0, F * 0.2, k, true); glow(ctx, recX - F * 0.2, -F * 0.25, F * 0.5 * k, ORANGE, 0.8); }
+      if (gives && S.r >= 0.3) { const k = smooth((S.r - 0.3) / 0.4); if (S.object) obj(ctx, S, recX - F * 0.2, 0, F * 0.22, { hot: k }); else gift(ctx, F, recX - F * 0.2, 0, F * 0.2, k, true); glow(ctx, recX - F * 0.2, -F * 0.25, F * 0.5 * k, ORANGE, 0.8); }
       void fbf;
     }
     if (S.good) S.focus = [recX - F * 0.2, -F * 1.3];

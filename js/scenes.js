@@ -1,5 +1,6 @@
 // Dos Caminos — escenas. Cada escena se dibuja en coordenadas de escenario:
 // x desde -w/2 a w/2, y = 0 es el suelo, y negativo hacia arriba.
+import { drawObject } from './objects.js';
 import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
 export const RED = '#E5484D';
@@ -147,6 +148,21 @@ function plankAt(ctx, h, F, facing) {
   ctx.strokeRect(h[0] - F * 0.12 + facing * F * 0.04, h[1] - F * 0.03, F * 0.24, F * 0.035);
 }
 function personDim(S) { return S.dimmed ? 0.85 : 1; }
+// Estado del objeto concreto del guion: en el camino bueno se enciende al final (rojo/naranja);
+// en el malo se va apagando y, si el final es caerse o alejarse, se cae.
+export function objState(S) {
+  return {
+    hot: S.good ? smooth((S.r - 0.35) / 0.35) : 0,
+    fade: S.good ? 0 : 0.5 * smooth(S.p) + 0.5 * smooth(S.r),
+    fall: !S.good && (S.bad === 'fall' || S.bad === 'apart') ? smooth((S.r - 0.2) / 0.4) : 0,
+  };
+}
+// Dibuja el objeto del guion en una ranura de la escena (en lugar del objeto genérico).
+export function obj(ctx, S, x, y, size, extra = {}) {
+  S.objHand = true;
+  if (NEUTRAL > 0.5 && !extra.always) return;
+  drawObject(ctx, S.object, x, y, size ?? S.F * 0.24, { ...objState(S), ...extra });
+}
 
 // Ciclo de trabajo: c = progreso en ciclos, k = ciclo actual, ph = fase dentro del ciclo
 function cycle(p, n) {
@@ -351,11 +367,13 @@ SCENES.puente = {
       if (hearts.length && hearts[hearts.length - 1].i === i) {
         const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
         const fade = (1 - NEUTRAL) * (S.good ? 1 : (1 - 0.3 * smooth(S.p)) * (1 - 0.5 * smooth((S.r - 0.3) / 0.6)));
-        glow(ctx, hx, hy, F * 0.35, RED, 0.5 * fade);
-        heart(ctx, hx, hy - F * 0.01, F * 0.12 * (1 + 0.05 * Math.sin(t * 3)), fade > 0.6 ? RED : '#8E3A3D', fade);
+        if (!S.object) glow(ctx, hx, hy, F * 0.35, RED, 0.5 * fade);
+        if (S.object) obj(ctx, S, hx, hy + F * 0.11, F * 0.24, { always: true });
+        else heart(ctx, hx, hy - F * 0.01, F * 0.12 * (1 + 0.05 * Math.sin(t * 3)), fade > 0.6 ? RED : '#8E3A3D', fade);
       }
     }
     if (S.good) S.focus = [meet ? 0 : (bL ? gR - F * 0.3 : gL + F * 0.3), -F * 1.35];
+    S.objSpot = [gL - F * 0.34, 0];
   },
 };
 
@@ -490,6 +508,7 @@ SCENES.arbol = {
     }
     const tr = drawTree(ctx, S, tx, g, decay);
     S.focus = [tx, -F * 0.95];
+    S.objSpot = [tx + F * 0.45, 0];
     // frutos rojos al final del camino bueno
     if (S.good && S.r > 0.3) {
       const k = smooth((S.r - 0.3) / 0.4);
@@ -659,6 +678,7 @@ SCENES.alcancia = {
     S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, jx + F * (0.45 + j * 0.4), -1, { kind: p2.act === 'gastar' ? 'stand' : 'drop', phase: 0.5 }));
     if (S.good) S.focus = S.focus || [jx, -jh - F * 0.6];
     if (NEUTRAL > 0.5) coin = null;
+    if (S.object && idle) S.objSpot = [jx, -jh - F * 0.02];
     if (idle && S.r < 0.5) phoneAt(ctx, fig.fh, F);
     if (coin) {
       setLine(ctx, F, 1, 0.8);
@@ -672,7 +692,8 @@ SCENES.alcancia = {
         cx = lerp(fig.fh[0], px - F * 0.4, k);
         cyy = lerp(fig.fh[1], -F * 0.1, k) - Math.sin(k * Math.PI) * F * 0.35;
       }
-      ctx.beginPath(); ctx.ellipse(cx, cyy, F * 0.03, F * 0.03, 0, 0, Math.PI * 2); ctx.stroke();
+      if (S.object) obj(ctx, S, cx, cyy + F * 0.06, F * 0.13);
+      else { ctx.beginPath(); ctx.ellipse(cx, cyy, F * 0.03, F * 0.03, 0, 0, Math.PI * 2); ctx.stroke(); }
     }
   },
 };
@@ -783,6 +804,7 @@ SCENES.casa = {
       else pose = lerpPose(pose, POSES.slump, resultBlend(S));
     }
     const wr = wl + cols * bw + bw * 0.25;
+    S.objSpot = [wl - F * 0.66, 0];
     S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, wr + F * (0.32 + j * 0.42), -1, { kind: BUILD.has(p2.act) && (share >= 1 || !S.good) ? 'work' : 'stand' }));
     const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
     if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.75); ctx.strokeRect(fig.fh[0] - bw / 2 + F * 0.03, fig.fh[1] - bh * 0.6, bw - 3, bh - 3); }
@@ -826,7 +848,8 @@ SCENES.escalera = {
     const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.35 * smooth(S.p)) * (1 - 0.6 * smooth(S.r / 0.6));
     if (S.good) S.focus = [sx, sy];
     glow(ctx, sx, sy, F * (0.35 + 0.5 * shine), GOLD, shine);
-    if (!(S.good && S.r > 0.5)) star(ctx, sx, sy, F * (0.05 + 0.03 * shine) * (1 + 0.04 * Math.sin(t * 2)), shine > 0.3 ? GOLD : '#8a7a4a', 0.5 + 0.5 * shine);
+    if (S.object) obj(ctx, S, sx, sy + F * 0.2, F * 0.36, { always: true });
+    else if (!(S.good && S.r > 0.5)) star(ctx, sx, sy, F * (0.05 + 0.03 * shine) * (1 + 0.04 * Math.sin(t * 2)), shine > 0.3 ? GOLD : '#8a7a4a', 0.5 + 0.5 * shine);
 
     S.people.forEach((pe, i) => {
       const act = pe.act;
@@ -919,6 +942,7 @@ SCENES.mesa = {
       if ((act === 'celular' || act === 'phone') && S.r < 0.6) phoneAt(ctx, fig.fh, FF);
     }
     if (S.good) S.focus = [0, -th - FF * 0.55];
+    S.objSpot = [0, -th - F * 0.005];
   },
 };
 
@@ -975,6 +999,7 @@ SCENES.fogata = {
     }
     flame(ctx, fx, -F * 0.05, size, F, t);
     if (S.good) S.focus = [fx, -F * 1.0];
+    S.objSpot = [fx - F * 0.34, 0];
     // chispas o humo
     if (S.good) {
       ctx.save(); ctx.fillStyle = '#FFD08A';
@@ -1082,6 +1107,7 @@ SCENES.camino = {
     // bandera en la cima
     const fxp = xe + w * 0.1;
     if (S.good) S.focus = [xe + w * 0.03, -Hh - F * 1.3];
+    S.objSpot = [Math.min(xe + w * 0.1 + F * 0.22, w / 2 - F * 0.13), -Hh];
     setLine(ctx, F, 0.85, 0.8);
     line(ctx, fxp, -Hh, fxp, -Hh - F * 0.4);
     ctx.save();
@@ -1214,14 +1240,19 @@ SCENES.libros = {
       if (flying) {
         const k = (cy.ph - 0.75) / 0.25;
         const bx = lerp(fig.fh[0], sx, k), by = lerp(fig.fh[1], -stackH - bh, k) - Math.sin(k * Math.PI) * F * 0.25;
-        ctx.strokeRect(bx - F * 0.12, by - bh / 2, F * 0.24, bh - 2);
+        if (S.object) obj(ctx, S, bx, by + F * 0.07, F * 0.14);
+        else ctx.strokeRect(bx - F * 0.12, by - bh / 2, F * 0.24, bh - 2);
       } else {
         const h = fig.fh;
-        ctx.beginPath();
-        ctx.moveTo(h[0] - F * 0.07, h[1] - F * 0.04); ctx.lineTo(h[0], h[1]); ctx.lineTo(h[0] + F * 0.07, h[1] - F * 0.04);
-        ctx.stroke();
+        if (S.object) obj(ctx, S, h[0], h[1] + F * 0.05, F * 0.15);
+        else {
+          ctx.beginPath();
+          ctx.moveTo(h[0] - F * 0.07, h[1] - F * 0.04); ctx.lineTo(h[0], h[1]); ctx.lineTo(h[0] + F * 0.07, h[1] - F * 0.04);
+          ctx.stroke();
+        }
       }
     } else if (!reads && S.r < 0.5) phoneAt(ctx, fig.fh, F);
+    if (S.object && (!reads || (S.good && S.r > 0.1))) { S.objHand = false; S.objSpot = [sx, -stackH]; }
   },
 };
 
@@ -1278,6 +1309,11 @@ SCENES.abrazo = {
     });
     // corazón entre los dos
     const hy = -F * 1.15;
+    if (S.object) {
+      obj(ctx, S, 0, hy + F * 0.38 + (!S.good ? smooth((S.r - 0.15) / 0.6) * F * 0.4 : 0), F * 0.34, { always: true, fall: !S.good ? smooth((S.r - 0.15) / 0.5) : 0 });
+      if (S.good) S.focus = [0, hy - F * 0.15];
+      return;
+    }
     if (S.good) {
       S.focus = [0, hy - F * 0.15];
       if (S.r > 0.7) return;
@@ -1296,4 +1332,4 @@ SCENES.abrazo = {
 
 export const SCENE_NAMES = Object.keys(SCENES);
 // herramientas compartidas con las escenas nuevas (scenes2.js)
-export const kit = { setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral: () => NEUTRAL, BUILD };
+export const kit = { obj, objState, setLine, line, groundLine, groundMass, phoneAt, cycle, workPose, resultBlend, bump, frac, rng, personDim, drawFigure, flame, getNeutral: () => NEUTRAL, BUILD };

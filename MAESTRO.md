@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (botón «Descargar video» para guardar en Fotos).
+Última actualización: 20 nov 2026 (objetos concretos: si el título o subtítulo nombra un objeto, se dibuja ese objeto).
 
 ---
 
@@ -21,7 +21,7 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 2. **Muñequitos blancos** con la misma simetría y proporciones del video del puente: cabeza redonda blanca rellena, cuerpo y extremidades de palitos blancos, siempre **dos brazos y dos piernas** y siempre **pisando el suelo** (o de rodillas / sentados, apoyados). Movimientos suaves.
    - La **muñequita** lleva **moñito atrás** y **sayita** sencilla.
    - Sin nombres, sin caras, sin protagonista fijo.
-3. **Objetos simples, limpios y ordenados**, como las pilas de tablas del puente. Suelo y orillas como masas sólidas gris muy oscuro que se funden con el negro.
+3. **Objetos simples, limpios y ordenados**, como las pilas de tablas del puente. Si el guion nombra un objeto concreto (flor, carta, pan, llave…), se dibuja ese objeto (ver §6 «Objetos concretos»). Suelo y orillas como masas sólidas gris muy oscuro que se funden con el negro.
 4. **Pocos toques de color cálido** (rojo o naranja: corazones brillantes, fogatas, una ventana encendida), solo en los momentos importantes. Nada de colores chillones ni azules fríos ni efectos de videojuego antiguo.
 5. **Final feliz = corazón grande y brillante** sobre el lado que termina bien.
 6. **Títulos de arriba bajados** para que no los tapen la flecha ni los botones de YouTube/Instagram/TikTok. Todo lo importante va dentro de la zona segura (ver §7).
@@ -135,6 +135,56 @@ Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2
 | `telefono` | Dos casas; ondas de una llamada; al final una línea naranja las une | llamar, ignorar | `B: NO CONTESTA \| LLAMADA {1-15} \| telefono \| mujer+hombre \| llamar+ignorar \| pierden` |
 | `regalo` | Caja con lazo (rojo solo al abrirla) y estante de regalos guardados | dar, guardar (2.º: esperar) | `A: LO DA A TIEMPO \| DÍA {1-30} \| regalo \| hombre+nina \| dar+esperar \| se unen` |
 
+### Objetos concretos (38)
+
+**Regla para todas las escenas:** si el `TITULO` o el título/subtítulo de un lado (`A:` / `B:`, también `_EN`) nombra uno de estos objetos, la escena dibuja **ese objeto** en lugar de su objeto genérico, con el mismo sello: líneas blancas; en el lado que termina bien se enciende en **rojo o naranja** al final, y en el lado malo se va apagando (y se cae si el final es `se cae` o `se alejan`). Si el objeto no está en la lista, se usa el genérico de la escena.
+
+- Si un lado nombra su propio objeto, ese lado lo usa; si no, se usa el del `TITULO`.
+- Si hay varios, gana el que va tras un artículo («Te regalo **una flor**» → flor; «**Un regalo** para mamá» → regalo); si no, el primero.
+- Dónde aparece: reemplaza lo que la escena tiene en la mano o en juego (corazón de quien espera en el puente, moneda en la alcancía, libro en las manos, pelota del parque, carta, regalo, productos de la tienda, luz de la escalera, cima de la montaña, corazón del abrazo, techo del coche); en las demás escenas aparece en un sitio fijo junto al personaje (sobre la mesa, el escritorio o el mueble de cocina, junto al árbol, en la cima del camino, bajo el columpio, en una mesita junto al sofá, etc.).
+- En el parque solo se lanzan objetos pequeños (pelota, manzana, flor, globo…); los grandes, como la bicicleta, esperan bajo el columpio.
+
+| Objeto | Palabras que lo activan (también en inglés: flower, letter, bread, ball, book, money, coin, key, ring, cup, bike, gift…) | Ejemplo |
+|---|---|---|
+| `flor` | flor, flores, rosa | `TITULO: Te regalo una flor` |
+| `carta` | carta, cartas | `A: UNA CARTA CADA SEMANA | SEMANA {1-20} | carta | …` |
+| `pan` | pan | `TITULO: El pan de cada día` |
+| `pelota` | pelota, balón | `A: SU PELOTA FAVORITA | TARDE {1-50} | parque | …` |
+| `libro` | libro, libros, biblia | `A: UN LIBRO CADA NOCHE | NOCHE {1-90} | libros | …` |
+| `dinero` | dinero, billete, dólares | `A: AHORRA {0-500} DÓLARES | … (subtítulo)` |
+| `moneda` | moneda, monedas | `TITULO: Moneda a moneda` |
+| `llave` | llave, llaves | `TITULO: La llave del éxito` |
+| `anillo` | anillo, alianza | `TITULO: Un anillo para siempre` |
+| `taza` | taza, café | `TITULO: Un café en la oficina` |
+| `bicicleta` | bicicleta, bici | `TITULO: Su primera bicicleta` |
+| `regalo` | regalo, regalos | `TITULO: Un regalo a tiempo` |
+| `maleta` | maleta, equipaje | `TITULO: La maleta lista` |
+| `guitarra` | guitarra | `A: PRACTICA LA GUITARRA | DÍA {1-100} | …` |
+| `vela` | vela, velas | `TITULO: Una vela encendida` |
+| `mochila` | mochila | `TITULO: Su mochila del colegio` |
+| `zapatos` | zapatos, tenis, zapatillas | `TITULO: Los tenis de correr` |
+| `foto` | foto, fotos, retrato | `TITULO: La foto de la familia` |
+| `estrella` | estrella, estrellita | `TITULO: Tu estrella` |
+| `globo` | globo, globos | `TITULO: Un globo rojo` |
+| `cometa` | cometa, papalote | `TITULO: La cometa de papá` |
+| `sombrero` | sombrero, gorra | `TITULO: El sombrero del abuelo` |
+| `gafas` | gafas, lentes | `TITULO: Sus lentes nuevos` |
+| `botella` | botella, agua | `A: TOMA AGUA | DÍA {1-30} | gimnasio | …` |
+| `plato` | plato, comida, cena | `TITULO: La cena en casa` |
+| `manzana` | manzana, fruta | `TITULO: Una manzana al día` |
+| `pastel` | pastel, torta, tarta, cumpleaños | `TITULO: Su pastel de cumpleaños` |
+| `osito` | osito, peluche, juguete | `TITULO: El osito de peluche` |
+| `maceta` | maceta, planta, plantita | `TITULO: La plantita de la ventana` |
+| `martillo` | martillo, herramienta | `TITULO: El martillo del abuelo` |
+| `lapiz` | lápiz, lápices | `TITULO: Un lápiz y un sueño` |
+| `cuaderno` | cuaderno, libreta | `TITULO: El cuaderno de metas` |
+| `trofeo` | trofeo, medalla, premio | `TITULO: La medalla llegó` |
+| `camara` | cámara | `TITULO: La cámara de fotos` |
+| `auriculares` | auriculares, audífonos | `A: CON AUDÍFONOS | NOCHE {1-30} | sofa | …` |
+| `candado` | candado | `TITULO: El candado del amor` |
+| `semilla` | semilla, semillas | `TITULO: Una semilla cada día` |
+| `corona` | corona | `TITULO: La corona de mamá` |
+
 ### Personajes
 
 | Palabra | Quién | Ejemplo |
@@ -232,6 +282,7 @@ Ejemplos de cada final nuevo:
 | `js/figure.js` | Muñequitos y poses |
 | `js/scenes.js` | Las 10 primeras escenas y herramientas comunes |
 | `js/scenes2.js` | Las 15 escenas nuevas |
+| `js/objects.js` | Los 38 objetos concretos y las palabras que los activan |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |
