@@ -191,3 +191,9 @@ textarea.short { flex: 0 0 auto; min-height: 110px; height: 22vh; }
 .vthumb .vplay { display: inline-block; }
 .vthumb.has-cover .vplay { margin-bottom: 14px; padding: 8px 16px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: var(--fg); }
 .vacts .dlv.cover { flex: 1 1 100%; background: rgba(229, 72, 77, 0.14); color: var(--fg); border-color: rgba(229, 72, 77, 0.7); }
+
+/* Primer comentario copiado */
+.copies button { font-size: 15px; }
+.comment-shown { margin-top: 8px; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(229, 72, 77, 0.6); background: rgba(229, 72, 77, 0.08); user-select: text; -webkit-user-select: text; }
+.comment-shown .cs-head { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.comment-shown .cs-text { font-size: 16px; line-height: 1.4; color: var(--fg); }

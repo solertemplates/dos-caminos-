@@ -7,7 +7,7 @@ import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './en
 import { remuxWithAudio } from './remux.js';
 import { settings, phrases, draft, counters, songs, videos, queue, persist } from './storage.js';
 import { addSongFiles, pickSong, CATS, CAT_LABEL, INTENSITY, INTENSITY_LABEL, intensityOf, songOffset } from './music.js';
-import { postText, NETWORKS } from './publish.js';
+import { postText, NETWORKS, commentsFor } from './publish.js';
 import { makeZip } from './zip.js';
 import { CLAUDE_PROMPT } from './format.js';
 import { pickFinal } from './finals.js';
@@ -313,9 +313,19 @@ async function makeOne(sc, idx, opts) {
     name: `${opts.lang === 'en' ? 'two-paths' : 'dos-caminos'}-${slug(job.title)}-${id.slice(-4)}.${out.ext}`,
     mime: out.mime, ext: out.ext, blob: out.blob, realtime: !!out.realtime, size: out.blob.size, song: song?.name || '', songId: song?.id || '', texts, posted: {},
     coverBuf: cover ? await cover.arrayBuffer() : null, coverType: 'image/jpeg',
+    phrase: v.phrase || '', question: v.question || '', // para los comentarios
     // receta para rehacer el audio (música + efectos) sin volver a dibujar el video
     recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {} }, seed: job.seed, layoutKind: job.layoutKind },
   };
+}
+
+// datos del guion para los comentarios (los videos de antes los sacan de su receta)
+function commentVars(rec) {
+  const sc = rec.recipe?.script;
+  const en = rec.lang === 'en';
+  const phrase = rec.phrase ?? ((en ? sc?.en?.phrase : sc?.phrase) || '');
+  const question = rec.question || (en ? sc?.en?.question : sc?.question) || '';
+  return { title: rec.title, phrase: String(phrase).replace(/\*/g, ''), question, lang: rec.lang };
 }
 
 // ---------- Portada ----------
@@ -489,7 +499,7 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v26';
+const APP_VERSION = 'v27';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -703,7 +713,7 @@ async function showVideos(highlight = new Set()) {
   picked = new Set([...picked].filter((id) => list.some((r) => r.id === id)));
   const box = $('#videoList');
   box.innerHTML = '';
-  $('#videosInfo').textContent = list.length ? `${list.length} ${list.length === 1 ? 'video guardado' : 'videos guardados'} en este teléfono. Cada botón de red copia el texto y abre el menú para publicar (el ✓ marca dónde ya lo publicaste). «Copiar texto» solo copia el texto de esa red: en la app, mantén el dedo en el cuadro y toca Pegar.` : 'Aún no hay videos. Pega guiones y pulsa «Crear videos».';
+  $('#videosInfo').textContent = list.length ? `${list.length} ${list.length === 1 ? 'video guardado' : 'videos guardados'} en este teléfono. Cada botón de red copia el texto y abre el menú para publicar (el ✓ marca dónde ya lo publicaste). «Comentario …» copia un primer comentario distinto en cada toque (10 por red): pégalo como primer comentario.` : 'Aún no hay videos. Pega guiones y pulsa «Crear videos».';
   $('#batchBtns').hidden = list.length < 2;
   for (const rec of list) {
     const file = fileOf(rec);
@@ -760,18 +770,34 @@ async function showVideos(highlight = new Set()) {
       nets.appendChild(b);
     }
     // botones grandes «Copiar texto» de cada red (aparte de compartir)
+    // primer comentario: cada toque copia uno NUEVO (10 por red y por video; después vuelve a empezar)
     const copies = document.createElement('div');
     copies.className = 'copies';
+    const said = document.createElement('div');
+    said.className = 'comment-shown';
+    said.hidden = true;
+    const cv = commentVars(rec);
     for (const n of NETWORKS) {
       const c = document.createElement('button');
       c.type = 'button';
-      c.innerHTML = `Copiar texto<small>${n.label}</small>`;
+      c.textContent = `Comentario ${n.label}`;
       c.addEventListener('click', () => {
-        const r = copyNow(rec.texts[n.id]);
-        rememberCopy(rec.texts[n.id], n.label);
-        logCopy(`botón Copiar texto ${n.label}`, r.ok);
-        r.later.then((ok2) => { if (!r.ok && !ok2) toast('No pude copiar. Abre «Ver textos para publicar» y copia a mano.', 4500); });
-        toast(copiedMsg(n.label), 4500);
+        const list = commentsFor(n.id, cv);
+        const idx = ((rec.commentIdx || {})[n.id] || 0) % list.length;
+        const text = list[idx];
+        const r = copyNow(text); // en el mismo toque (iPhone)
+        rememberCopy(text, n.label);
+        logCopy(`Comentario ${n.label} ${idx + 1}/${list.length}`, r.ok);
+        rec.commentIdx = { ...(rec.commentIdx || {}), [n.id]: idx + 1 };
+        videos.update(rec.id, { commentIdx: rec.commentIdx });
+        const msg = `Comentario copiado (${idx + 1} de ${list.length}). Pégalo como primer comentario`;
+        said.hidden = false;
+        said.innerHTML = '';
+        const h = document.createElement('div'); h.className = 'cs-head'; h.textContent = `${msg} en ${n.label}:`;
+        const b = document.createElement('div'); b.className = 'cs-text'; b.textContent = text;
+        said.append(h, b);
+        toast(msg, 4000);
+        r.later.then((ok2) => { if (!r.ok && !ok2) toast('No pude copiar. Mantén el dedo sobre el comentario de la tarjeta y cópialo.', 4500); });
         c.classList.add('copied');
         setTimeout(() => c.classList.remove('copied'), 1500);
       });
@@ -828,7 +854,7 @@ async function showVideos(highlight = new Set()) {
     un.textContent = 'Quitar las marcas ✓';
     un.addEventListener('click', () => { rec.posted = {}; videos.update(rec.id, { posted: {} }); nets.querySelectorAll('button').forEach((x) => x.classList.remove('done')); });
     det.appendChild(un);
-    card.append(thumb, head, meta, nets, copies, acts, det);
+    card.append(thumb, head, meta, nets, copies, said, acts, det);
     box.appendChild(card);
   }
   paintDelBar();
