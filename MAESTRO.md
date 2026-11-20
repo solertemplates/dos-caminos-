@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA FIJA DE RITMO y líneas A-MOMENTOS / B-MOMENTOS; videos de 60 s).
+Última actualización: 20 nov 2026 (REGLA DE ORO DE GUIONES y ejemplo modelo «Espera, hijo, un momento»).
 
 ---
 
@@ -18,7 +18,39 @@ Cada guion debe tener, como el video del puente:
 3. **Diferencia que crece:** cada segundo la distancia entre los dos caminos se nota más en el dibujo.
 4. **Final con sorpresa:** un desenlace que emocione y no sea obvio desde el principio (el puente que por fin se une, la carta que llega, la llave que se enciende arriba), y una pregunta que invite a verlo otra vez.
 
-El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta misma regla.
+El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta misma regla y con la REGLA DE ORO DE GUIONES (abajo).
+
+## ⭐ REGLA DE ORO DE GUIONES (cómo tiene que doler)
+
+1. **El error del lado malo se ve desde el primer segundo** (ej.: papá mira el móvil mientras su hijo quiere jugar). Misma escena y mismos personajes en los dos lados; en cuanto cada uno elige (a los ~2 s, justo tras el gancho) el error ya está en pantalla.
+2. **Dolor real entre dos personas:** pareja, padres e hijos, amistad, familia.
+3. **Alguien carga solo, espera o es ignorado**, como en el video del puente.
+4. **Final que duele** y hace pensar «esto me pasa a mí».
+5. **Siempre con FRASE fuerte y con A-MOMENTOS y B-MOMENTOS de 8 sucesos**, para que funcione en 15, 30 y 45 segundos. (En 15 s la app usa 5 de los 8: el primero, el último y tres de en medio; en 30 s cada suceso dura ~2,8 s; en 45 s la app intercala sucesos suaves para no pasar de 3 s.)
+
+**Ejemplo modelo** (probado en 15, 30 y 45 s, arriba-abajo y lados):
+
+```
+TITULO: Espera, hijo, un momento
+FRASE: Tu hijo no necesita un papá perfecto. Necesita un papá *presente*.
+TEMA: hijos
+EMOCION: emotiva
+DIVISION: arriba-abajo
+GANCHO: Papá, ¿juegas conmigo?
+A: DEJA EL MÓVIL Y JUEGA | TARDE {1-30} | parque | hombre+nino | jugar+jugar | se abrazan
+B: ESPERA, HIJO, UN MOMENTO | TARDE {1-30} | parque | hombre+nino | celular+jugar | se alejan
+A-MOMENTOS: el niño saluda > él lo mira > se ríen > el niño salta > él lo sujeta > el contador salta > celebran juntos > se abrazan
+B-MOMENTOS: él mira el móvil > el niño saluda > él no lo ve > el niño lo mira > el contador salta > el niño se cansa > anochece > el niño llora
+PREGUNTA: ¿Cuántas veces le dijiste «un momento»?
+TITULO_EN: Hold on, buddy, one minute
+GANCHO_EN: Dad, will you play with me?
+A_EN: PUTS THE PHONE DOWN | AFTERNOON {1-30}
+B_EN: HOLD ON, BUDDY | AFTERNOON {1-30}
+FRASE_EN: Your kid doesn't need a perfect dad. Just a *present* one.
+PREGUNTA_EN: How many times have you said "one minute"?
+---
+```
+En A el niño saluda, ríen, salta, papá lo sujeta, celebran y se abrazan bajo el corazón grande. En B papá está en el banco con el móvil desde el principio, el niño saluda y no lo ve, el niño se cansa, anochece y acaba en el suelo llorando mientras papá sigue con el móvil.
 
 ---
 
@@ -142,15 +174,15 @@ Un guion tras otro, separados por una línea `---`:
 
 ```
 TITULO: título corto (distinto en cada guion)
-FRASE: frase final del video, tal cual (opcional; *palabra* en rojo)
+FRASE: frase final del video, tal cual (siempre, fuerte; *palabra* en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-A-MOMENTOS: suceso > suceso > suceso   (opcional, de 3 a 8)
-B-MOMENTOS: suceso > suceso > suceso   (opcional, de 3 a 8)
+A-MOMENTOS: 8 sucesos separados por >   (la app acepta de 3 a 8; la regla de oro pide 8)
+B-MOMENTOS: 8 sucesos separados por >
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
 GANCHO_EN: hook in natural US English

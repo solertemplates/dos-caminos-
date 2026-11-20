@@ -129,7 +129,7 @@ function autoPick(R, pool, ctx) {
   const ok = pool.filter((t) => {
     const M = MOMENTS[t];
     if (!M) return false;
-    if (t === ctx.prev) return false;
+    if (t === ctx.prev || t === ctx.next) return false;
     if (ONCE.has(t) && ctx.used.has(t)) return false;
     if (M.out && ctx.indoor) return false;
     if (M.kind === 'fig' && ctx.noFig) return false;
@@ -176,11 +176,11 @@ function sidePlan({ user, T0, T1, seed, role, people, scene, arcWin, late0 }) {
   if (list.length > maxN) { const step = (list.length - 1) / (maxN - 1); list = Array.from({ length: maxN }, (_, k) => list[Math.round(k * step)]); }
   if (list.length) {
     const slot = span / list.length;
-    const parts = Math.max(1, Math.ceil(slot / 2.8));
+    const parts = Math.max(1, Math.ceil(slot / 3 - 1e-6));
     const part = slot / parts;
     list.forEach((m, j) => {
       const s0 = T0 + j * slot;
-      ctx.prev = m.type; ctx.used.add(m.type);
+      ctx.prev = m.type; ctx.used.add(m.type); ctx.next = list[j + 1]?.type;
       put(m, s0, s0 + part);
       for (let q = 1; q < parts; q++) {
         const ts = s0 + q * part;
@@ -457,7 +457,7 @@ function sparkles(ctx, x, y, rad, lt, a, color = WHITE) {
 const UPPER = ['tr', 'hd', 'fa1', 'fa2', 'ba1', 'ba2'];
 // acciones en las que la escena une una herramienta a la mano (cuchara, regadera, tabla, volante…):
 // esos personajes reaccionan con la cabeza, el torso y el símbolo, sin soltar la herramienta
-export const BUSY_ACTS = new Set(['construir', 'trabajar', 'build', 'work', 'regar', 'cuidar', 'cocinar', 'sembrar', 'escribir', 'vender', 'ahorrar', 'gastar', 'entrenar', 'conducir', 'jugar', 'escalar', 'aprovechar', 'dar', 'leer', 'subir', 'orar', 'orar-domingo', 'llamar']);
+export const BUSY_ACTS = new Set(['construir', 'trabajar', 'build', 'work', 'regar', 'cuidar', 'cocinar', 'sembrar', 'escribir', 'vender', 'ahorrar', 'gastar', 'entrenar', 'conducir', 'escalar', 'aprovechar', 'dar', 'leer', 'subir', 'orar', 'orar-domingo', 'llamar']);
 const upperOf = (base, p) => { const o = { ...base }; for (const k of UPPER) if (p[k] !== undefined) o[k] = p[k]; return o; };
 
 function poseFor(type, base, lt, e, standing) {

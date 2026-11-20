@@ -8,18 +8,44 @@ Antes de escribir, busca en la web qué temas y formatos de reels son virales ah
 3. Diferencia que crece: cada segundo se nota más en el dibujo.
 4. Final con sorpresa: un desenlace que emocione y no sea obvio desde el principio, y una pregunta que invite a verlo otra vez.
 
+REGLA DE ORO DE GUIONES (cómo tiene que doler)
+1. El error del lado malo se ve desde el primer segundo (ej.: papá mira el móvil mientras su hijo quiere jugar). Misma escena y personajes en los dos lados; en cuanto cada uno elige, el error ya está en pantalla.
+2. Dolor real entre dos personas: pareja, padres e hijos, amistad, familia.
+3. Alguien carga solo, espera o es ignorado, como en el video del puente.
+4. Final que duele y hace pensar «esto me pasa a mí».
+5. Siempre con FRASE fuerte y con A-MOMENTOS y B-MOMENTOS de 8 sucesos, para que funcione en 15, 30 y 45 segundos.
+Ejemplo modelo:
+TITULO: Espera, hijo, un momento
+FRASE: Tu hijo no necesita un papá perfecto. Necesita un papá *presente*.
+TEMA: hijos
+EMOCION: emotiva
+DIVISION: arriba-abajo
+GANCHO: Papá, ¿juegas conmigo?
+A: DEJA EL MÓVIL Y JUEGA | TARDE {1-30} | parque | hombre+nino | jugar+jugar | se abrazan
+B: ESPERA, HIJO, UN MOMENTO | TARDE {1-30} | parque | hombre+nino | celular+jugar | se alejan
+A-MOMENTOS: el niño saluda > él lo mira > se ríen > el niño salta > él lo sujeta > el contador salta > celebran juntos > se abrazan
+B-MOMENTOS: él mira el móvil > el niño saluda > él no lo ve > el niño lo mira > el contador salta > el niño se cansa > anochece > el niño llora
+PREGUNTA: ¿Cuántas veces le dijiste «un momento»?
+TITULO_EN: Hold on, buddy, one minute
+GANCHO_EN: Dad, will you play with me?
+A_EN: PUTS THE PHONE DOWN | AFTERNOON {1-30}
+B_EN: HOLD ON, BUDDY | AFTERNOON {1-30}
+FRASE_EN: Your kid doesn't need a perfect dad. Just a *present* one.
+PREGUNTA_EN: How many times have you said "one minute"?
+---
+
 Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
 
 TITULO: título corto (distinto en cada guion)
-FRASE: frase final que aparece grande al terminar el video, tal cual (opcional; pon *una palabra clave* entre asteriscos para que salga en rojo)
+FRASE: frase final fuerte que aparece grande al terminar el video, tal cual (siempre; pon *una palabra clave* entre asteriscos para que salga en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-A-MOMENTOS: suceso > suceso > suceso (opcional, de 3 a 8 sucesos del camino A)
-B-MOMENTOS: suceso > suceso > suceso (opcional, de 3 a 8 sucesos del camino B)
+A-MOMENTOS: 8 sucesos del camino A separados por >
+B-MOMENTOS: 8 sucesos del camino B separados por >
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
 GANCHO_EN: hook, natural US English
@@ -62,10 +88,10 @@ REGLAS DE LA HISTORIA
 5. Temas universales: pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil y la constancia. Fe solo de vez en cuando, sutil y con un mensaje que entienda cualquiera. Cada guion, de un tema distinto.
 
 REGLA FIJA DE RITMO
-En todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida. Para eso escribe en cada lado A-MOMENTOS y B-MOMENTOS: de 3 a 8 sucesos cortos separados por «>» que cuenten la historia paso a paso (cada uno dura lo mismo; no salen escritos, se dibujan). Ejemplo:
+En todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida. Para eso escribe en cada lado A-MOMENTOS y B-MOMENTOS: 8 sucesos cortos separados por «>» que cuenten la historia paso a paso (cada uno dura lo mismo; no salen escritos, se dibujan). Ejemplo:
 A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen
 B-MOMENTOS: llueve > él se cubre solo > ella tropieza > él no lo ve > ella se aleja
-En «se rinde», los sucesos de A y B antes de la caída deben ser los mismos. En 15 s caben como mucho 5 sucesos.
+En «se rinde», los sucesos de A y B antes de la caída deben ser los mismos. Escribe siempre 8: en 15 s la app usa 5 de ellos (el primero, el último y tres de en medio), en 30 y 45 s los usa todos.
 SUCESOS QUE LA APP SABE DIBUJAR (usa estas palabras; di quién: él, ella, el niño, la niña, juntos):
 - tiempo y escenario: llueve, sale el sol, anochece, nieva, sopla el viento, trueno, pasa un pájaro, estrella fugaz, algo cae (cae una manzana…), llega alguien (llega su hijo…), se enciende, se apaga, el contador salta
 - personajes: corazón, tropieza, se cae, la sujeta / le da la mano, se abrazan, se ríen, celebra / salta / baila, saluda, no lo ve / mira el móvil, mira, llora, se cansa / suspira, se sorprende, piensa / recuerda, se sienta, se aleja, se acerca / vuelve, se cubre(n), duerme, sigue / lo intenta otra vez
@@ -74,7 +100,7 @@ Si no escribes MOMENTOS, la app elige sucesos variados por su cuenta.
 REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.
 - Contador animado: {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
-- TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (opcional): máximo 14 palabras; es la frase final del video y sale tal cual; si no hay FRASE, sale el TITULO. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
+- TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (siempre, fuerte): máximo 14 palabras; es la frase final del video y sale tal cual. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
 - personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla.
