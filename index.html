@@ -63,6 +63,15 @@
     </div>
   </section>
 
+  <section class="block">
+    <div class="label">Música</div>
+    <div class="music-pick">
+      <select id="musicSel" aria-label="Música"></select>
+      <button class="play-btn" id="musicPlay" type="button" aria-label="Escuchar unos segundos">▶</button>
+    </div>
+    <p class="hint small" id="musicNote"></p>
+  </section>
+
   <button class="primary" id="create"><span data-i18n="create">Crear videos</span></button>
   <p class="foot" id="homeNote"></p>
 </main>
@@ -121,6 +130,23 @@
       <button class="chip danger" id="delSelected" disabled>Borrar seleccionados</button>
       <button class="chip danger subtle" id="delAll">Borrar todo</button>
     </div>
+  </div>
+</div>
+
+<!-- Cambiar la música de un video ya creado -->
+<div class="sheet" id="remusicSheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-head">
+      <h2>Cambiar música</h2>
+      <button class="text-btn" data-close>Cerrar</button>
+    </div>
+    <p class="hint" id="remusicTitle"></p>
+    <div class="music-pick">
+      <select id="remusicSel" aria-label="Canción"></select>
+      <button class="play-btn" id="remusicPlay" type="button" aria-label="Escuchar unos segundos">▶</button>
+    </div>
+    <button class="primary" id="remusicGo" type="button">Cambiar la música</button>
+    <p class="hint" id="remusicStatus"></p>
   </div>
 </div>
 

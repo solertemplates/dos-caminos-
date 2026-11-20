@@ -3,9 +3,10 @@ import { parseScripts } from './parser.js';
 import { EXAMPLES } from './examples.js';
 import { makeTimeline, layoutFor, makeStars } from './render.js';
 import { renderAudio } from './audio.js';
-import { encodeVideo, unlockAudio, isIOS } from './encoder.js';
+import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
+import { remuxWithAudio } from './remux.js';
 import { settings, phrases, draft, counters, songs, videos, queue, persist } from './storage.js';
-import { addSongFiles, pickSong, CATS, CAT_LABEL } from './music.js';
+import { addSongFiles, pickSong, CATS, CAT_LABEL, INTENSITY, INTENSITY_LABEL, intensityOf, songOffset } from './music.js';
 import { postText, NETWORKS } from './publish.js';
 import { makeZip } from './zip.js';
 import { CLAUDE_PROMPT } from './format.js';
@@ -90,6 +91,63 @@ async function refreshHome() {
   } catch (e) {}
 }
 refreshHome();
+
+// ---------- Música: elegir canción y escuchar unos segundos ----------
+async function fillSongSelect(sel, value) {
+  const l = await songs.meta();
+  sel.innerHTML = '';
+  const add = (v, txt) => { const o = document.createElement('option'); o.value = v; o.textContent = txt; sel.appendChild(o); };
+  add('random', l.length ? 'Aleatoria (nunca las fuertes)' : 'Aleatoria (música de la app)');
+  for (const s of l) add(s.id, `${s.name} · ${INTENSITY_LABEL[intensityOf(s)]}`);
+  sel.value = l.some((s) => s.id === value) ? value : 'random';
+  return l;
+}
+async function paintMusicPick() {
+  const l = await fillSongSelect($('#musicSel'), S.music);
+  const v = $('#musicSel').value;
+  const s = l.find((x) => x.id === v);
+  $('#musicNote').textContent = !l.length ? 'Sin canciones en el banco: los videos llevan una música suave de la app. Súbelas en Ajustes → Banco de música.'
+    : v === 'random' ? 'Aleatoria: elige según la emoción de cada guion y nunca usa las canciones «fuertes».'
+    : s && intensityOf(s) === 'fuerte' ? 'Canción fuerte: se usa solo porque la elegiste. Todos los videos de la tanda la llevarán.'
+    : 'Todos los videos de la tanda llevarán esta canción.';
+}
+$('#musicSel').addEventListener('change', () => { stopPreview(); S = settings.set({ music: $('#musicSel').value }); paintMusicPick(); });
+paintMusicPick();
+
+// ▶ escuchar ~10 s de la canción, desde donde empezaría en el video (Web Audio: suena también en iPhone tras leer el banco)
+let preview = null;
+function stopPreview() {
+  if (!preview) return;
+  try { preview.src.stop(); } catch (e) {}
+  preview.btn.textContent = '▶'; preview.btn.classList.remove('on');
+  preview = null;
+}
+async function playPreview(id, btn) {
+  const same = preview && preview.btn === btn;
+  stopPreview();
+  if (same) return;
+  if (!id || id === 'random') { toast('Elige una canción de la lista para escucharla.'); return; }
+  unlockAudio(); // en el mismo toque
+  const ac = audioCtx();
+  if (!ac) return;
+  btn.textContent = '…';
+  try {
+    const full = await songs.get(id);
+    const buf = await ac.decodeAudioData(full.data.slice(0));
+    const src = ac.createBufferSource(), g = ac.createGain();
+    src.buffer = buf; src.connect(g).connect(ac.destination);
+    const t = ac.currentTime + 0.05, len = Math.min(10, buf.duration);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.9, t + 0.3);
+    g.gain.setValueAtTime(0.9, t + len - 0.8); g.gain.linearRampToValueAtTime(0.0001, t + len);
+    src.start(t, songOffset(buf.duration, S.duration), len);
+    preview = { src, btn };
+    btn.textContent = '■'; btn.classList.add('on');
+    src.onended = () => { if (preview && preview.src === src) stopPreview(); };
+  } catch (e) { btn.textContent = '▶'; toast('No pude leer esa canción.'); }
+}
+$('#musicPlay').addEventListener('click', () => playPreview($('#musicSel').value, $('#musicPlay')));
+$('#remusicPlay').addEventListener('click', () => playPreview($('#remusicSel').value, $('#remusicPlay')));
+$('#remusicSel').addEventListener('change', stopPreview);
 
 // ---------- pegar y elegir guiones ----------
 const ta = $('#scriptsText');
@@ -176,11 +234,11 @@ function buildJob(script, idx, opts) {
   const sideTexts = isTime
     ? (en ? E.stages : script.stages).map((lbl) => ({ title: lbl, sub: (en && E.sides?.[0]?.sub) || script.sides[0].sub }))
     : script.sides.map((sd, i) => (en && E.sides?.[i]) || { title: sd.title, sub: sd.sub });
-  const layoutKind = isTime ? 'time' : S.layout === 'auto' ? script.layout || (idx % 3 === 2 ? 'lr' : 'ab') : S.layout;
+  const layoutKind = opts.layoutKind || (isTime ? 'time' : S.layout === 'auto' ? script.layout || (idx % 3 === 2 ? 'lr' : 'ab') : S.layout);
   const tl = makeTimeline(opts.duration);
-  const seed = (Date.now() + idx * 977) % 100000;
+  const seed = opts.seed ?? (Date.now() + idx * 977) % 100000;
   return {
-    tl, seed,
+    tl, seed, layoutKind,
     layout: layoutFor(layoutKind),
     stars: makeStars(seed),
     sides: script.sides,
@@ -212,7 +270,7 @@ document.addEventListener('visibilitychange', () => {
 async function makeOne(sc, idx, opts) {
   const job = buildJob(sc, idx, opts);
   const D = opts.duration;
-  const song = await pickSong(sc.emotion);
+  const song = await pickSong(sc.emotion, opts.music || 'random');
   const audio = await renderAudio({ job, D, musicData: song?.data, sfxOn: S.sfx, sfxVol: S.sfxVol, musicVol: S.musicVol });
   const enc = (force) => encodeVideo({
     canvas: $('#stage'), job, audio, D, scale: S.quality, signal: abort.signal, force,
@@ -250,9 +308,69 @@ async function makeOne(sc, idx, opts) {
   return {
     id, created: Date.now(), title: job.title, theme: sc.theme, lang: opts.lang, duration: D,
     name: `${opts.lang === 'en' ? 'two-paths' : 'dos-caminos'}-${slug(job.title)}-${id.slice(-4)}.${out.ext}`,
-    mime: out.mime, ext: out.ext, blob: out.blob, realtime: !!out.realtime, size: out.blob.size, song: song?.name || '', texts, posted: {},
+    mime: out.mime, ext: out.ext, blob: out.blob, realtime: !!out.realtime, size: out.blob.size, song: song?.name || '', songId: song?.id || '', texts, posted: {},
+    // receta para rehacer el audio (música + efectos) sin volver a dibujar el video
+    recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {} }, seed: job.seed, layoutKind: job.layoutKind },
   };
 }
+
+// ---------- Mis videos: cambiar la música sin volver a crear el video ----------
+let remusicRec = null;
+async function openRemusic(rec) {
+  remusicRec = rec;
+  stopPreview();
+  $('#remusicTitle').textContent = `«${rec.title}» · ahora: ${rec.song ? '♪ ' + rec.song : 'música de la app'}`;
+  await fillSongSelect($('#remusicSel'), rec.songId || 'random');
+  $('#remusicStatus').textContent = rec.ext !== 'mp4' ? 'Este video no es MP4: no se le puede cambiar la música.'
+    : rec.recipe ? 'Solo cambia el audio: el dibujo queda igual. Los efectos de sonido se mantienen.'
+    : 'Este video se creó antes de esta función: la música nueva irá sin efectos de sonido.';
+  $('#remusicGo').disabled = rec.ext !== 'mp4';
+  open('#remusicSheet');
+}
+$('#remusicGo').addEventListener('click', async () => {
+  const rec = remusicRec;
+  if (!rec) return;
+  unlockAudio(); // en el mismo toque (iPhone graba la música nueva en tiempo real)
+  stopPreview();
+  const btn = $('#remusicGo'), st = $('#remusicStatus');
+  btn.disabled = true;
+  keepAwake(true);
+  const info = { when: new Date().toISOString(), title: rec.title };
+  try {
+    const D = rec.duration;
+    const job = rec.recipe ? buildJob(rec.recipe.script, rec.recipe.idx, { ...rec.recipe.opts, seed: rec.recipe.seed, layoutKind: rec.recipe.layoutKind }) : { emotion: 'emotiva' };
+    const song = await pickSong(rec.recipe?.script?.emotion || 'emotiva', $('#remusicSel').value);
+    st.textContent = 'Preparando la música nueva…';
+    const audio = await renderAudio({ job, D, musicData: song?.data, sfxOn: !!rec.recipe && S.sfx, sfxVol: S.sfxVol, musicVol: S.musicVol });
+    const realtime = isIOS() && S.iosMethod !== 'fast';
+    if (realtime) st.textContent = `Grabando la música nueva (${D} s)… deja la pantalla encendida.`;
+    const a = await encodeAudioOnly(audio, { realtime, onProgress: (k) => { if (realtime) st.textContent = `Grabando la música nueva… ${Math.round(k * 100)} %`; } });
+    info.audio = { method: a.method, codec: a.codec, chunks: a.chunks.length };
+    st.textContent = 'Uniendo la música al video…';
+    const src = rec.blob || new Blob([rec.buf], { type: rec.mime });
+    const blob = remuxWithAudio(await src.arrayBuffer(), a);
+    // comprobación: la música nueva está dentro y suena
+    const out = { blob, ext: 'mp4' };
+    const mp4 = await inspectOut(out), heard = await hearMp4(out);
+    info.mp4 = mp4; info.heard = heard; info.song = song?.name || '(música de la app)';
+    const silent = heard && heard.decoded && heard.whole.rms < 0.002 && (audio.__info?.whole?.rms || 0) > 0.01;
+    if (!audioOk(mp4, D) || silent) throw new Error(silent ? 'la música nueva sale en silencio' : 'la música nueva no quedó completa en el MP4');
+    const name = rec.name.replace(/\.\w+$/, '.mp4');
+    await saveVideo({ ...rec, blob, buf: null, size: blob.size, mime: 'video/mp4', ext: 'mp4', name, song: song?.name || '', songId: song?.id || '', saved: false, savedMute: false });
+    info.ok = true;
+    close('#remusicSheet');
+    toast('Música cambiada. Descárgalo otra vez para guardarlo en Fotos.', 4000);
+    showVideos(new Set([rec.id]));
+  } catch (e) {
+    console.error(e);
+    info.ok = false; info.error = `${e.name}: ${e.message}`;
+    st.textContent = `No pude cambiar la música: ${e.message}. El video sigue como estaba.`;
+  } finally {
+    try { localStorage.setItem('dc.diagRemusic', JSON.stringify(info)); } catch (e) {}
+    btn.disabled = false;
+    if (!running) keepAwake(false);
+  }
+});
 
 // ---------- Diagnóstico ----------
 async function inspectOut(out) {
@@ -329,10 +447,19 @@ function diagText() {
     L.push(`Archivo: ${s.name} · ${s.type} · ${mb(s.size || 0)} · menú compartir disponible: ${yes(s.canShare)}`);
     L.push(`Resultado: ${s.result}`);
   }
+  let rmx = null;
+  try { rmx = JSON.parse(localStorage.getItem('dc.diagRemusic') || 'null'); } catch (e) {}
+  if (rmx) {
+    const ra = rmx.mp4?.tracks?.find((t) => t.kind === 'audio');
+    L.push('', `ÚLTIMO «CAMBIAR MÚSICA»: «${rmx.title}» · ${new Date(rmx.when).toLocaleString()} · ${rmx.ok ? 'bien' : 'falló'}`);
+    if (rmx.song) L.push(`Canción: ${rmx.song} · audio ${rmx.audio ? `${rmx.audio.method} (${rmx.audio.codec}, ${rmx.audio.chunks} bloques)` : '—'}`);
+    if (ra) L.push(`Pista de audio nueva: ${ra.codec} · ${ra.seconds.toFixed(1)} s${rmx.heard?.decoded ? ` · suena: ${rmx.heard.whole.rms < 0.002 ? 'NO' : 'SÍ'} (${rmx.heard.whole.rms})` : ''}`);
+    if (rmx.error) L.push(`Error: ${rmx.error}`);
+  }
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v23';
+const APP_VERSION = 'v24';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -352,7 +479,7 @@ function startBatch(scripts) {
   unlockAudio(); // en el mismo toque, para que iPhone deje grabar la música
   const q = queue.get();
   if (q && q.idx < q.items.length && !confirm('Hay una tanda sin terminar. ¿Empezar una nueva y descartarla?')) return;
-  queue.set({ items: scripts, idx: 0, opts: { duration: S.duration, lang: S.lang, total: scripts.length }, ids: [] });
+  queue.set({ items: scripts, idx: 0, opts: { duration: S.duration, lang: S.lang, total: scripts.length, music: S.music || 'random' }, ids: [] });
   runQueue();
 }
 
@@ -536,7 +663,9 @@ async function showVideos(highlight = new Set()) {
     });
     const del = document.createElement('button'); del.textContent = 'Borrar';
     del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); picked.delete(rec.id); showVideos(); refreshHome(); } });
-    acts.append(dl, dlm, del);
+    const rm = document.createElement('button'); rm.textContent = 'Cambiar música';
+    rm.addEventListener('click', () => openRemusic(rec));
+    acts.append(dl, dlm, rm, del);
     const det = document.createElement('details');
     det.innerHTML = '<summary>Ver textos para publicar</summary><pre></pre>';
     det.querySelector('pre').textContent = NETWORKS.map((n) => `— ${n.label} —\n${rec.texts[n.id]}`).join('\n\n');
@@ -661,6 +790,12 @@ async function paintSongs() {
     for (const c of CATS) { const o = document.createElement('option'); o.value = c; o.textContent = CAT_LABEL.es[c]; sel.appendChild(o); }
     sel.value = s.category;
     sel.addEventListener('change', () => songs.update(s.id, { category: sel.value, auto: false }));
+    // suave / emotiva / fuerte (en modo aleatorio nunca se usan las fuertes)
+    const isel = document.createElement('select');
+    isel.setAttribute('aria-label', 'Intensidad');
+    for (const c of INTENSITY) { const o = document.createElement('option'); o.value = c; o.textContent = INTENSITY_LABEL[c]; isel.appendChild(o); }
+    isel.value = intensityOf(s);
+    isel.addEventListener('change', async () => { await songs.update(s.id, { intensity: isel.value }); paintMusicPick(); });
     const play = document.createElement('button'); play.textContent = 'Escuchar';
     play.addEventListener('click', async () => {
       if (audioEl) { audioEl.pause(); URL.revokeObjectURL(audioEl.src); if (audioEl._id === s.id) { audioEl = null; play.textContent = 'Escuchar'; return; } }
@@ -671,8 +806,8 @@ async function paintSongs() {
       play.textContent = 'Parar';
     });
     const del = document.createElement('button'); del.textContent = 'Borrar';
-    del.addEventListener('click', async () => { if (confirm(`¿Borrar «${s.name}»?`)) { await songs.del(s.id); paintSongs(); } });
-    acts.append(sel, play, del);
+    del.addEventListener('click', async () => { if (confirm(`¿Borrar «${s.name}»?`)) { await songs.del(s.id); paintSongs(); paintMusicPick(); } });
+    acts.append(sel, isel, play, del);
     li.append(name, acts);
     ul.appendChild(li);
   }
@@ -688,6 +823,7 @@ $('#musicInput').addEventListener('change', async (e) => {
   await addSongFiles(files, (s) => { n++; st.textContent = `${n} de ${files.length}: «${s.name}» → ${CAT_LABEL.es[s.category]}`; });
   st.textContent = `${n} ${n === 1 ? 'canción guardada' : 'canciones guardadas'} en el teléfono.`;
   paintSongs();
+  paintMusicPick();
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

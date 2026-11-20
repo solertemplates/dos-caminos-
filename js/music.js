@@ -8,6 +8,22 @@ export const CAT_LABEL = {
   en: { romantica: 'Romantic', tension: 'Tension', triste: 'Sad', emotiva: 'Emotional', inspiracional: 'Inspiring', alegre: 'Happy' },
 };
 
+// Intensidad de cada canción (se cambia en Ajustes). En modo aleatorio nunca se usan las «fuertes».
+export const INTENSITY = ['suave', 'emotiva', 'fuerte'];
+export const INTENSITY_LABEL = { suave: 'Suave', emotiva: 'Emotiva', fuerte: 'Fuerte' };
+// si la canción aún no tiene etiqueta: por su análisis o, si no, por su categoría
+export function intensityOf(s) {
+  if (s.intensity) return s.intensity;
+  if (s.category === 'tension') return 'fuerte';
+  if (s.category === 'triste' || s.category === 'romantica') return 'suave';
+  return 'emotiva';
+}
+function intensityByFeatures(f) {
+  if (f.energy > 0.2 && f.rate > 1.4) return 'fuerte';
+  if (f.energy < 0.1) return 'suave';
+  return 'emotiva';
+}
+
 const WORDS = {
   romantica: ['love', 'amor', 'romant', 'heart', 'corazon', 'kiss', 'beso', 'wedding', 'boda', 'together', 'juntos', 'valentine', 'tender'],
   tension: ['tension', 'suspense', 'dark', 'oscur', 'thriller', 'epic', 'battle', 'storm', 'tormenta', 'drama', 'intense', 'danger', 'cinematic'],
@@ -75,6 +91,7 @@ export async function addSongFiles(files, onEach) {
       type: file.type || 'audio/mpeg',
       category: cat || 'emotiva',
       auto: true,
+      intensity: feat ? intensityByFeatures(feat) : (cat === 'tension' ? 'fuerte' : cat === 'triste' || cat === 'romantica' ? 'suave' : 'emotiva'),
       duration: feat?.duration || 0,
       added: Date.now(),
       lastUsed: 0,
@@ -93,19 +110,33 @@ const NEAR = {
   emotiva: ['inspiracional', 'triste', 'romantica'], inspiracional: ['emotiva', 'alegre'], alegre: ['inspiracional', 'romantica'],
 };
 
-// Elige la canción menos usada de la emoción (o de una cercana). Devuelve {id, name, data} o null.
-export async function pickSong(emotion) {
-  const meta = await songs.meta();
+// Elige la canción: choice = id de una canción concreta, o 'random' (la menos usada de la emoción o de una cercana,
+// NUNCA una «fuerte»). Devuelve {id, name, category, intensity, data} o null (= música propia de la app).
+export async function pickSong(emotion, choice = 'random') {
+  if (choice && choice !== 'random') {
+    const full = await songs.get(choice);
+    if (full) {
+      await songs.update(full.id, { lastUsed: Date.now(), uses: (full.uses || 0) + 1 });
+      return { id: full.id, name: full.name, category: full.category, intensity: intensityOf(full), data: full.data, chosen: true };
+    }
+  }
+  const meta = (await songs.meta()).filter((s) => intensityOf(s) !== 'fuerte');
   if (!meta.length) return null;
   const tiers = [[emotion], NEAR[emotion] || [], CATS];
   for (const cats of tiers) {
     const pool = meta.filter((s) => cats.includes(s.category));
     if (!pool.length) continue;
     pool.sort((a, b) => a.lastUsed - b.lastUsed || Math.random() - 0.5);
-    const choice = pool[0];
-    await songs.update(choice.id, { lastUsed: Date.now(), uses: (choice.uses || 0) + 1 });
-    const full = await songs.get(choice.id);
-    return { id: full.id, name: full.name, category: full.category, data: full.data };
+    const choice2 = pool[0];
+    await songs.update(choice2.id, { lastUsed: Date.now(), uses: (choice2.uses || 0) + 1 });
+    const full = await songs.get(choice2.id);
+    return { id: full.id, name: full.name, category: full.category, intensity: intensityOf(full), data: full.data };
   }
   return null;
+}
+
+// desde qué segundo suena la canción en un video de D segundos (igual que en audio.js)
+export function songOffset(duration, D = 30) {
+  if (duration > D + 25) return Math.min(12, duration * 0.08);
+  return 0;
 }

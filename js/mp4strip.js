@@ -5,7 +5,7 @@
 
 const CONTAINERS = new Set(['moov', 'trak', 'mdia', 'mvex', 'moof', 'traf', 'mfra', 'edts', 'minf', 'stbl']);
 
-function* boxes(u8, dv, start, end) {
+export function* boxes(u8, dv, start, end) {
   let p = start;
   while (p + 8 <= end) {
     let size = dv.getUint32(p);
@@ -19,7 +19,7 @@ function* boxes(u8, dv, start, end) {
   }
 }
 const markFree = (u8, b) => { u8[b.p + 4] = 0x66; u8[b.p + 5] = 0x72; u8[b.p + 6] = 0x65; u8[b.p + 7] = 0x65; }; // 'free'
-const find = (u8, dv, b, type) => { for (const c of boxes(u8, dv, b.body, b.end)) if (c.type === type) return c; return null; };
+export const find = (u8, dv, b, type) => { for (const c of boxes(u8, dv, b.body, b.end)) if (c.type === type) return c; return null; };
 
 function trackInfo(u8, dv, trak) {
   const tkhd = find(u8, dv, trak, 'tkhd');

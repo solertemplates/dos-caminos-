@@ -86,6 +86,7 @@ export const DEFAULTS = {
   signPhrases: true,
   starNote: true,
   handle: '',
+  music: 'random', // 'random' o el id de una canción del banco
   iosMethod: 'realtime', // en iPhone: 'realtime' (seguro) o 'fast' (WebCodecs, en prueba)
 };
 export const settings = {

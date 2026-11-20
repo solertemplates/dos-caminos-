@@ -2,6 +2,7 @@
 // Vía rápida: WebCodecs (H.264 + AAC) + mp4-muxer. Respaldo: MediaRecorder en tiempo real.
 import { Muxer, ArrayBufferTarget } from '../vendor/mp4-muxer.mjs';
 import { renderFrame, FPS, W, H } from './render.js';
+import { audioChunksFromMp4 } from './remux.js';
 
 const VCODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42002a', 'avc1.640033', 'avc1.42e01f'];
 let support = null;
@@ -51,6 +52,8 @@ export function unlockAudio() {
     s.buffer = b; s.connect(sharedAC.destination); s.start(0);
   } catch (e) { console.warn('audio', e); }
 }
+
+export function audioCtx() { return sharedAC && sharedAC.state !== 'closed' ? sharedAC : null; }
 
 // Configuración AAC-LC (AudioSpecificConfig) para el MP4, por si el navegador no la da.
 function aacConfig(sampleRate, channels) {
@@ -199,4 +202,80 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   if (signal?.aborted) throw new DOMException('cancelado', 'AbortError');
   const type = mime.split(';')[0];
   return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type, realtime: true, diag: { recorderMime: mime, audioContext: own ? 'nuevo' : 'desbloqueado al tocar', audioStateBefore: acBefore, audioTracks: dest.stream.getAudioTracks().length } };
+}
+
+// ---------------------------------------------------------------------------
+// Solo audio (para «Cambiar música» en Mis videos): devuelve chunks listos para remuxWithAudio.
+// En iPhone (salvo «Rápido» en Ajustes) se graba en tiempo real con MediaRecorder, el método que suena en Fotos.
+export async function encodeAudioOnly(audio, { realtime = false, onProgress } = {}) {
+  if (realtime) {
+    const mime = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'].find((m) => { try { return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m); } catch (e) { return false; } });
+    if (mime) return { ...(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
+  }
+  const tries = [
+    { codec: 'aac', cfg: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, bitrate: 160000 } },
+    { codec: 'opus', cfg: { codec: 'opus', sampleRate: audio.sampleRate, numberOfChannels: 2, bitrate: 128000 } },
+  ];
+  if (typeof AudioEncoder !== 'undefined') {
+    for (const tr of tries) {
+      try { if (!(await AudioEncoder.isConfigSupported(tr.cfg)).supported) continue; } catch (e) { continue; }
+      return { ...(await encodeAudioWC(audio, tr.codec, tr.cfg, onProgress)), method: 'rápido' };
+    }
+  }
+  const mime = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'].find((m) => { try { return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m); } catch (e) { return false; } });
+  if (mime) return { ...(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
+  throw new Error('este navegador no puede crear audio para MP4');
+}
+
+async function encodeAudioWC(audio, codec, cfg, onProgress) {
+  const chunks = [];
+  let err = null, description = codec === 'aac' ? aacConfig(audio.sampleRate, 2) : undefined;
+  const enc = new AudioEncoder({
+    output: (c, m) => {
+      let data = new Uint8Array(c.byteLength);
+      c.copyTo(data);
+      if (codec === 'aac' && data.length > 7 && data[0] === 0xff && (data[1] & 0xf6) === 0xf0) data = data.slice(data[1] & 1 ? 7 : 9);
+      if (codec === 'opus' && !chunks.length && m?.decoderConfig?.description) description = new Uint8Array(m.decoderConfig.description);
+      if (data.length) chunks.push({ data, ts: c.timestamp, dur: c.duration || Math.round((1024 / audio.sampleRate) * 1e6) });
+    },
+    error: (e) => (err = e),
+  });
+  try { enc.configure(codec === 'aac' ? { ...cfg, aac: { format: 'aac' } } : cfg); } catch (e) { enc.configure(cfg); }
+  const L = audio.getChannelData(0), R = audio.getChannelData(1), step = 4096;
+  for (let i = 0; i < audio.length; i += step) {
+    const n = Math.min(step, audio.length - i), data = new Float32Array(n * 2);
+    data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
+    const ad = new AudioData({ format: 'f32-planar', sampleRate: audio.sampleRate, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round((i / audio.sampleRate) * 1e6), data });
+    enc.encode(ad); ad.close();
+    if (i % (step * 40) === 0) { onProgress?.(i / audio.length); await sleep(0); }
+  }
+  await enc.flush(); enc.close();
+  if (err) throw err;
+  if (!chunks.length) throw new Error('el codificador no dio audio');
+  return { codec, sampleRate: audio.sampleRate, channels: 2, description: description && description.byteLength >= (codec === 'opus' ? 18 : 2) ? description : codec === 'aac' ? aacConfig(audio.sampleRate, 2) : undefined, chunks };
+}
+
+async function recordAudio(audio, mime, onProgress) {
+  const own = !(sharedAC && sharedAC.state !== 'closed');
+  const ac = own ? new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audio.sampleRate }) : sharedAC;
+  await ac.resume();
+  const dest = ac.createMediaStreamDestination();
+  const src = ac.createBufferSource();
+  src.buffer = audio;
+  src.connect(dest);
+  const rec = new MediaRecorder(dest.stream, { mimeType: mime, audioBitsPerSecond: 160000 });
+  const parts = [];
+  rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
+  const done = new Promise((r) => (rec.onstop = r));
+  rec.start(500);
+  const t0 = ac.currentTime + 0.05;
+  src.start(t0);
+  const D = audio.duration;
+  while (ac.currentTime - t0 < D) { onProgress?.((ac.currentTime - t0) / D); await sleep(200); }
+  await sleep(150);
+  rec.stop();
+  await done;
+  try { src.stop(); } catch (e) {}
+  if (own) ac.close();
+  return audioChunksFromMp4(await new Blob(parts).arrayBuffer());
 }
