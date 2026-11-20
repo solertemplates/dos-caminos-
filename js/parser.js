@@ -2,6 +2,7 @@
 import { SCENE_NAMES } from './scenes.js';
 import { findObject } from './objects.js';
 import { USES, USE_ALIAS } from './uses.js';
+import { parseMomentList } from './moments.js';
 
 export const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
@@ -186,6 +187,9 @@ export function parseScripts(text) {
   splitBlocks(text).forEach((block, bi) => {
     const f = { en: {} };
     for (const raw of block.split('\n')) {
+      // A-MOMENTOS: / B-MOMENTOS: (también MOMENTOS_A, A MOMENTOS…): sucesos de cada lado separados por «>»
+      const mm = raw.match(/^\s*[#*\-\s]*(?:([AaBb])[\s_\-]*MOMENTOS|MOMENTOS[\s_\-]*([AaBb]))\s*:\s*(.*)$/i);
+      if (mm) { f[`mom${(mm[1] || mm[2]).toUpperCase()}`] = mm[3].replace(/\*\*/g, '').trim(); continue; }
       const m = raw.match(/^\s*[#*\-\s]*([A-Za-zÁÉÍÓÚáéíóúÑñ]+)(?:[_ ]?(EN|en))?\s*:\s*(.*)$/);
       if (!m) continue;
       const key = KEY[norm(m[1])];
@@ -211,6 +215,10 @@ export function parseScripts(text) {
     const general = findObject(f.title, f.en.title);
     A.object = findObject(A.title, A.sub, enA[0], enA[1]) || general;
     if (B !== A) B.object = findObject(B.title, B.sub, enB[0], enB[1]) || general;
+    // MOMENTOS: con «>» (sin A/B) = los sucesos del lado A (o del único camino en «tiempo»)
+    if (!f.momA && f.stages && />/.test(f.stages)) { f.momA = f.stages; f.stages = ''; }
+    A.moments = parseMomentList(f.momA);
+    if (B !== A) B.moments = parseMomentList(f.momB);
     const stagesOf = (v, def) => { const l = (v || '').split('|').map((x) => x.trim()).filter(Boolean); return l.length === 3 ? l : def; };
     const enSide = (v, base) => {
       if (!v) return null;

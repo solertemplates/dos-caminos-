@@ -18,6 +18,8 @@ DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
+A-MOMENTOS: suceso > suceso > suceso (opcional, de 3 a 8 sucesos del camino A)
+B-MOMENTOS: suceso > suceso > suceso (opcional, de 3 a 8 sucesos del camino B)
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
 GANCHO_EN: hook, natural US English
@@ -58,6 +60,16 @@ REGLAS DE LA HISTORIA
 3. Desde ahí la diferencia crece poco a poco hasta el final: uno crece o se une; el otro se seca, se queda atrás o se cae.
 4. Un lado termina bien y el otro mal. Se cuenta con acciones y objetos, no con carteles.
 5. Temas universales: pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil y la constancia. Fe solo de vez en cuando, sutil y con un mensaje que entienda cualquiera. Cada guion, de un tema distinto.
+
+REGLA FIJA DE RITMO
+En todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida. Para eso escribe en cada lado A-MOMENTOS y B-MOMENTOS: de 3 a 8 sucesos cortos separados por «>» que cuenten la historia paso a paso (cada uno dura lo mismo; no salen escritos, se dibujan). Ejemplo:
+A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen
+B-MOMENTOS: llueve > él se cubre solo > ella tropieza > él no lo ve > ella se aleja
+En «se rinde», los sucesos de A y B antes de la caída deben ser los mismos. En 15 s caben como mucho 5 sucesos.
+SUCESOS QUE LA APP SABE DIBUJAR (usa estas palabras; di quién: él, ella, el niño, la niña, juntos):
+- tiempo y escenario: llueve, sale el sol, anochece, nieva, sopla el viento, trueno, pasa un pájaro, estrella fugaz, algo cae (cae una manzana…), llega alguien (llega su hijo…), se enciende, se apaga, el contador salta
+- personajes: corazón, tropieza, se cae, la sujeta / le da la mano, se abrazan, se ríen, celebra / salta / baila, saluda, no lo ve / mira el móvil, mira, llora, se cansa / suspira, se sorprende, piensa / recuerda, se sienta, se aleja, se acerca / vuelve, se cubre(n), duerme, sigue / lo intenta otra vez
+Si no escribes MOMENTOS, la app elige sucesos variados por su cuenta.
 
 REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.

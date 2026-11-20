@@ -1,7 +1,8 @@
 // Dos Caminos — audio. Efectos de sonido sintetizados por código (obra propia, dedicada CC0)
 // y mezcla con la música del banco del usuario. Todo se genera en el teléfono, sin API.
 import { SCENES } from './scenes.js';
-import { tOfP, timeEventP, rolesOf, pathInv, arcTime, ARC } from './render.js';
+import { tOfP, timeEventP, rolesOf, pathInv, arcTime, ARC, momentsOf } from './render.js';
+import { MOMENTS } from './moments.js';
 
 const SR = 48000;
 
@@ -210,6 +211,19 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
       play('wind', tD + ARC.quit[0], {}, roles.indexOf('bad') ? 0.25 : -0.25);
     } else if (isTime) [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
     play('ping', tl.endStart + 0.5, { vol: 0.8 });
+    // sucesos (regla de ritmo): un sonido suave al empezar cada uno
+    const heard = new Set();
+    momentsOf(job).forEach((plan, i) => {
+      const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.3 : -0.3) : (i ? 0.12 : -0.12);
+      for (const e of plan) {
+        const fx = MOMENTS[e.type]?.sfx;
+        const key = `${e.type}@${e.t0.toFixed(2)}`;
+        if (!fx || heard.has(key)) continue;
+        heard.add(key);
+        if (e.type === 'llueve') [0, 0.35, 0.8, 1.3].forEach((d) => play('drip', e.t0 + d, { vol: 0.45 }, pan));
+        else play(fx, e.t0 + 0.05, { vol: 0.45 }, pan);
+      }
+    });
   }
   const rendered = await ctx.startRendering();
   // nivel de la mezcla (para el Diagnóstico)

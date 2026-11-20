@@ -4,6 +4,7 @@ import { drawObject } from './objects.js';
 import { USES } from './uses.js';
 import { WHITE } from './figure.js';
 import './scenes2.js';
+import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
@@ -234,8 +235,19 @@ function shootingStar(ctx, t) {
 }
 
 // job: { texts:{hook,phrase,question,signature,sides:[{title,sub}]}, sides:[{scene,people,good,bad}], layout, tl, seed, stars }
+// SUCESOS (REGLA FIJA DE RITMO): un plan por panel, calculado una vez por video
+export function momentsOf(job) {
+  if (!job.moments) {
+    const roles = rolesOf(job);
+    const tD = arcTime(job.tl);
+    job.moments = planMoments(job, { roles, tD, arcEnd: tD + ARC.quit[1] + 0.25 });
+  }
+  return job.moments;
+}
+
 export function renderFrame(ctx, job, t, scale = 1) {
   if (job.roles === undefined) job.roles = rolesOf(job);
+  const plans = momentsOf(job);
   const { tl, layout } = job;
   const st = stateAt(tl, t);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -286,6 +298,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
+      // la misma caja en todos los paneles: así un suceso igual se dibuja igual en los dos lados (regla del arco)
+      box: { l: -Math.min(...layout.panels.map((q) => q.stageW)) / 2, r: Math.min(...layout.panels.map((q) => q.stageW)) / 2, top: Math.max(...layout.panels.map((q) => q.clip[1] - q.groundY)), bot: Math.min(...layout.panels.map((q) => q.clip[1] + q.clip[3] - q.groundY)) },
+      moments: st.phase === 'hook' ? null : momentsNow(plans[i], t),
     };
     let a = endDim * hookIn * ps.show;
     if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.5 * smooth(st.endK * 2.5);
@@ -304,6 +319,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     withAlpha(ctx, sceneAlpha, () => scene.draw(ctx, S));
     setNeutral(0);
     setCurrent(null);
+    // sucesos del escenario: lluvia, sol, alguien llega, algo cae, se enciende…
+    if (S.moments) withAlpha(ctx, sceneAlpha, () => drawWorldMoments(ctx, S, S.moments));
     // objeto concreto del guion en su sitio fijo (si la escena no lo usó en una ranura propia)
     if (S.object && !S.objHand && S.objSpot) drawObject(ctx, S.object, S.objSpot[0], S.objSpot[1], pn.F * 0.3, { ...objState(S), fade: objState(S).fade * (ps.neutral > 0.5 ? 0 : 1) });
     // final feliz: corazón grande y brillante sobre el objeto principal de la escena
@@ -337,8 +354,11 @@ export function renderFrame(ctx, job, t, scale = 1) {
     let y = pn.titleY;
     for (const ln of lines.slice(0, 3)) { spaced(ctx, ln, ax, y, pn.size * 0.18, left); y += pn.size * 1.2; }
     if (tx.sub) {
-      ctx.font = `400 ${pn.sub}px ${FONT}`;
-      ctx.globalAlpha = titleA * 0.6;
+      // «el contador salta»: el subtítulo late y se calienta un instante
+      const jump = st.phase === 'hook' ? 0 : counterPulse(momentsNow(plans[i], t));
+      ctx.font = `400 ${Math.round(pn.sub * (1 + 0.28 * jump))}px ${FONT}`;
+      ctx.globalAlpha = titleA * (0.6 + 0.4 * jump);
+      if (jump > 0.05) ctx.fillStyle = jump > 0.4 ? AMBER : WHITE;
       const sub = counterText(tx.sub, ps.cp).toUpperCase();
       for (const ln of wrap(ctx, sub, pn.tw, pn.sub * 0.24).slice(0, 2)) { spaced(ctx, ln, ax, y + pn.sub * 0.25, pn.sub * 0.24, left); y += pn.sub * 1.3; }
     }
@@ -405,6 +425,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
       }
     }
     ctx.restore();
+    // regla de ritmo en el cierre largo: una estrella fugaz como la del principio (el final se parece al inicio)
+    const se = e - (tl.end - 2.4);
+    if (tl.end > 4 && se > 0 && se < 1.2) shootingStar(ctx, se);
   }
 }
 

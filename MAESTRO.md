@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (iPhone graba en tiempo real por defecto; el Diagnóstico escucha el MP4).
+Última actualización: 20 nov 2026 (REGLA FIJA DE RITMO y líneas A-MOMENTOS / B-MOMENTOS; videos de 60 s).
 
 ---
 
@@ -44,7 +44,9 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 
 8. **REGLA FIJA DE MOVIMIENTO: todos los movimientos son como los de una persona real.** Piernas, brazos, manos y objetos se mueven coordinados y en la dirección correcta (ver «Movimiento real» abajo). **Toda acción nueva debe cumplir esta regla y probarse en los dos lados de la división antes de subirla.**
 
-Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` (composición, estrellas, textos, zona segura).
+9. **REGLA FIJA DE RITMO: en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos. Nunca más de 3 segundos de la misma acción repetida.** Lo cumplen los **sucesos** (ver «Ritmo y sucesos» en §4 y la lista en §6): los del guion (`A-MOMENTOS` / `B-MOMENTOS`) o, si no hay, los que elige la app para la escena.
+
+Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` (composición, estrellas, textos, zona segura), `js/moments.js` (sucesos).
 
 ### Movimiento real (cómo está hecho y qué hay que comprobar)
 
@@ -113,7 +115,7 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 6. **Tipo «tiempo»** (`DIVISION: tiempo`): un solo camino visto en tres momentos — HOY, EN UN MES, EN UN AÑO. Mismo personaje y mismo camino en las tres franjas; lo que cambia es el resultado (el árbol crece, la alcancía se llena, la escalera se sube, la casa se completa). Las franjas se revelan una tras otra y al final **EN UN AÑO se ilumina** con luz cálida y el **corazón grande**. Aquí no hay momento de elección (es un solo camino).
 7. Los guiones los escribe el usuario (con Claude). La app **no inventa guiones con plantillas**. El único ejemplo incluido es el del puente.
 
-## 4. Estructura del video (15 / 30 / 45 s)
+## 4. Estructura del video (15 / 30 / 45 / 60 s)
 
 | Momento | Qué pasa |
 |---|---|
@@ -123,6 +125,16 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 | después | El bueno se levanta y sigue; el malo lo intenta, se desanima y se queda sentado. |
 | resultado (2–3 s) | Uno florece (corazón grande y brillante), el otro se apaga. |
 | cierre (3,5–6,5 s) | **Frase final** (FRASE tal cual; si no hay, el TITULO), grande, centrada y en blanco, con las palabras entre *asteriscos* en rojo + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
+
+### ⭐ Ritmo y sucesos (REGLA FIJA DE RITMO)
+
+- **Algo nuevo y visible cada 2–3 s; nunca más de 3 s de la misma acción repetida.**
+- 0–1,8 s: gancho (frase, estrella fugaz, latido). ~2,5 s: cada uno elige distinto. Desde ahí hasta el cierre, **un suceso detrás de otro**. Resultado: corazón grande. Cierre: frase (0,35 s), pregunta (1,5 s), corazoncito (2,1 s) y, en los cierres largos (30–60 s), una estrella fugaz como la del principio.
+- **Con MOMENTOS** (`A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen`): de 3 a 8 sucesos por lado, separados por `>`. Cada suceso dura lo mismo y se reparten desde la elección (~2,5 s) hasta el cierre. Si a un suceso le toca más de ~2,8 s (videos largos o pocos sucesos), ese hueco se completa con sucesos suaves de la app (el contador salta, un corazón, una luz, un pájaro, una reacción…) para que nunca pasen más de 3 s sin novedad. Si hay más de los que caben (cada uno necesita ≥ 1,6 s; en 15 s caben 5), se usan el primero, el último y los de en medio repartidos.
+- **Sin MOMENTOS:** la app inventa sucesos variados para la escena cada ~2,5 s: algo cae, alguien llega, cambia el tiempo, el contador salta, una reacción, un objeto que se enciende… En el lado bueno, sucesos cálidos (luz, corazón, risa, saludo, pájaros, sol, al final abrazo o celebración); en el malo, fríos (humo, cansancio, móvil, viento, lluvia, noche, al final lágrimas). Nunca repite el mismo seguido y usa primero los menos usados.
+- **Regla del arco («se rinde»):** antes del momento difícil los dos lados tienen **exactamente los mismos sucesos** (los del lado bueno), para que sigan idénticos píxel a píxel; durante la caída común y el rendirse, los sucesos de personaje se quedan en su símbolo (no cambian la pose del arco).
+- **Tipo «tiempo»:** los sucesos van a la franja que se está revelando en ese momento.
+- Cada suceso tiene un sonido suave (gotas, viento, pasos, campanita…), también CC0.
 
 ## 5. Formato de guion
 
@@ -137,6 +149,8 @@ DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
+A-MOMENTOS: suceso > suceso > suceso   (opcional, de 3 a 8)
+B-MOMENTOS: suceso > suceso > suceso   (opcional, de 3 a 8)
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
 GANCHO_EN: hook in natural US English
@@ -159,6 +173,12 @@ PREGUNTA_EN: closing question in natural US English
   FRASE_EN: Time never comes *back*
   ```
   → en el video: «El tiempo no **vuelve**» con «vuelve» en rojo. En los textos para publicar la frase va sin asteriscos.
+- **MOMENTOS** (opcional, una línea por lado, también vale `MOMENTOS_A`): de 3 a 8 sucesos separados por `>`, escritos con palabras sencillas de la lista de §6 «Sucesos». No salen escritos en pantalla: se dibujan. Ejemplo:
+  ```
+  A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen
+  B-MOMENTOS: llueve > él se cubre solo > ella tropieza > él no lo ve > ella se aleja
+  ```
+  En el tipo «tiempo», `A-MOMENTOS` (o `MOMENTOS:` con `>`).
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas. TITULO ≤ 10 palabras. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
 - **Contador animado:** `{inicio-fin}` dentro del subtítulo → `DÍA {1-45}` va de «DÍA 1» a «DÍA 45».
 - Si falta `TEMA`, se usa `constancia`. Si falta `EMOCION`, la del tema. Si falta `PREGUNTA`, «¿Cuál de los dos eres tú?» / «Which one are you?».
@@ -367,6 +387,51 @@ El personaje **usa el objeto como lo haría una persona**: el objeto va **en su 
 | `caer-bici` | bicicleta | Va en bici por el camino, se cae de la bici y se queda en el suelo | `camino \| nina \| caer-bici \| se queda` |
 | `levantarse-bici` | bicicleta | Va en bici, se cae a mitad del camino y se vuelve a montar | `camino \| nina \| levantarse-bici \| llega` |
 
+### Sucesos (MOMENTOS) que la app sabe dibujar
+
+Se escriben en `A-MOMENTOS:` / `B-MOMENTOS:` con palabras sencillas; la app reconoce la palabra clave y quién lo hace («él», «ella», «el niño», «la niña», «mamá»…; «juntos», «los dos» o un verbo en plural = todos).
+
+| Suceso | Se escribe (ejemplos) | Qué se ve |
+|---|---|---|
+| `llueve` | llueve, empieza a llover, tormenta | Lluvia que cae y salpica; **se queda** hasta que otro suceso de tiempo la cambie |
+| `sol` | sale el sol, amanece, deja de llover | Sol cálido que sube en el cielo (se queda) |
+| `noche` | anochece, se hace de noche | El panel se oscurece y sale la luna (se queda) |
+| `nieva` | nieva | Copos que caen (se queda) |
+| `viento` | sopla el viento, brisa | Ráfagas y hojitas naranjas que cruzan |
+| `rayo` | trueno, relámpago | Destello y rayo |
+| `pajaro` | pasa un pájaro, mariposa | Dos pájaros cruzan el cielo |
+| `fugaz` | estrella fugaz, pide un deseo | Estrella fugaz |
+| `cae` | algo cae, cae una manzana, se cae el vaso | El objeto del guion (o una manzana) cae y rebota en el suelo |
+| `llega` | llega alguien, llega su hijo, aparece un amigo | Alguien nuevo entra caminando desde el borde y saluda (se queda) |
+| `enciende` | se enciende, brilla, luz | Luz cálida y chispitas en el objeto principal |
+| `apaga` | se apaga, humo | Humo gris que sube |
+| `contador` | el contador salta, pasan los días | El contador del subtítulo late y se pone ámbar |
+| `corazon` | corazón, amor, beso | Manos al pecho y un corazón rojo que sube |
+| `tropieza` | tropieza, resbala | Se va hacia delante, adelanta un pie, estira los brazos y recupera el equilibrio; polvo en los pies |
+| `caerse` | se cae (una persona) | Cae al suelo (en «se rinde» la caída es la del arco) |
+| `sujeta` | él la sujeta, le da la mano, ayuda | Estira los brazos hacia el otro; luz cálida en la mano |
+| `abraza` | se abrazan | Abrazo y corazón |
+| `rie` | se ríen, sonríe | Cabeza atrás, sacudidas de risa, chispitas |
+| `celebra` | celebra, salta, baila, lo logra | Brazos arriba y saltitos, chispitas doradas |
+| `saluda` | saluda, se despide | Mano arriba que se mueve |
+| `movil` | no lo ve, mira el móvil, ignora | Mira el móvil (pantalla azulada) |
+| `mira` | mira, levanta la vista | Levanta la cabeza |
+| `llora` | llora, triste | Cabeza baja, manos a la cara y lágrimas |
+| `cansa` | se cansa, suspira, no puede | Hombros caídos y gota de sudor |
+| `sorpresa` | se sorprende, descubre | Brazos medio arriba y «!» ámbar |
+| `piensa` | piensa, recuerda, duda | Mano a la barbilla y puntitos de pensamiento |
+| `sienta` | se sienta, descansa | Se sienta en el suelo |
+| `aleja` | se aleja, se va, da la espalda | Camina hacia el borde, de espaldas, y se queda allí más apagado |
+| `acerca` | se acerca, vuelve, regresa | Camina hacia el centro y se queda allí |
+| `cubre` | se cubre, se cubren juntos | Brazos sobre la cabeza |
+| `duerme` | duerme, bosteza | Cabeza caída y «z» |
+| `insiste` | sigue, lo intenta otra vez, se esfuerza | Se inclina con esfuerzo y rayitas de ánimo |
+| `reaccion` | (cualquier frase que no se reconoce) | El personaje gira la cabeza con rayitas de atención |
+
+Notas:
+- Si un personaje está trabajando con una herramienta que la escena le pone en la mano (construir, cocinar, regar, conducir…), reacciona con la **cabeza, el torso y el símbolo**, sin soltar la herramienta (REGLA DE MOVIMIENTO). Sentados mueven solo la parte de arriba; acostados o en bici, el símbolo.
+- En escenas de interior (mesa, cocina, oficina, sofá, cama, libros, reloj, regalo, gimnasio) la app no inventa lluvia, sol, noche, pájaros ni viento (si el guion los pide, sí los dibuja).
+
 ### Finales
 
 | Tipo | Palabras | Qué se ve | Ejemplo |
@@ -396,7 +461,7 @@ Ejemplos de cada final nuevo:
 
 ## 8. App (pocos botones)
 
-- **Pantalla principal:** Pegar guiones · Duración (15/30/45) · Idioma (Español / English US) · Crear videos. Arriba: «Mis videos» y Ajustes.
+- **Pantalla principal:** Pegar guiones · Duración (15/30/45/60) · Idioma (Español / English US) · Crear videos. Arriba: «Mis videos» y Ajustes.
 - **Pegar guiones:** cada guion aparece con su casilla; botones **Crear seleccionados** y **Crear todos**.
 - **Creación en tanda:** cada video se guarda en el teléfono (IndexedDB) **en cuanto termina**. La tanda se guarda; si la app se cierra o el teléfono se bloquea, al volver aparece «Continuar» y sigue donde se quedó. Se pide mantener la pantalla encendida (y se usa Wake Lock cuando el iPhone lo permite).
 - **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene dos botones que abren el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (cada uno queda marcado con ✓): **Descargar con música** (el MP4 con la canción dentro, H.264 + AAC) y **Descargar sin música** (el mismo MP4 sin pista de audio, para ponerle música dentro de Instagram, TikTok o YouTube; se obtiene al instante quitando la pista de audio sin volver a codificar, `js/mp4strip.js`, y se guarda con «-sin-musica» en el nombre); **Guardar todos** y **ZIP** (con los textos). Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden).
@@ -423,6 +488,7 @@ Ejemplos de cada final nuevo:
 | `js/uses.js` | Las acciones con objetos (pose y dónde va el objeto) |
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
+| `js/moments.js` | Sucesos (regla de ritmo): lista, lectura de MOMENTOS, reparto en el tiempo y dibujo |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |
 | `js/storage.js` | IndexedDB / localStorage |
