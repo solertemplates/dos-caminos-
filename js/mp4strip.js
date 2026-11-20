@@ -82,7 +82,7 @@ export function inspectMp4(buffer) {
         if (b.type !== 'trak') continue;
         const info = trackInfo(u8, dv, b);
         if (!info) continue;
-        const t = { id: info.id, kind: info.handler === 'soun' ? 'audio' : info.handler === 'vide' ? 'video' : info.handler, codec: '', timescale: 0, seconds: 0, samples: 0, esds: null, fragTicks: 0 };
+        const t = { id: info.id, kind: info.handler === 'soun' ? 'audio' : info.handler === 'vide' ? 'video' : info.handler, codec: '', timescale: 0, seconds: 0, samples: 0, bytes: 0, esds: null, fragTicks: 0 };
         const mdia = find(u8, dv, b, 'mdia');
         const mdhd = mdia && find(u8, dv, mdia, 'mdhd');
         if (mdhd) {
@@ -104,14 +104,19 @@ export function inspectMp4(buffer) {
                 if (c.type === 'esds') {
                   // busca el DecoderSpecificInfo (tag 0x05): la configuración AAC
                   let k = c.body + 4, cfg = 0;
-                  while (k < c.end - 2) { if (u8[k] === 0x05) { let n = 0, j = k + 1, by; do { by = u8[j++]; n = (n << 7) | (by & 0x7f); } while (by & 0x80 && j < c.end); cfg = n; break; } k++; }
-                  t.esds = { configBytes: cfg };
+                  while (k < c.end - 2) { if (u8[k] === 0x05) { let n = 0, j = k + 1, by; do { by = u8[j++]; n = (n << 7) | (by & 0x7f); } while (by & 0x80 && j < c.end); cfg = n; k = j; break; } k++; }
+                  t.esds = { configBytes: cfg, config: cfg ? [...u8.subarray(k, k + Math.min(cfg, 24))].map((x) => x.toString(16).padStart(2, '0')).join(' ') : '' };
                 }
               }
             }
           }
           const stsz = find(u8, dv, stbl, 'stsz');
-          if (stsz) t.samples = dv.getUint32(stsz.body + 8);
+          if (stsz) {
+            t.samples = dv.getUint32(stsz.body + 8);
+            const fixed = dv.getUint32(stsz.body + 4);
+            if (fixed) t.bytes = fixed * t.samples;
+            else for (let i = 0; i < t.samples && stsz.body + 12 + i * 4 + 4 <= stsz.end; i++) t.bytes += dv.getUint32(stsz.body + 12 + i * 4);
+          }
         }
         out.tracks.push(t);
         byId[t.id] = t;
@@ -135,8 +140,10 @@ export function inspectMp4(buffer) {
           t.samples += n;
           let k = c.body + 8 + (fl & 0x01 ? 4 : 0) + (fl & 0x04 ? 4 : 0);
           const per = ((fl & 0x100 ? 1 : 0) + (fl & 0x200 ? 1 : 0) + (fl & 0x400 ? 1 : 0) + (fl & 0x800 ? 1 : 0)) * 4;
+          const k0 = k;
           if (fl & 0x100) for (let i = 0; i < n && k + 4 <= c.end; i++, k += per) t.fragTicks += dv.getUint32(k);
           else t.fragTicks += n * defDur;
+          if (fl & 0x200) { const off = fl & 0x100 ? 4 : 0; for (let i = 0, q2 = k0 + off; i < n && q2 + 4 <= c.end; i++, q2 += per) t.bytes += dv.getUint32(q2); }
         }
       }
     }

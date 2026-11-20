@@ -86,6 +86,7 @@ export const DEFAULTS = {
   signPhrases: true,
   starNote: true,
   handle: '',
+  iosMethod: 'realtime', // en iPhone: 'realtime' (seguro) o 'fast' (WebCodecs, en prueba)
 };
 export const settings = {
   get: () => ({ ...DEFAULTS, ...LS.get('settings', {}) }),

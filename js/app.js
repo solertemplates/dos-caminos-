@@ -3,7 +3,7 @@ import { parseScripts } from './parser.js';
 import { EXAMPLES } from './examples.js';
 import { makeTimeline, layoutFor, makeStars } from './render.js';
 import { renderAudio } from './audio.js';
-import { encodeVideo, unlockAudio } from './encoder.js';
+import { encodeVideo, unlockAudio, isIOS } from './encoder.js';
 import { settings, phrases, draft, counters, songs, videos, queue, persist } from './storage.js';
 import { addSongFiles, pickSong, CATS, CAT_LABEL } from './music.js';
 import { postText, NETWORKS } from './publish.js';
@@ -218,26 +218,31 @@ async function makeOne(sc, idx, opts) {
     canvas: $('#stage'), job, audio, D, scale: S.quality, signal: abort.signal, force,
     onProgress: (k) => { $('#progBar').style.width = `${((idx + k) / opts.total) * 100}%`; },
   });
-  let out = await enc();
+  // En iPhone se graba en tiempo real mientras se investiga por qué el método rápido sale mudo
+  // (Ajustes → Diagnóstico → «Método en iPhone» permite probar el rápido).
+  const iosForced = isIOS() && S.iosMethod !== 'fast';
+  let out = await enc(iosForced ? 'realtime' : undefined);
   let mp4 = await inspectOut(out);
+  let heard = await hearMp4(out);
   const encDiag = [...out.diag.tried];
   // comprobación final dentro del archivo: si el MP4 no trae la música entera, se rehace en tiempo real
-  if (out.method === 'webcodecs' && !audioOk(mp4, D) && out.diag.support.mediaRecorder) {
-    encDiag.push({ method: 'comprobación del MP4', ok: false, error: mp4 ? `audio en el MP4: ${mp4.audio ? mp4.audio.seconds.toFixed(1) + ' s' : 'ninguno'}` : 'no se pudo leer el MP4' });
+  const mixLoud = (audio.__info?.whole?.rms || 0) > 0.01;
+  const mute = (h) => h && h.decoded && mixLoud && h.whole.rms < 0.002;
+  if (out.method === 'webcodecs' && (!audioOk(mp4, D) || mute(heard)) && out.diag.support.mediaRecorder) {
+    encDiag.push({ method: 'comprobación del MP4', ok: false, error: !audioOk(mp4, D) ? (mp4 ? `audio en el MP4: ${mp4.tracks.find((t) => t.kind === 'audio') ? 'incompleto' : 'ninguno'}` : 'no se pudo leer el MP4') : 'el audio del MP4 se oye en silencio' });
     const out2 = await enc('realtime');
-    const mp42 = await inspectOut(out2);
     encDiag.push(...out2.diag.tried);
-    out = out2; mp4 = mp42;
+    out = out2; mp4 = await inspectOut(out2); heard = await hearMp4(out2);
   }
   saveDiag({
     when: new Date().toISOString(), title: job.title, duration: D, lang: opts.lang,
-    device: deviceInfo(), support: out.diag.support, method: out.method, tries: encDiag,
+    device: deviceInfo(), support: out.diag.support, method: out.method, iosForced, tries: encDiag, heard,
     song: song ? { name: song.name, category: song.category || '', ...(audio.__info?.song || {}) } : { name: '(ninguna en el banco: música propia de la app)' },
     mix: audio.__info ? { firstSecond: audio.__info.firstSecond, whole: audio.__info.whole } : null,
     file: { mime: out.mime, ext: out.ext, size: out.blob.size, mp4 },
-    audioOk: audioOk(mp4, D), retried: wasHidden && !!out.realtime,
+    audioOk: audioOk(mp4, D) && !mute(heard), retried: wasHidden && !!out.realtime,
   });
-  if (mp4 && !audioOk(mp4, D)) toast('Aviso: este video salió sin música completa. Mira Ajustes → Diagnóstico.', 5000);
+  if ((mp4 && !audioOk(mp4, D)) || mute(heard)) toast('Aviso: este video salió sin música completa. Mira Ajustes → Diagnóstico.', 5000);
   const n = counters.next('videos');
   const v = { title: job.title, phrase: job.texts.postPhrase, question: job.texts.question, theme: sc.theme, lang: opts.lang, star: S.starNote && n % 4 === 0 };
   const texts = Object.fromEntries(NETWORKS.map((nw) => [nw.id, postText(nw.id, v)]));
@@ -254,6 +259,17 @@ async function inspectOut(out) {
   if (out.ext !== 'mp4') return null;
   try { const m = inspectMp4(await out.blob.arrayBuffer()); return { brand: m.brand, fragmented: m.fragmented, tracks: m.tracks }; }
   catch (e) { return { error: `${e.name}: ${e.message}`, tracks: [] }; }
+}
+// Escucha el MP4 terminado: lo decodifica como lo haría Fotos y mide si de verdad suena.
+async function hearMp4(out) {
+  try {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const ac = new OAC(2, 48000, 48000);
+    const buf = await ac.decodeAudioData(await out.blob.arrayBuffer());
+    const ch = buf.getChannelData(0), sr = buf.sampleRate;
+    const lvl = (a, b) => { let s = 0, pk = 0; const i0 = Math.floor(a * sr), i1 = Math.min(ch.length, Math.floor(b * sr)); for (let i = i0; i < i1; i++) { s += ch[i] * ch[i]; pk = Math.max(pk, Math.abs(ch[i])); } return { rms: +Math.sqrt(s / Math.max(1, i1 - i0)).toFixed(3), peak: +pk.toFixed(3) }; };
+    return { decoded: true, seconds: +buf.duration.toFixed(1), firstSecond: lvl(0, 1), whole: lvl(0, buf.duration) };
+  } catch (e) { return { decoded: false, error: `${e.name}: ${e.message}` }; }
 }
 function audioOk(mp4, D) {
   if (!mp4) return null; // webm: no se puede comprobar
@@ -290,9 +306,12 @@ function diagText() {
     const a = m?.tracks?.find((t) => t.kind === 'audio'), v = m?.tracks?.find((t) => t.kind === 'video');
     L.push('', `ÚLTIMO VIDEO: «${d.title}» (${d.duration} s) · ${new Date(d.when).toLocaleString()}`);
     L.push(`¿Tiene música dentro?: ${d.audioOk === null ? 'no se puede comprobar (WebM)' : d.audioOk ? 'SÍ' : 'NO'}`);
+    const h = d.heard;
+    if (h) L.push(h.decoded ? `¿Suena al reproducirlo?: ${h.whole.rms < 0.002 ? 'NO, SILENCIO' : 'SÍ'} (volumen leído del MP4: primer segundo ${h.firstSecond.rms}, pico ${h.firstSecond.peak} · todo ${h.whole.rms} · ${h.seconds} s)` : `¿Suena al reproducirlo?: no se pudo leer el audio del MP4 (${h.error})`);
+    if (d.iosForced) L.push('Método en iPhone: tiempo real (prueba segura, puesto en Ajustes)');
     L.push(`Formato: ${f.mime} · ${mb(f.size || 0)}${m ? ` · ${m.fragmented ? 'MP4 fragmentado' : 'MP4 normal'} (${m.brand})` : ''}`);
     if (v) L.push(`Pista de video: ${v.codec} · ${v.seconds.toFixed(1)} s · ${v.samples} fotogramas`);
-    L.push(a ? `Pista de audio: ${a.codec} · ${a.seconds.toFixed(1)} s · ${a.samples} bloques${a.esds ? ` · configuración AAC: ${a.esds.configBytes ? 'sí' : 'FALTA'}` : ''}` : 'Pista de audio: NINGUNA');
+    L.push(a ? `Pista de audio: ${a.codec} · ${a.seconds.toFixed(1)} s · ${a.samples} bloques${a.bytes ? ` · ${Math.round(a.bytes / 1024)} KB (${Math.round(a.bytes / Math.max(1, a.samples))} bytes por bloque)` : ''}${a.esds ? ` · configuración AAC: ${a.esds.configBytes ? `${a.esds.configBytes} bytes [${a.esds.config}]` : 'FALTA'}` : ''}` : 'Pista de audio: NINGUNA');
     if (m?.error) L.push(`Error al leer el MP4: ${m.error}`);
     L.push(`Método usado: ${d.method === 'webcodecs' ? 'rápido (WebCodecs)' : 'tiempo real (MediaRecorder)'}`);
     for (const t of d.tries || []) {
@@ -313,7 +332,7 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v19';
+const APP_VERSION = 'v20';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -587,6 +606,7 @@ bindSetting('#musicVol', 'musicVol', (e) => Number(e.value), (e, v) => (e.value 
 bindSetting('#layoutSel', 'layout', (e) => e.value, (e, v) => (e.value = v));
 bindSetting('#qualitySel', 'quality', (e) => Number(e.value), (e, v) => (e.value = String(v)));
 bindSetting('#sfxOn', 'sfx', (e) => e.checked, (e, v) => (e.checked = v));
+bindSetting('#iosMethod', 'iosMethod', (e) => e.value, (e, v) => (e.value = v));
 bindSetting('#starNote', 'starNote', (e) => e.checked, (e, v) => (e.checked = v));
 
 function paintSettings() { paintPhrases(); paintSongs(); }

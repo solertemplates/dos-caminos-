@@ -28,6 +28,13 @@ export async function detectSupport(width, height) {
   return s;
 }
 
+// iPhone / iPad (también iPad que se presenta como Mac)
+export function isIOS() {
+  const ua = navigator.userAgent || '';
+  return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+const hex = (b, n = 24) => [...new Uint8Array(b.buffer ? b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) : b)].slice(0, n).map((x) => x.toString(16).padStart(2, '0')).join(' ');
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // iOS solo deja sonar el audio de un AudioContext creado/activado en un toque del usuario:
@@ -90,7 +97,7 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   venc.configure({ codec, width, height, bitrate: scale >= 1 ? 7_000_000 : 4_000_000, framerate: FPS, avc: { format: 'avc' } });
   // AAC: Safari puede entregarlo con cabeceras ADTS y sin configuración; se normaliza para el MP4
   // (sin esto el MP4 sale con la pista de audio vacía o ilegible = video sin música)
-  let audioChunks = 0, audioUs = 0, sentConfig = false, adts = 0, descFromEncoder = null;
+  let audioChunks = 0, audioUs = 0, sentConfig = false, adts = 0, descFromEncoder = null, safariDesc = '', aBytes = 0, aMin = Infinity, aMax = 0;
   const asc = aacConfig(audio.sampleRate, 2);
   const aenc = new AudioEncoder({
     output: (c, m) => {
@@ -102,13 +109,16 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
       if (!sentConfig) {
         const dc = m && m.decoderConfig;
         descFromEncoder = !!(dc && dc.description && dc.description.byteLength);
-        const desc = descFromEncoder ? dc.description : asc;
-        meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, description: desc } };
+        if (descFromEncoder) safariDesc = `${dc.description.byteLength} bytes: ${hex(dc.description)}`;
+        // Siempre la configuración AAC-LC propia (2 bytes). La de Safari puede venir en otro formato
+        // (p. ej. un «magic cookie»/esds completo) y, metida tal cual en el MP4, el audio no suena.
+        meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, description: asc } };
         sentConfig = true;
       }
       const dur = c.duration || Math.round((1024 / audio.sampleRate) * 1e6);
       muxer.addAudioChunkRaw(data, 'key', c.timestamp, dur, meta);
       audioChunks++;
+      aBytes += data.length; aMin = Math.min(aMin, data.length); aMax = Math.max(aMax, data.length);
       audioUs += dur;
     },
     error: (e) => (err = e),
@@ -148,7 +158,7 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   muxer.finalize();
   venc.close();
   aenc.close();
-  return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4', diag: { videoCodec: codec, aacChunks: audioChunks, aacSeconds: +(audioUs / 1e6).toFixed(2), adtsHeadersRemoved: adts, aacConfigFromSafari: descFromEncoder } };
+  return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4', diag: { videoCodec: codec, aacChunks: audioChunks, aacSeconds: +(audioUs / 1e6).toFixed(2), adtsHeadersRemoved: adts, aacConfigFromSafari: descFromEncoder ? safariDesc : 'no', aacConfigUsed: hex(asc), aacBytesPerBlock: `media ${Math.round(aBytes / Math.max(1, audioChunks))}, mín ${aMin === Infinity ? 0 : aMin}, máx ${aMax}` } };
 }
 
 async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgress, signal }) {
