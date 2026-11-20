@@ -3,7 +3,22 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (objetos concretos: si el título o subtítulo nombra un objeto, se dibuja ese objeto).
+Última actualización: 20 nov 2026 (REGLA DE ORO para escribir guiones).
+
+---
+
+## ⭐ REGLA DE ORO (para escribir guiones)
+
+**Antes de escribir guiones, Claude debe buscar en la web qué temas y formatos de reels son virales ahora** (qué historias, ganchos y comparaciones se están compartiendo esta semana) y usar eso como inspiración, siempre dentro del formato y el sello de Dos Caminos.
+
+Cada guion debe tener, como el video del puente:
+
+1. **Gancho en los primeros 2 segundos:** una frase GANCHO corta y una imagen que intrigue («Un mismo puente. Dos historias.»).
+2. **Conflicto claro:** dos formas de vivir fáciles de entender de un vistazo, en igualdad al principio.
+3. **Diferencia que crece:** cada segundo la distancia entre los dos caminos se nota más en el dibujo.
+4. **Final con sorpresa:** un desenlace que emocione y no sea obvio desde el principio (el puente que por fin se une, la carta que llega, la llave que se enciende arriba), y una pregunta que invite a verlo otra vez.
+
+El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta misma regla.
 
 ---
 

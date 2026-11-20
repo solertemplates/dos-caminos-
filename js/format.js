@@ -1,6 +1,13 @@
 // Instrucciones para pedirle guiones a Claude (se copian desde Ajustes). Mantener igual que MAESTRO.md.
 export const CLAUDE_PROMPT = `Escribe guiones para mi app "Dos Caminos" (canal en inglés: "Two Paths Stories"). Son videos verticales sin voz: la pantalla se divide en dos y cada lado muestra una forma de vivir y su resultado.
 
+REGLA DE ORO
+Antes de escribir, busca en la web qué temas y formatos de reels son virales ahora (historias, ganchos y comparaciones que se están compartiendo esta semana) y úsalos como inspiración dentro de este formato. Escribe cada guion como el video del puente:
+1. Gancho en los primeros 2 segundos: GANCHO corto que intrigue.
+2. Conflicto claro: dos formas de vivir que se entienden de un vistazo y empiezan iguales.
+3. Diferencia que crece: cada segundo se nota más en el dibujo.
+4. Final con sorpresa: un desenlace que emocione y no sea obvio desde el principio, y una pregunta que invite a verlo otra vez.
+
 Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
 
 TITULO: título corto (es la FRASE FINAL que se ve al terminar el video: que sea una frase con sentido, distinta en cada guion)
