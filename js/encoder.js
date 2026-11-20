@@ -1,7 +1,7 @@
 // Dos Caminos — creación del MP4 en el propio teléfono.
 // Vía rápida: WebCodecs (H.264 + AAC) + mp4-muxer. Respaldo: MediaRecorder en tiempo real.
 import { Muxer, ArrayBufferTarget } from '../vendor/mp4-muxer.mjs';
-import { renderFrame, FPS, W, H } from './render.js';
+import { renderFrame, renderCover, FPS, W, H } from './render.js';
 import { audioChunksFromMp4 } from './remux.js';
 
 const VCODECS = ['avc1.640028', 'avc1.4d0028', 'avc1.42002a', 'avc1.640033', 'avc1.42e01f'];
@@ -146,7 +146,8 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   for (let i = 0; i < frames; i++) {
     if (signal?.aborted) { try { venc.close(); aenc.close(); } catch (e) {} throw new DOMException('cancelado', 'AbortError'); }
     if (err) throw err;
-    renderFrame(ctx, job, i / FPS, scale);
+    // fotograma 0 = portada (la miniatura del video); la historia empieza en el fotograma 1
+    if (i === 0) renderCover(ctx, job, scale); else renderFrame(ctx, job, i / FPS, scale);
     const vf = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
     venc.encode(vf, { keyFrame: i % (FPS * 2) === 0 });
     vf.close();
@@ -173,7 +174,7 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   const src = ac.createBufferSource();
   src.buffer = audio;
   src.connect(dest);
-  renderFrame(ctx, job, 0, scale);
+  renderCover(ctx, job, scale); // primer fotograma = portada (la miniatura del video)
   const vstream = canvas.captureStream(FPS);
   const stream = new MediaStream([...vstream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: scale >= 1 ? 7_000_000 : 4_000_000, audioBitsPerSecond: 160000 });
@@ -181,6 +182,7 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
   const done = new Promise((r) => (rec.onstop = r));
   rec.start(500);
+  await sleep(150); // la portada queda grabada como primer fotograma
   const t0 = ac.currentTime + 0.05;
   src.start(t0);
   await new Promise((resolve) => {

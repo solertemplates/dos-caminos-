@@ -499,3 +499,49 @@ function withAlpha(ctx, a, fn) {
   d.set.call(ctx, a);
   try { fn(); } finally { delete ctx.globalAlpha; }
 }
+
+// ---------------------------------------------------------------------------
+// PORTADA (fotograma 0 del MP4 y imagen «Descargar portada»): los dos lados de la escena ya dibujados
+// a mitad de la historia (se ve la diferencia), el TITULO grande y el corazón rojo.
+// No cuenta como inicio de la historia: desde el fotograma 1 el video empieza como siempre.
+export function coverTime(job) {
+  const tl = job.tl;
+  if (job.layout.kind === 'time') return tl.resStart + tl.res * 0.7;
+  const roles = rolesOf(job);
+  if (roles) return Math.min(tl.resStart - 0.2, arcTime(tl) + ARC.quit[1] + 1.2);
+  return tOfP(tl, 0.62);
+}
+export function renderCover(ctx, job, scale = 1) {
+  // la escena sin los títulos de cada lado ni el gancho (la portada lleva solo el TITULO)
+  if (!job.coverJob) job.coverJob = { ...job, moments: undefined, roles: undefined, coverJob: undefined, texts: { ...job.texts, hook: '', sides: [] } };
+  renderFrame(ctx, job.coverJob, coverTime(job), scale);
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.globalAlpha = 1;
+  const yC = job.layout.kind === 'lr' ? 1150 : job.layout.kind === 'time' ? 765 : 905;
+  const title = String(job.title || job.texts.phrase || '').replace(/\*/g, '').trim();
+  ctx.font = `500 88px ${FONT}`;
+  let fs = 88, lines = wrap(ctx, title, 940, 2);
+  while (lines.length > 3 && fs > 56) { fs -= 8; ctx.font = `500 ${fs}px ${FONT}`; lines = wrap(ctx, title, 940, 2); }
+  lines = lines.slice(0, 3);
+  const lh = fs * 1.12, blockH = lines.length * lh;
+  const top = yC - blockH / 2;
+  // velo negro suave detrás del título para que se lea limpio
+  const g = ctx.createLinearGradient(0, top - 190, 0, top + blockH + 120);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.28, 'rgba(0,0,0,0.82)'); g.addColorStop(0.8, 'rgba(0,0,0,0.82)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, top - 190, W, blockH + 310);
+  // corazón rojo encima del título
+  const hy = top - 78;
+  glow(ctx, W / 2, hy, 150, RED, 0.85);
+  heart(ctx, W / 2, hy, 46, RED, 1);
+  ctx.fillStyle = WHITE;
+  ctx.globalAlpha = 1;
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `500 ${fs}px ${FONT}`;
+  lines.forEach((ln, i) => spaced(ctx, ln, W / 2, top + fs * 0.92 + i * lh, 2));
+  // nombre del canal, pequeño
+  ctx.globalAlpha = 0.6;
+  ctx.font = `400 24px ${FONT}`;
+  spaced(ctx, job.lang === 'en' ? 'TWO PATHS STORIES' : 'DOS CAMINOS', W / 2, top + blockH + 52, 6);
+  ctx.globalAlpha = 1;
+}

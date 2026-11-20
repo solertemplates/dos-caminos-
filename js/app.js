@@ -1,7 +1,7 @@
 // Dos Caminos — interfaz. Reglas en MAESTRO.md.
 import { parseScripts } from './parser.js';
 import { EXAMPLES } from './examples.js';
-import { makeTimeline, layoutFor, makeStars } from './render.js';
+import { makeTimeline, layoutFor, makeStars, renderCover } from './render.js';
 import { renderAudio } from './audio.js';
 import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
 import { remuxWithAudio } from './remux.js';
@@ -238,7 +238,7 @@ function buildJob(script, idx, opts) {
   const tl = makeTimeline(opts.duration);
   const seed = opts.seed ?? (Date.now() + idx * 977) % 100000;
   return {
-    tl, seed, layoutKind,
+    tl, seed, layoutKind, lang,
     layout: layoutFor(layoutKind),
     stars: makeStars(seed),
     sides: script.sides,
@@ -301,6 +301,9 @@ async function makeOne(sc, idx, opts) {
     audioOk: audioOk(mp4, D) && !mute(heard), retried: wasHidden && !!out.realtime,
   });
   if ((mp4 && !audioOk(mp4, D)) || mute(heard)) toast('Aviso: este video salió sin música completa. Mira Ajustes → Diagnóstico.', 5000);
+  // portada (la misma imagen que el fotograma 0 del MP4) para la tarjeta y «Descargar portada»
+  let cover = null;
+  try { cover = await coverImage(job); } catch (e) { console.warn('portada', e); }
   const n = counters.next('videos');
   const v = { title: job.title, phrase: job.texts.postPhrase, question: job.texts.question, theme: sc.theme, lang: opts.lang, star: S.starNote && n % 4 === 0 };
   const texts = Object.fromEntries(NETWORKS.map((nw) => [nw.id, postText(nw.id, v)]));
@@ -309,10 +312,33 @@ async function makeOne(sc, idx, opts) {
     id, created: Date.now(), title: job.title, theme: sc.theme, lang: opts.lang, duration: D,
     name: `${opts.lang === 'en' ? 'two-paths' : 'dos-caminos'}-${slug(job.title)}-${id.slice(-4)}.${out.ext}`,
     mime: out.mime, ext: out.ext, blob: out.blob, realtime: !!out.realtime, size: out.blob.size, song: song?.name || '', songId: song?.id || '', texts, posted: {},
+    coverBuf: cover ? await cover.arrayBuffer() : null, coverType: 'image/jpeg',
     // receta para rehacer el audio (música + efectos) sin volver a dibujar el video
     recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {} }, seed: job.seed, layoutKind: job.layoutKind },
   };
 }
+
+// ---------- Portada ----------
+// Se guarda como ArrayBuffer (algunos Safari no guardan Blob en IndexedDB).
+async function coverImage(job) {
+  const c = document.createElement('canvas');
+  c.width = 1080; c.height = 1920;
+  renderCover(c.getContext('2d', { alpha: false }), job, 1);
+  const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.9));
+  c.width = c.height = 1; // libera memoria en iPhone
+  if (!blob) throw new Error('no se pudo crear la imagen');
+  return blob;
+}
+// videos de antes sin portada: si guardaron su receta, se dibuja ahora
+async function ensureCover(rec) {
+  if (rec.coverBuf || !rec.recipe) return rec.coverBuf || null;
+  const job = buildJob(rec.recipe.script, rec.recipe.idx, { ...rec.recipe.opts, seed: rec.recipe.seed, layoutKind: rec.recipe.layoutKind });
+  const buf = await (await coverImage(job)).arrayBuffer();
+  rec.coverBuf = buf; rec.coverType = 'image/jpeg';
+  await videos.update(rec.id, { coverBuf: buf, coverType: 'image/jpeg' });
+  return buf;
+}
+const coverFileOf = (rec) => new File([rec.coverBuf], rec.name.replace(/\.\w+$/, '-portada.jpg'), { type: rec.coverType || 'image/jpeg' });
 
 // ---------- Mis videos: cambiar la música sin volver a crear el video ----------
 let remusicRec = null;
@@ -463,7 +489,7 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v26';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -645,9 +671,9 @@ async function shareFiles(files, text, label) {
 }
 // Guardar en Fotos: abre el menú compartir del iPhone solo con el MP4 (sin texto),
 // así aparece «Guardar video». Se llama sin esperas previas para no perder el permiso del toque.
-async function saveToPhotos(file) {
+async function saveToPhotos(file, kind = 'video') {
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    toast('En el menú, elige «Guardar video» para guardarlo en Fotos.', 4500);
+    toast(kind === 'imagen' ? 'En el menú, elige «Guardar imagen» para guardarla en Fotos.' : 'En el menú, elige «Guardar video» para guardarlo en Fotos.', 4500);
     try { await navigator.share({ files: [file] }); logShare('guardar en Fotos', file, 'menú abierto y se eligió una opción'); return true; }
     catch (e) {
       logShare('guardar en Fotos', file, e.name === 'AbortError' ? 'menú cerrado sin elegir (o iOS lo canceló)' : `${e.name}: ${e.message}`);
@@ -655,7 +681,7 @@ async function saveToPhotos(file) {
     }
   } else logShare('guardar en Fotos', file, 'el menú compartir no acepta el archivo: se descargó a Archivos');
   download(file, file.name);
-  toast('Video descargado.');
+  toast(kind === 'imagen' ? 'Portada descargada.' : 'Video descargado.');
   return true;
 }
 const allTexts = (list) => list.map((r, i) => `#${i + 1} ${r.title} (${r.name})\n\n` + NETWORKS.map((n) => `— ${n.label} —\n${r.texts[n.id]}`).join('\n\n')).join('\n\n==========\n\n');
@@ -685,7 +711,15 @@ async function showVideos(highlight = new Set()) {
     card.className = 'result' + (highlight.has(rec.id) ? ' new' : '');
     const thumb = document.createElement('button');
     thumb.className = 'vthumb';
-    thumb.textContent = '▶  Ver video';
+    thumb.innerHTML = '<span class="vplay">▶  Ver video</span>';
+    const showCover = (buf) => {
+      if (!buf) return;
+      const cu = URL.createObjectURL(new Blob([buf], { type: rec.coverType || 'image/jpeg' })); urls.push(cu);
+      thumb.style.backgroundImage = `url("${cu}")`;
+      thumb.classList.add('has-cover');
+    };
+    if (rec.coverBuf) showCover(rec.coverBuf);
+    else if (rec.recipe) ensureCover(rec).then((b) => { showCover(b); dc.hidden = !b; }).catch((e) => console.warn('portada', e));
     thumb.addEventListener('click', () => {
       const v = document.createElement('video');
       v.playsInline = true; v.controls = true; v.autoplay = true; v.muted = false;
@@ -773,9 +807,19 @@ async function showVideos(highlight = new Set()) {
     });
     const del = document.createElement('button'); del.textContent = 'Borrar';
     del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); picked.delete(rec.id); showVideos(); refreshHome(); } });
+    // Descargar portada: la imagen del fotograma 0, para subirla como miniatura (abre «Guardar imagen»)
+    const dc = document.createElement('button');
+    dc.className = 'dlv cover' + (rec.savedCover ? ' done' : '');
+    dc.textContent = 'Descargar portada';
+    dc.hidden = !rec.coverBuf && !rec.recipe;
+    dc.addEventListener('click', async () => {
+      if (!rec.coverBuf) { toast('Preparando la portada… toca otra vez en un momento.'); ensureCover(rec).catch(() => toast('No pude crear la portada.')); return; }
+      try { if (await saveToPhotos(coverFileOf(rec), 'imagen')) { rec.savedCover = true; dc.classList.add('done'); videos.update(rec.id, { savedCover: true }); } }
+      catch (e) { toast('Toca otra vez para guardar la portada.'); }
+    });
     const rm = document.createElement('button'); rm.textContent = 'Cambiar música';
     rm.addEventListener('click', () => openRemusic(rec));
-    acts.append(dl, dlm, rm, del);
+    acts.append(dl, dlm, dc, rm, del);
     const det = document.createElement('details');
     det.innerHTML = '<summary>Ver textos para publicar</summary><pre></pre>';
     det.querySelector('pre').textContent = NETWORKS.map((n) => `— ${n.label} —\n${rec.texts[n.id]}`).join('\n\n');
