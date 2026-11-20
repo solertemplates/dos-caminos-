@@ -159,4 +159,6 @@ textarea.short { flex: 0 0 auto; min-height: 110px; height: 22vh; }
 .chip.danger { border-color: rgba(229, 72, 77, 0.6); color: #f0a0a2; }
 .chip.danger:disabled { opacity: 0.4; }
 .vacts { display: flex; gap: 8px; margin-top: 8px; }
+.vacts .dlv { flex: 2; background: var(--fg); color: #000; border-color: var(--fg); font-weight: 400; }
+.vacts .dlv.done::before { content: '✓ '; }
 .vacts button { flex: 1; border: 1px solid var(--line); background: none; border-radius: 12px; padding: 11px 6px; font-size: 14px; color: var(--muted); }

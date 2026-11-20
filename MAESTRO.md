@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (la frase final de cada video es su TITULO; lista de reserva sin repetir por lote).
+Última actualización: 20 nov 2026 (botón «Descargar video» para guardar en Fotos).
 
 ---
 
@@ -213,7 +213,7 @@ Ejemplos de cada final nuevo:
 - **Pantalla principal:** Pegar guiones · Duración (15/30/45) · Idioma (Español / English US) · Crear videos. Arriba: «Mis videos» y Ajustes.
 - **Pegar guiones:** cada guion aparece con su casilla; botones **Crear seleccionados** y **Crear todos**.
 - **Creación en tanda:** cada video se guarda en el teléfono (IndexedDB) **en cuanto termina**. La tanda se guarda; si la app se cierra o el teléfono se bloquea, al volver aparece «Continuar» y sigue donde se quedó. Se pide mantener la pantalla encendida (y se usa Wake Lock cuando el iPhone lo permite).
-- **Mis videos:** todos los videos guardados; ver, descargar uno por uno, borrar; **Guardar todos** y **ZIP** (con los textos). Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden).
+- **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene **Descargar video**, que abre el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (queda marcado con ✓). El MP4 lleva siempre la música dentro (H.264 + AAC); **Guardar todos** y **ZIP** (con los textos). Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden).
 - **Música:** cada video sale **con la música ya metida en el MP4** (sirve para Facebook). Banco de música en el teléfono (MP3/M4A), categoría automática editable (romántica, tensión, triste, emotiva, inspiracional, alegre); se elige según la emoción y sin repetir siempre la misma. Sin canciones, la app genera una música suave propia.
 - **Efectos de sonido:** pocos, suaves, sincronizados con lo que pasa; generados por código y publicados bajo **CC0**.
 - **Ajustes:** formato de guion (copiar instrucciones para Claude), banco de frases, banco de música, video (división, calidad, efectos, estrellita), acerca de.

@@ -310,6 +310,17 @@ async function shareFiles(files, text) {
   for (const f of files) download(f, f.name);
   return true;
 }
+// Guardar en Fotos: abre el menú compartir del iPhone solo con el MP4 (sin texto),
+// así aparece «Guardar video». Se llama sin esperas previas para no perder el permiso del toque.
+async function saveToPhotos(file) {
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    toast('En el menú, elige «Guardar video» para guardarlo en Fotos.', 4500);
+    try { await navigator.share({ files: [file] }); return true; } catch (e) { if (e.name === 'AbortError') return false; }
+  }
+  download(file, file.name);
+  toast('Video descargado.');
+  return true;
+}
 const allTexts = (list) => list.map((r, i) => `#${i + 1} ${r.title} (${r.name})\n\n` + NETWORKS.map((n) => `— ${n.label} —\n${r.texts[n.id]}`).join('\n\n')).join('\n\n==========\n\n');
 
 let shown = [];
@@ -378,8 +389,12 @@ async function showVideos(highlight = new Set()) {
     }
     const acts = document.createElement('div');
     acts.className = 'vacts';
-    const dl = document.createElement('button'); dl.textContent = 'Descargar';
-    dl.addEventListener('click', () => shareFiles([file]));
+    const dl = document.createElement('button');
+    dl.className = 'dlv' + (rec.saved ? ' done' : '');
+    dl.textContent = 'Descargar video';
+    dl.addEventListener('click', async () => {
+      if (await saveToPhotos(file)) { rec.saved = true; dl.classList.add('done'); videos.update(rec.id, { saved: true }); }
+    });
     const del = document.createElement('button'); del.textContent = 'Borrar';
     del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); picked.delete(rec.id); showVideos(); refreshHome(); } });
     acts.append(dl, del);
