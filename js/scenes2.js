@@ -83,7 +83,8 @@ SCENES.cocina = {
     S.objSpot = [cx + cw * 0.3, -ch];
     if (cooks) {
       // vapor que crece y platos servidos
-      smoke(ctx, F, px, pt, (0.3 + 0.7 * smooth(S.p)) * (1 - neutral), t, false);
+      smoke(ctx, F, px, pt, (0.3 + 0.7 * smooth(S.p)) * (1 - neutral) * (S.good ? 1 : 1 - smooth(S.r / 0.4)), t, false);
+      if (!S.good) { flame(ctx, px, -ch - 0.002, 0.12 * smooth(S.r / 0.3) * (1 - smooth((S.r - 0.5) / 0.4)), F * 0.6, t); smoke(ctx, F, px, pt, smooth(S.r / 0.5), t); }
       const plates = S.object ? 0 : Math.min(4, Math.floor(S.p * 4.99));
       setLine(ctx, F, 0.85, 0.7);
       for (let i = 0; i < plates; i++) { ctx.beginPath(); ctx.ellipse(cx + cw * 0.28, -ch - F * 0.012 - i * F * 0.022, F * 0.1, F * 0.012, 0, 0, Math.PI * 2); ctx.stroke(); }
@@ -131,8 +132,8 @@ SCENES.oficina = {
     const gx = w * 0.3, gy = -F * 1.25, gw = F * 0.52, gh = F * 0.42;
     setLine(ctx, F, 0.7, 0.7);
     rect(ctx, gx - gw / 2, gy, gw, gh);
-    const lvl = works && S.good ? 0.25 + 0.75 * smooth(S.p) : works ? 0.4 : 0.6 - 0.45 * smooth(S.p) - 0.1 * S.r;
-    const bars = [0.35, 0.55, 0.75, 1].map((b, i) => (works && S.good ? b * lvl : (1 - i * 0.22) * lvl));
+    const lvl = (works ? 0.25 + 0.75 * smooth(S.p) : 0.6 - 0.45 * smooth(S.p)) * (S.good ? 1 : 1 - 0.7 * smooth(S.r / 0.7));
+    const bars = [0.35, 0.55, 0.75, 1].map((b, i) => lerp(works ? b : 1 - i * 0.22, 1 - i * 0.22, S.good ? 0 : smooth(S.r / 0.4)) * lvl);
     bars.forEach((b, i) => { const bx = gx - gw * 0.38 + i * gw * 0.22; const bh = (gh - F * 0.06) * clamp(b * (1 - neutral) + 0.2 * neutral, 0.05, 1); setLine(ctx, F, 0.85, 0.7); rect(ctx, bx, gy + gh - F * 0.03 - bh, gw * 0.13, bh); });
     if (S.good && S.r > 0.2) {
       const k = smooth((S.r - 0.2) / 0.4);
@@ -149,7 +150,7 @@ SCENES.oficina = {
     line(ctx, dx + F * 0.07, -dh - F * 0.1, dx + F * 0.07, -dh);
     if (works && S.r < 0.5) glow(ctx, dx + F * 0.07, -dh - F * 0.2, F * 0.3, WHITE, 0.25 * (1 - neutral));
     // pila de hojas terminadas
-    const papers = S.object ? 0 : works ? Math.min(8, Math.floor(S.p * (S.good ? 8.9 : 3))) : 1;
+    const papers = S.object ? 0 : works ? Math.min(8, Math.floor(S.p * 8.9)) : 1;
     S.objSpot = [dx + dw * 0.38, -dh];
     setLine(ctx, F, 0.7, 0.6);
     for (let i = 0; i < papers; i++) line(ctx, dx + dw * 0.3, -dh - F * 0.012 * (i + 1), dx + dw * 0.45, -dh - F * 0.012 * (i + 1));
@@ -192,7 +193,7 @@ SCENES.parque = {
     setLine(ctx, F, 0.75, 0.85);
     line(ctx, sx - F * 0.3, 0, sx - F * 0.2, -sh); line(ctx, sx + F * 0.3, 0, sx + F * 0.2, -sh);
     line(ctx, sx - F * 0.24, -sh, sx + F * 0.24, -sh);
-    const swingAmp = S.good ? 0.35 : 0.35 * (1 - smooth(S.p)) + 0.05;
+    const swingAmp = S.good ? 0.35 : 0.35 * (1 - smooth(S.r)) + 0.05;
     const sa = Math.sin(t * 2.2) * swingAmp;
     const seatX = sx + Math.sin(sa) * F * 0.62, seatY = -sh + Math.cos(sa) * F * 0.62;
     setLine(ctx, F, 0.6, 0.6);
@@ -260,7 +261,7 @@ SCENES.coche = {
     const drives = pe.act === 'conducir';
     const neutral = getNeutral();
     const stop = S.r > 0 ? smooth(S.r / 0.5) : 0;
-    const speed = (1 - neutral) * (1 - stop);
+    const speed = (1 - neutral) * (1 - stop) * (S.arc && S.arc.role === 'bad' ? 1 - S.arc.quit : 1);
     // carretera con rayas que pasan
     groundLine(ctx, F, -w / 2, w / 2);
     setLine(ctx, F, 0.45, 0.8);
@@ -442,7 +443,7 @@ SCENES.sofa = {
     setLine(ctx, F, 0.35, 0.6);
     ctx.beginPath(); ctx.ellipse(0, F * 0.03, F * 0.9, F * 0.04, 0, 0, Math.PI * 2); ctx.stroke();
     const lx = -w * 0.38;
-    const lamp = S.good ? 0.5 + 0.4 * S.r : 0.6 * (1 - 0.6 * smooth(S.p)) * (1 - smooth(S.r / 0.5));
+    const lamp = S.good ? 0.5 + 0.4 * S.r : 0.5 * (1 - smooth(S.r / 0.5));
     setLine(ctx, F, 0.7, 0.7); line(ctx, lx, 0, lx, -F * 1.0);
     ctx.beginPath(); ctx.moveTo(lx - F * 0.12, -F * 0.95); ctx.lineTo(lx - F * 0.07, -F * 1.12); ctx.lineTo(lx + F * 0.07, -F * 1.12); ctx.lineTo(lx + F * 0.12, -F * 0.95); ctx.closePath(); ctx.stroke();
     glow(ctx, lx, -F * 0.9, F * 0.9, AMBER, lamp);
@@ -457,7 +458,7 @@ SCENES.sofa = {
     if (S.object) { const tx = sw / 2 + F * 0.28; setLine(ctx, F, 0.7, 0.8); line(ctx, tx - F * 0.12, -F * 0.3, tx + F * 0.12, -F * 0.3); line(ctx, tx, -F * 0.3, tx, 0); line(ctx, tx - F * 0.08, 0, tx + F * 0.08, 0); S.objSpot = [tx, -F * 0.3]; }
     const list = S.people.length ? S.people.slice(0, 2) : [{ kind: 'hombre', act: 'hablar' }];
     const phones = list.filter((p) => isPhone(p.act)).length;
-    const apart = !S.good ? (0.3 * smooth(S.p) + 0.7 * smooth(S.r / 0.6)) : 0;
+    const apart = !S.good ? smooth(S.r / 0.6) : 0;
     const close = S.good ? smooth(S.r / 0.4) : 0;
     list.forEach((pe, i) => {
       const side = list.length === 1 ? 0 : i ? 1 : -1;
@@ -498,9 +499,9 @@ SCENES.huerto = {
       setLine(ctx, F, 0.7, 0.8);
       ctx.beginPath(); ctx.ellipse(mx, 0, F * 0.15, F * 0.06, 0, Math.PI, 0); ctx.stroke();
       if (i >= planted) continue;
-      let g = tends && S.good ? clamp((S.p - i / (N * 1.25)) * 1.6 + S.r * 0.3) : clamp(S.p * 0.6) * 0.5;
+      let g = tends ? clamp((S.p - i / (N * 1.25)) * 1.6 + (S.good ? S.r * 0.3 : 0)) : clamp(S.p * 0.6) * 0.5;
       g *= 1 - neutral;
-      const dry = !S.good ? smooth(S.p * 0.5 + S.r) : 0;
+      const dry = !S.good ? smooth(S.r) : 0;
       const hgt = F * (0.08 + 0.5 * g) * (1 - 0.3 * dry);
       setLine(ctx, F, 0.9 - 0.4 * dry, 0.8);
       ctx.beginPath(); ctx.moveTo(mx, -F * 0.05); ctx.quadraticCurveTo(mx + dry * F * 0.1, -F * 0.05 - hgt * 0.6, mx + dry * F * 0.15, -F * 0.05 - hgt); ctx.stroke();
@@ -574,7 +575,7 @@ SCENES.montana = {
       const act = pe.act;
       let x, y, pose, facing = 1;
       if (act === 'escalar' || act === 'caer') {
-        let prog = act === 'caer' ? (S.p < 0.45 ? S.p / 0.45 * 0.45 : lerp(0.45, 0, smooth((S.p - 0.45) / 0.12))) : S.good ? S.p : S.p * 0.55;
+        let prog = act === 'caer' ? (S.p < 0.45 ? S.p / 0.45 * 0.45 : lerp(0.45, 0, smooth((S.p - 0.45) / 0.12))) : S.p;
         prog = Math.max(0, prog - i * 0.08);
         x = lerp(bx - F * 0.25, px - F * 0.04, prog);
         y = x < bx ? 0 : slopeY(x);
@@ -609,7 +610,7 @@ SCENES.lluvia = {
   draw(ctx, S) {
     const { w, F, t } = S;
     const rainK = S.good ? 1 - smooth(S.r / 0.5) : 1;
-    const puddle = !S.good ? smooth(S.p * 0.7 + S.r * 0.6) : 0;
+    const puddle = !S.good ? smooth(S.r) : 0;
     groundLine(ctx, F, -w / 2, w / 2);
     // nubes
     const cloud = (cx, cy, s, a) => { setLine(ctx, F, a, 0.8); ctx.beginPath(); ctx.arc(cx - s * 0.35, cy, s * 0.25, Math.PI * 0.9, Math.PI * 1.9); ctx.arc(cx, cy - s * 0.12, s * 0.33, Math.PI * 1.1, Math.PI * 1.95); ctx.arc(cx + s * 0.38, cy, s * 0.22, Math.PI * 1.2, Math.PI * 2.1); ctx.lineTo(cx - s * 0.6, cy + s * 0.22); ctx.closePath(); ctx.stroke(); };
@@ -670,7 +671,7 @@ SCENES.tienda = {
     const sx = w * 0.0, sw = F * 0.95, ch = F * 0.4, top = -F * 1.05;
     const pe = P(S, 0, { kind: 'hombre', act: 'vender' });
     const sells = pe.act === 'vender';
-    const dust = sells ? 0 : smooth(S.p * 0.8 + S.r);
+    const dust = (sells ? 0 : smooth(S.p * 0.8)) + (S.good ? 0 : smooth(S.r) * 0.8);
     // toldo a rayas con festón
     setLine(ctx, F, 0.9, 0.9);
     line(ctx, sx - sw / 2, top, sx + sw / 2, top);
@@ -803,7 +804,7 @@ SCENES.reloj = {
     const uses = pe.act === 'aprovechar';
     // reloj grande en la pared
     const cx = 0, cyy = -F * 1.2, R = F * 0.34;
-    const speed = uses ? 1 : 1 + 6 * smooth(S.p);
+    const speed = (uses ? 1 : 1 + 6 * smooth(S.p)) + (S.good ? 0 : 6 * smooth(S.r));
     const ang = t * 0.9 * speed;
     if (S.good && S.r > 0) glow(ctx, cx, cyy, F * 0.9 * smooth(S.r), ORANGE, 0.7);
     setLine(ctx, F, 0.9, 1); circle(ctx, cx, cyy, R);

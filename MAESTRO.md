@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA FIJA de movimiento real: pedaleo hacia delante, pasos según la distancia, objetos orientados).
+Última actualización: 20 nov 2026 (REGLA FIJA DEL ARCO: empiezan iguales, momento difícil a la vez, el bueno se levanta, el malo lo intenta y se rinde).
 
 ---
 
@@ -69,9 +69,25 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 
 ## 3. Regla de los guiones (historia)
 
-1. **Igualdad al inicio:** los dos caminos empiezan iguales (misma escena, mismos personajes, de pie, sin objetos, contador en 1).
-2. **Momento de la elección** en los primeros segundos (≈ 2,2–2,6 s): cada uno elige distinto y se nota (uno toma la tabla, el otro saca el móvil). La línea divisoria late y suena una nota que se separa en dos.
-3. **La diferencia crece poco a poco** en el dibujo: pared bien alineada frente a pared de ladrillos desalineados (siempre rectos y limpios, nunca torcidos: unos un poco más arriba y otros más abajo, cada vez más desparejos) hasta que se cae; árbol verde frente a árbol que pierde hojas; corazón que se va apagando; mesa que se separa.
+### ⭐ REGLA FIJA DEL ARCO (todos los videos, todas las escenas y todas las acciones)
+
+1. **Los dos lados empiezan exactamente iguales y hacen lo mismo durante los primeros segundos.** Ningún personaje empieza en su estado final (el video ya no empieza mostrando el final: desde el primer fotograma los dos lados son idénticos).
+2. **El momento difícil les llega a los dos a la vez** (caerse, cansarse, un obstáculo, un problema). La línea divisoria late y suena un golpe suave en los dos lados.
+3. **Lado bueno:** se levanta, insiste y sigue hasta el final bueno.
+4. **Lado malo:** también lo intenta un poco (se pone de rodillas, mira hacia arriba, estira el brazo, intenta levantar la bici…), pero se desanima: **baja la cabeza, deja caer los brazos y se queda sentado o quieto**. Que se note el desánimo, no que nunca lo intentó. Si su acción era el móvil, acaba sentado mirándolo.
+5. Después, cada lado llega a su final: el bueno crece/llega con el corazón grande; en el malo lo que dejó a medias se queda así y llega su final (se seca, se apaga, se cae, se alejan…).
+
+Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno se vuelve a montar y llega a la cima; el otro se agacha a levantar la bici, no puede, y se queda sentado a su lado con la cabeza baja.
+
+**Cómo lo hace la app (para cualquier guion con un lado bueno y uno malo):**
+- El lado malo dibuja **la misma escena y las mismas acciones que el bueno** hasta el momento difícil; sus propias acciones (`B:`) solo deciden cómo se queda al rendirse.
+- Momento difícil al **38 %** del desarrollo (≈ 9,9 s en un video de 30 s). Los dos caen (o, sentados, se desploman de cansancio) en 0,45 s.
+- Bueno: en el suelo ~1 s, se levanta (1,0–1,75 s después) y sigue; su avance se pausa mientras está caído.
+- Malo: intenta (1,0–1,8 s después) y se rinde (2,15–3,2 s después); su escena se queda congelada donde cayó.
+- Las escenas no muestran diferencias entre los dos lados antes del final: el final malo de cada escena empieza al terminar el desarrollo.
+- Comprobación obligatoria antes de subir cambios: las escenas de los dos lados deben ser **idénticas píxel a píxel antes del momento difícil**, y revisar fotograma a fotograma el arco (caída común, el bueno se levanta, el malo intenta y se rinde) en los dos lados de la división.
+
+3. **La diferencia crece después del momento difícil:** el bueno sigue construyendo, regando o subiendo; el malo se queda a medias y al final su obra se viene abajo (ladrillos rectos que se desalinean y caen, árbol que pierde las hojas, fuego que se apaga, mesa que se separa).
 4. Al final uno **crece / se une / llega** y el otro **se seca / se queda atrás / se cae**.
 5. **Temas:** universales — pareja, familia, hijos, dinero, trabajo, amistad, salud, el móvil, la constancia. **Fe casi nunca**: como mucho un guion de vez en cuando, sutil, con un mensaje que entienda cualquiera. **Cada guion, de un tema distinto.**
 6. **Tipo «tiempo»** (`DIVISION: tiempo`): un solo camino visto en tres momentos — HOY, EN UN MES, EN UN AÑO. Mismo personaje y mismo camino en las tres franjas; lo que cambia es el resultado (el árbol crece, la alcancía se llena, la escalera se sube, la casa se completa). Las franjas se revelan una tras otra y al final **EN UN AÑO se ilumina** con luz cálida y el **corazón grande**. Aquí no hay momento de elección (es un solo camino).
@@ -81,10 +97,10 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 
 | Momento | Qué pasa |
 |---|---|
-| 0 – 1,2 s | **Gancho:** se ve el final de las dos historias + frase GANCHO + estrella fugaz + latido. |
-| 1,2 – 1,8 s | Rebobinado rápido (sonido suave) hasta el inicio. |
-| 1,8 – 2,6 s | **Igualdad y elección**: los dos iguales, «DÍA 1»; cada uno elige distinto. |
-| hasta el resultado | La diferencia crece; contador animado. |
+| 0 – 1,8 s | **Gancho:** los dos lados iguales desde el primer fotograma + frase GANCHO + estrella fugaz + latido. |
+| 1,8 – momento difícil | Los dos hacen exactamente lo mismo; contador animado. |
+| momento difícil (38 % del desarrollo) | A los dos les pasa a la vez: caen o se cansan. |
+| después | El bueno se levanta y sigue; el malo lo intenta, se desanima y se queda sentado. |
 | resultado (2–3 s) | Uno florece (corazón grande y brillante), el otro se apaga. |
 | cierre (3,5–6,5 s) | **Frase final** (FRASE tal cual; si no hay, el TITULO), grande, centrada y en blanco, con las palabras entre *asteriscos* en rojo + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
 

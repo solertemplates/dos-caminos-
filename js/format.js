@@ -50,6 +50,7 @@ PREGUNTA_EN: Where do you want to be a year from now?
 ---
 
 REGLAS DE LA HISTORIA
+0. REGLA FIJA DEL ARCO: los dos caminos empiezan exactamente iguales y hacen lo mismo; a los dos les llega a la vez un momento difícil (caerse, cansarse, un obstáculo); el bueno se levanta y sigue; el malo lo intenta un poco y se desanima. Escribe A y B con la misma escena y los mismos personajes; la acción de B dice cómo se queda al rendirse (por ejemplo celular, sentarse, esperar).
 1. (En arriba-abajo y lados) Los dos caminos empiezan en igualdad de condiciones: misma escena, mismos personajes, mismo punto de partida.
 2. En los primeros segundos se ve el momento en que cada uno elige distinto (uno toma la tabla, el otro saca el móvil).
 3. Desde ahí la diferencia crece poco a poco hasta el final: uno crece o se une; el otro se seca, se queda atrás o se cae.

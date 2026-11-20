@@ -23,18 +23,54 @@ export function makeTimeline(D) {
 // distinto y desde ahí la diferencia crece con el progreso p.
 export const CHOICE = 0.75;
 export function tOfP(tl, p) { return tl.mainStart + CHOICE + clamp(p) * (tl.mainDur - CHOICE); }
+// REGLA FIJA: los dos lados empiezan exactamente iguales desde el primer fotograma (nadie empieza en su estado final).
 export function stateAt(tl, t) {
-  if (t < tl.hookHold) return { phase: 'hook', p: 1, r: 1, hookK: t / tl.hookHold, endK: 0, neutral: 0 };
-  if (t < tl.mainStart) {
-    const k = smooth((t - tl.hookHold) / (tl.mainStart - tl.hookHold));
-    return { phase: 'rewind', p: 1 - k, r: 1 - k, rewK: k, endK: 0, neutral: smooth((k - 0.55) / 0.45) };
-  }
+  if (t < tl.mainStart) return { phase: 'hook', p: 0, r: 0, hookK: t / tl.mainStart, endK: 0, neutral: 1 };
   if (t < tl.resStart) {
     const tc = t - tl.mainStart;
-    return { phase: 'main', p: clamp((tc - CHOICE) / (tl.mainDur - CHOICE)), r: 0, endK: 0, neutral: 1 - smooth((tc - 0.35) / 0.55), choiceK: tc / CHOICE };
+    return { phase: 'main', p: clamp((tc - CHOICE) / (tl.mainDur - CHOICE)), r: 0, endK: 0, neutral: 1 - smooth((tc - 0.35) / 0.55) };
   }
   if (t < tl.endStart) return { phase: 'result', p: 1, r: (t - tl.resStart) / tl.res, endK: 0, neutral: 0 };
   return { phase: 'end', p: 1, r: 1, endK: (t - tl.endStart) / tl.end, neutral: 0 };
+}
+
+// ARCO DE LOS DOS CAMINOS (regla fija):
+// 1) los dos hacen lo mismo hasta el momento difícil (pD); 2) a los dos les llega a la vez (caen, se cansan);
+// 3) el lado bueno se levanta y sigue; 4) el malo lo intenta un poco y se desanima (baja la cabeza y se sienta).
+export const ARC = { pD: 0.38, pause: 1.5, fall: 0.45, rise: [1.0, 1.75], tryT: [1.0, 1.8], quit: [2.15, 3.2] };
+export function arcPause(tl) { return clamp(ARC.pause / (tl.mainDur - CHOICE), 0, 0.3); }
+// progreso de la escena en cada lado: el bueno se para durante la caída y luego sigue; el malo se queda donde cayó
+export function pathP(tl, p, role) {
+  const pD = ARC.pD, dp = arcPause(tl);
+  if (role === 'bad') return Math.min(p, pD);
+  if (role !== 'good') return p;
+  if (p < pD) return p;
+  if (p < pD + dp) return pD;
+  return pD + ((p - pD - dp) * (1 - pD)) / (1 - pD - dp);
+}
+// progreso global en que ocurre un progreso de escena (para los sonidos); null si nunca ocurre
+export function pathInv(tl, pe, role) {
+  const pD = ARC.pD, dp = arcPause(tl);
+  if (role === 'bad') return pe <= pD ? pe : null;
+  if (role !== 'good' || pe < pD) return pe;
+  return pD + dp + ((pe - pD) * (1 - pD - dp)) / (1 - pD);
+}
+// papeles: en dos caminos con un final bueno y uno malo → 'good' / 'bad'; si no (tiempo, dos buenos…), sin arco
+export function rolesOf(job) {
+  if (!job.sides || job.sides.length !== 2 || job.layout?.kind === 'time') return null;
+  const g = job.sides.filter((s) => s.good).length;
+  return g === 1 ? job.sides.map((s) => (s.good ? 'good' : 'bad')) : null;
+}
+export function arcTime(tl) { return tOfP(tl, ARC.pD); }
+// estado del arco en el tiempo t (fall, rise, tryK, quit entre 0 y 1)
+export function arcState(tl, t, st, role) {
+  if (role !== 'good' && role !== 'bad') return null;
+  const tD = arcTime(tl), e = t - tD;
+  const sm = (a, b) => smooth((e - a) / (b - a));
+  if (st.phase === 'hook') return { role, fall: 0, rise: 0, tryK: 0, quit: 0 };
+  const fall = sm(0, ARC.fall);
+  if (role === 'good') return { role, fall, rise: sm(...ARC.rise), tryK: 0, quit: 0 };
+  return { role, fall, rise: 0, tryK: sm(...ARC.tryT), quit: sm(...ARC.quit) };
 }
 
 // Zona segura de reels: arriba ~130 px y abajo desde ~1380 px los tapan los textos y botones
@@ -185,6 +221,7 @@ function shootingStar(ctx, t) {
 
 // job: { texts:{hook,phrase,question,signature,sides:[{title,sub}]}, sides:[{scene,people,good,bad}], layout, tl, seed, stars }
 export function renderFrame(ctx, job, t, scale = 1) {
+  if (job.roles === undefined) job.roles = rolesOf(job);
   const { tl, layout } = job;
   const st = stateAt(tl, t);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -201,7 +238,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
     ctx.save();
     ctx.strokeStyle = WHITE;
-    const pulse = !isTime && st.phase === 'main' && st.choiceK != null ? Math.max(0, Math.sin(clamp(st.choiceK * 1.1 - 0.15) * Math.PI)) : 0;
+    const pe = t - arcTime(tl);
+    const pulse = !isTime && job.roles ? Math.max(0, Math.sin(clamp(pe / 0.9) * Math.PI)) : 0;
     ctx.globalAlpha = (0.22 + 0.45 * pulse) * (st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -214,7 +252,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
   const endDim = st.phase === 'end' ? 1 - 0.55 * smooth(st.endK * 2.5) : 1;
   const hookIn = smooth(t / 0.35);
 
-  job.sides.forEach((side, i) => {
+  job.sides.forEach((side0, i) => {
     const pn = layout.panels[i];
     ctx.save();
     ctx.beginPath();
@@ -222,16 +260,22 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.clip();
     ctx.translate(pn.cx, pn.groundY);
     const ps = panelState(layout, i, st, tl.C);
+    // el lado malo dibuja la MISMA escena y las mismas acciones que el bueno (empiezan iguales);
+    // sus propias acciones solo deciden cómo se queda al rendirse
+    const role = job.roles ? job.roles[i] : null;
+    const gSide = job.roles ? job.sides[job.roles.indexOf('good')] : null;
+    const side = role === 'bad' ? { ...side0, scene: gSide.scene, people: gSide.people.map((p, j) => ({ ...p, badAct: (side0.people[j] || side0.people[0] || p).act })) } : side0;
+    const sp = role ? pathP(tl, ps.p, role) : ps.p;
     const S = {
-      w: pn.stageW, F: pn.F, people: side.people, good: side.good, bad: side.bad,
-      p: ps.p, r: ps.r, t, C: tl.C, seed: isTime ? job.seed : job.seed + i * 13,
-      dimmed: !side.good && ps.r > 0.4, focus: null,
+      w: pn.stageW, F: pn.F, people: side.people, good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
+      p: sp, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role,
+      dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
     };
     let a = endDim * hookIn * ps.show;
     if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.5 * smooth(st.endK * 2.5);
-    if (!side.good && st.phase !== 'main') a *= 1 - 0.25 * ps.r;
+    if (!side0.good && st.phase !== 'main') a *= 1 - 0.25 * ps.r;
     // EN UN AÑO: la franja se ilumina con luz cálida al final feliz
     if (isTime && i === 2 && side.good && ps.r > 0.3) {
       const k = smooth((ps.r - 0.3) / 0.5);
@@ -249,7 +293,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // objeto concreto del guion en su sitio fijo (si la escena no lo usó en una ranura propia)
     if (S.object && !S.objHand && S.objSpot) drawObject(ctx, S.object, S.objSpot[0], S.objSpot[1], pn.F * 0.3, { ...objState(S), fade: objState(S).fade * (ps.neutral > 0.5 ? 0 : 1) });
     // final feliz: corazón grande y brillante sobre el objeto principal de la escena
-    if (side.good && S.focus && ps.r > 0.45) {
+    if (side0.good && S.focus && ps.r > 0.45) {
       const k = smooth((ps.r - 0.45) / 0.4);
       const [fx, fy] = S.focus;
       const beat = 1 + 0.07 * Math.max(0, Math.sin(t * 5.2)) * Math.max(0, Math.sin(t * 5.2 + 0.6));

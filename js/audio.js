@@ -1,7 +1,7 @@
 // Dos Caminos — audio. Efectos de sonido sintetizados por código (obra propia, dedicada CC0)
 // y mezcla con la música del banco del usuario. Todo se genera en el teléfono, sin API.
 import { SCENES } from './scenes.js';
-import { tOfP, CHOICE, timeEventP } from './render.js';
+import { tOfP, timeEventP, rolesOf, pathInv, arcTime, ARC } from './render.js';
 
 const SR = 48000;
 
@@ -178,26 +178,35 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
     };
     play('heartbeat', 0.05);
     play('shimmer', 0.2);
-    play('whoosh', tl.hookHold - 0.05);
     const isTime = job.layout.kind === 'time';
-    job.sides.forEach((side, i) => {
+    const roles = rolesOf(job);
+    job.sides.forEach((side0, i) => {
+      // el lado malo hace lo mismo que el bueno hasta que se rinde: suenan las mismas acciones
+      const role = roles ? roles[i] : null;
+      const side = role === 'bad' ? { ...side0, scene: job.sides[roles.indexOf('good')].scene, people: job.sides[roles.indexOf('good')].people } : side0;
       const scene = SCENES[side.scene];
       if (!scene || !scene.events) return;
       if (isTime && i > 0) return; // mismo camino: los sonidos se calculan una vez
-      const S = { people: side.people, good: side.good, bad: side.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
+      const S = { people: side.people, good: side0.good, bad: side0.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
       const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
       for (const e of scene.events(S)) {
         let t;
         if (e.p != null) {
-          const pg = isTime ? timeEventP(tl.C, e.p) : e.p;
+          const pg = isTime ? timeEventP(tl.C, e.p) : role ? pathInv(tl, e.p, role) : e.p;
           if (pg == null) continue;
           t = tOfP(tl, pg);
         } else t = tl.resStart + e.r * tl.res;
         play(e.type, t, e, pan);
       }
     });
-    if (!isTime) play('choice', tl.mainStart + CHOICE * 0.6);
-    else [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
+    if (roles) {
+      // el momento difícil llega a los dos a la vez; el bueno se levanta (nota suave); el malo suspira y se queda
+      const tD = arcTime(tl);
+      play('thud', tD + 0.25, {}, -0.2);
+      play('thud', tD + 0.27, {}, 0.2);
+      play('ping', tD + ARC.rise[1], { vol: 0.6 }, roles.indexOf('good') ? 0.25 : -0.25);
+      play('wind', tD + ARC.quit[0], {}, roles.indexOf('bad') ? 0.25 : -0.25);
+    } else if (isTime) [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
     play('ping', tl.endStart + 0.5, { vol: 0.8 });
   }
   return await ctx.startRendering();

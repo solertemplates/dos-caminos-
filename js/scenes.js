@@ -15,6 +15,34 @@ function neutralPose(pose) {
   const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
   return chair ? POSES.sit : POSES.stand;
 }
+// Poses del arco: caída/cansancio común, intento (de rodillas, mira arriba, estira el brazo) y desánimo.
+function arcPoses(pose, badAct) {
+  const lying = pose.tr > 1.2;
+  if (lying) return null;
+  const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
+  const phone = badAct === 'celular' || badAct === 'phone' || badAct === 'ignorar';
+  if (chair) {
+    return {
+      fallen: { ...POSES.sitSlump, tr: 0.48, hd: 0.9, fa1: 0.4, fa2: 0.35 },
+      tryP: { ...POSES.sitTalk, tr: 0.0, hd: -0.32, fa1: 1.35, fa2: 1.6, ba1: 0.4, ba2: 0.8 },
+      quit: phone ? { ...POSES.sitPhone, tr: 0.3, hd: 0.8 } : { ...POSES.sitSlump, tr: 0.5, hd: 1.05, fa1: 0.45, fa2: 0.3, ba1: 0.4, ba2: 0.25 },
+    };
+  }
+  return {
+    fallen: { ...POSES.floor, tr: 0.3, hd: 0.45, fa1: 0.9, fa2: 0.6, ba1: -0.4, ba2: -0.2 },
+    tryP: { ...POSES.pray, tr: 0.08, hd: -0.38, fa1: 1.75, fa2: 1.95, ba1: 0.35, ba2: 0.25 },
+    quit: phone ? { ...POSES.floorPhone, tr: 0.32, hd: 0.8 } : { ...POSES.floor, tr: 0.46, hd: 1.0, fa1: 0.35, fa2: 0.22, ba1: 0.3, ba2: 0.18 },
+  };
+}
+function applyArc(pose, A, badAct) {
+  const P = arcPoses(pose, badAct);
+  if (!P) return pose;
+  if (A.role === 'good') return lerpPose(pose, P.fallen, A.fall * (1 - A.rise));
+  let q = lerpPose(pose, P.fallen, A.fall);
+  q = lerpPose(q, P.tryP, A.tryK * (1 - A.quit));
+  return lerpPose(q, P.quit, A.quit);
+}
+
 function drawFigure(ctx, o) {
   // acción de uso real de un objeto (tocar-guitarra, beber-cafe…): pose propia y el objeto en la mano o el cuerpo
   const use = o.pe && USES[o.pe.act];
@@ -23,11 +51,18 @@ function drawFigure(ctx, o) {
     o = { ...o, pose: usePose(use, o.pose, k), y: (o.y || 0) - useLift(use, figureSize(o.kind, o.F)) };
     if (CUR && CUR.object === use.obj) CUR.objHand = true;
   }
+  // arco de los dos caminos: caída común, el bueno se levanta, el malo lo intenta y se desanima
+  const A = CUR && CUR.arc;
+  if (A && !o.noArc && o.neutral !== 'none' && (A.fall > 0 || A.quit > 0)) o = { ...o, pose: applyArc(o.pose, A, o.pe && o.pe.badAct) };
   // o.neutral: 'stand' fuerza de pie al inicio; 'none' no cambia la pose (p. ej. acostados en la cama)
-  if (NEUTRAL > 0.001 && o.neutral !== 'none') o = { ...o, pose: lerpPose(o.pose, o.neutral === 'stand' ? POSES.stand : neutralPose(o.pose), NEUTRAL) };
+  // en bici empieza ya montado (quieto, sin pedalear), igual en los dos lados
+  const riding = use && use.legs === 'ride';
+  if (NEUTRAL > 0.001 && o.neutral !== 'none' && !riding) o = { ...o, pose: lerpPose(o.pose, o.neutral === 'stand' ? POSES.stand : neutralPose(o.pose), NEUTRAL) };
   const fig = rawFigure(ctx, o);
-  if (use && NEUTRAL < 0.5) {
-    const st = CUR ? objState(CUR) : {};
+  if (A && A.role === 'bad' && A.quit > 0.6 && o.pe && /celular|phone|ignorar/.test(o.pe.badAct || '')) phoneAt(ctx, fig.fh, o.F);
+  if (use && (NEUTRAL < 0.5 || riding)) {
+    const st = CUR ? { ...objState(CUR) } : {};
+    if (A && A.role === 'bad') st.fade = Math.max(st.fade || 0, 0.5 * A.quit);
     drawUseProp(ctx, use, fig, { ...o, y: (o.y || 0) + useLift(use, figureSize(o.kind, o.F)) }, k, st);
   }
   return fig;
@@ -268,14 +303,9 @@ SCENES.puente = {
     const bR = !!(R && BUILD.has(R.act));
     const nb = (bL ? 1 : 0) + (bR ? 1 : 0);
     const N = S.C * 2;
+    // el mismo plan en los dos lados: la diferencia la pone el arco (el malo se rinde y deja de construir)
     let tL = 0, tR = 0;
-    if (S.good) {
-      if (nb === 2) { tL = S.C; tR = S.C; } else if (bL) tL = N; else if (bR) tR = N;
-    } else if (S.bad === 'fall') {
-      tL = bL ? (nb === 2 ? S.C : N) : 0; tR = bR ? (nb === 2 ? S.C : N) : 0;
-    } else {
-      tL = bL ? (nb === 2 ? S.C - 1 : S.C) : 0; tR = bR ? (nb === 2 ? S.C - 1 : S.C) : 0;
-    }
+    if (nb === 2) { tL = S.C; tR = S.C; } else if (bL) tL = N; else if (bR) tR = N;
     return { bL, bR, N, tL, tR };
   },
   events(S) {
@@ -395,7 +425,7 @@ SCENES.puente = {
       if (pe.act === 'celular' || pe.act === 'phone') phoneAt(ctx, fig.fh, F);
       if (hearts.length && hearts[hearts.length - 1].i === i) {
         const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
-        const fade = (1 - NEUTRAL) * (S.good ? 1 : (1 - 0.3 * smooth(S.p)) * (1 - 0.5 * smooth((S.r - 0.3) / 0.6)));
+        const fade = (1 - NEUTRAL) * (S.good ? 1 : 1 - 0.5 * smooth((S.r - 0.3) / 0.6));
         if (!S.object) glow(ctx, hx, hy, F * 0.35, RED, 0.5 * fade);
         if (S.object) obj(ctx, S, hx, hy + F * 0.11, F * 0.24, { always: true });
         else heart(ctx, hx, hy - F * 0.01, F * 0.12 * (1 + 0.05 * Math.sin(t * 3)), fade > 0.6 ? RED : '#8E3A3D', fade);
@@ -529,12 +559,8 @@ SCENES.arbol = {
     const { w, F, t } = S;
     groundLine(ctx, F, -w / 2, w / 2);
     const tx = w * 0.15;
-    let g, decay = 0;
-    if (S.good) g = 0.12 + 0.88 * smooth(S.p);
-    else {
-      g = 0.12 + (S.bad === 'stall' ? 0.3 : 0.42) * smooth(S.p);
-      decay = S.bad === 'stall' ? 0 : clamp(S.p * 0.45 + S.r * 0.7);
-    }
+    const g = 0.12 + 0.88 * smooth(S.p);
+    const decay = S.good || S.bad === 'stall' ? 0 : clamp(S.r * 0.95);
     const tr = drawTree(ctx, S, tx, g, decay);
     S.focus = [tx, -F * 0.95];
     S.objSpot = [tx + F * 0.45, 0];
@@ -787,7 +813,7 @@ SCENES.casa = {
       if (!S.good) {
         // ladrillos rectos pero desalineados: unos un poco más arriba y otros más abajo,
         // cada vez más desparejos (la diferencia crece) hasta que la pared se cae
-        const q = i / Math.max(1, total - 1);
+        const q = (i / Math.max(1, total - 1)) * smooth(S.r / 0.35);
         const dir = (i + row) % 2 ? 1 : -1;
         ctx.translate(0, dir * q * bh * (0.18 + 0.17 * R()));
       }
@@ -848,7 +874,7 @@ SCENES.escalera = {
   events(S) {
     const ev = [];
     const climbs = S.people.some((p) => p.act === 'subir' || p.act === 'climb');
-    const maxS = S.good ? this.K : this.K * 0.55;
+    const maxS = this.K;
     const steps = climbs ? Math.floor(maxS) : 0;
     for (let k = 0; k < steps; k++) ev.push({ p: (k + 0.75) / maxS, type: 'step' });
     if (S.good) ev.push({ r: 0.3, type: 'chime' });
@@ -874,7 +900,7 @@ SCENES.escalera = {
     groundLine(ctx, F, x0 + K * sw, w / 2, 0.4, false);
     // estrella en lo alto
     const sx = x0 + K * sw + sw * 0.2, sy = -K * sh - F * 1.0;
-    const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.35 * smooth(S.p)) * (1 - 0.6 * smooth(S.r / 0.6));
+    const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.6 * smooth(S.r / 0.6));
     if (S.good) S.focus = [sx, sy];
     glow(ctx, sx, sy, F * (0.35 + 0.5 * shine), GOLD, shine);
     if (S.object) obj(ctx, S, sx, sy + F * 0.2, F * 0.36, { always: true });
@@ -884,7 +910,7 @@ SCENES.escalera = {
       const act = pe.act;
       let pose, x, y = 0, facing = 1;
       if (act === 'subir' || act === 'climb') {
-        const maxS = S.good ? K : K * 0.55;
+        const maxS = K;
         const s = smooth(S.p) * 0 + S.p * maxS;
         const k = Math.floor(s), ph = s - k;
         const off = i * Math.max(sw * 0.9, F * 0.3);
@@ -926,9 +952,9 @@ SCENES.mesa = {
     const scale = n > 2 ? 0.88 : 1;
     const FF = F * scale;
     const tw = FF * 1.0, th = FF * 0.36;
-    const apart = !S.good ? (0.35 * smooth(S.p) + 0.65 * smooth(S.r / 0.8)) * FF * 0.22 : 0;
+    const apart = !S.good ? smooth(S.r / 0.8) * FF * 0.22 : 0;
     // lámpara
-    const lampOn = S.good ? 0.35 + 0.5 * smooth(S.p) + 0.15 * S.r : 0.6 * (1 - 0.55 * S.p) * (1 - smooth(S.r / 0.4));
+    const lampOn = (0.35 + 0.5 * smooth(S.p)) * (S.good ? 1 + 0.15 * S.r : 1 - smooth(S.r / 0.4));
     const ly = -FF * 1.25;
     setLine(ctx, F, 0.5, 0.6);
     line(ctx, 0, ly - FF * 0.6, 0, ly);
@@ -1012,9 +1038,9 @@ SCENES.fogata = {
     const fx = 0;
     const cy = cycle(S.p, S.C);
     const tends = S.people.filter((p) => p.act === 'cuidar').length;
-    let size;
-    if (S.good) size = 0.4 + 0.5 * smooth(S.p) + 0.12 * S.r;
-    else size = 0.55 * (1 - smooth(S.p) * 0.75) * (1 - smooth(S.r / 0.5));
+    let size = 0.4 + 0.5 * smooth(S.p);
+    if (S.good) size += 0.12 * S.r;
+    else size *= 1 - smooth(S.r / 0.6);
     if (tends && !cy.done && cy.ph > 0.6) size += 0.1 * (1 - smooth((cy.ph - 0.6) / 0.35));
     // leña
     setLine(ctx, F, 0.9, 1.1);
@@ -1030,7 +1056,7 @@ SCENES.fogata = {
     if (S.good) S.focus = [fx, -F * 1.0];
     S.objSpot = [fx - F * 0.34, 0];
     // chispas o humo
-    if (S.good) {
+    if (S.good || S.r === 0) {
       ctx.save(); ctx.fillStyle = '#FFD08A';
       for (let i = 0; i < 9; i++) {
         const q = frac(t * 0.35 + i / 9);
@@ -1041,7 +1067,7 @@ SCENES.fogata = {
       }
       ctx.restore();
     } else {
-      const sm = smooth(S.p * 0.6 + S.r);
+      const sm = smooth(S.r);
       setLine(ctx, F, 0.25 * sm, 0.6);
       for (let i = 0; i < 3; i++) {
         ctx.beginPath();
@@ -1155,6 +1181,8 @@ SCENES.camino = {
     const bike = act === 'montar-bici' || act === 'caer-bici' || act === 'levantarse-bici' || ((act === 'caer' || act === 'levantarse') && S.object === 'bicicleta');
     if (act === 'caer-bici') act = 'caer';
     if (act === 'levantarse-bici') act = 'levantarse';
+    // con el arco de los dos caminos, la caída es la común: el resto del camino se recorre igual
+    if (S.arc) act = bike ? 'montar-bici' : act === 'levantarse' || act === 'caer' ? 'correr' : act;
     if (bike) S.objHand = true;
     const run = act === 'correr' || act === 'levantarse' || act === 'caer' || bike;
     const lag = j * F * 0.38;
@@ -1178,19 +1206,27 @@ SCENES.camino = {
     } else if (act === 'caer') {
       prog = Math.min(S.p, 0.42);
       fallen = smooth((S.p - 0.42) / 0.05);
-    } else if (!S.good) prog = Math.min(1, S.p) * 0.5;
+    }
     const dist = prog * (end - start);
     x = start + dist;
     pose = walkPose((dist / (F * (run ? 0.55 : 0.4))) * Math.PI, run);
-    if (prog >= (act === 'caer' || !S.good ? Math.min(prog, 0.5) : 1) && S.p >= 1) pose = POSES.stand;
+    if (S.p >= 1 && act !== 'caer') pose = POSES.stand;
     if (fallen > 0) pose = lerpPose(pose, { ...POSES.floor, hd: 0.5 }, fallen);
     if (bike) {
       const y = hill(x);
-      if (fallen > 0.5 || (act === 'caer' && S.p > 0.45)) {
-        // se cayó de la bici: la bici queda tumbada al lado y el personaje en el suelo
-        drawObject(ctx, 'bicicleta', x + F * 0.42, y, F * 0.42, { ...objState(S), fall: 1, hot: 0 });
-        if (S.r > 0) pose = lerpPose({ ...POSES.floor, hd: 0.5 }, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0, 0.6));
-        drawFigure(ctx, { x: x - F * 0.05, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+      const A = S.arc;
+      const down = A ? (A.role === 'good' ? A.fall * (1 - A.rise) : A.fall) : fallen > 0.5 || (act === 'caer' && S.p > 0.45) ? 1 : 0;
+      if (down > 0.5) {
+        // se cayó de la bici: la bici queda tumbada al lado y el personaje en el suelo.
+        // El lado malo intenta levantar la bici, no puede y se sienta con la cabeza baja.
+        const lift = A && A.role === 'bad' ? A.tryK * (1 - A.quit) : 0;
+        drawObject(ctx, 'bicicleta', x + F * 0.42, y, F * 0.42, { ...objState(S), fall: 1 - 0.6 * lift, hot: 0, fade: A && A.role === 'bad' ? 0.5 * A.quit : objState(S).fade });
+        let q = { ...POSES.floor, tr: 0.3, hd: 0.45 };
+        if (A && A.role === 'bad') {
+          q = lerpPose(q, { ...POSES.crouch, tr: 0.7, hd: 0.1, fa1: 0.9, fa2: 0.7, ba1: 0.8, ba2: 0.6 }, lift > 0 ? smooth(A.tryK) * (1 - A.quit) : 0);
+          q = lerpPose(q, { ...POSES.floor, tr: 0.46, hd: 1.0, fa1: 0.35, fa2: 0.22, ba1: 0.3, ba2: 0.18 }, A.quit);
+        } else if (S.r > 0) q = lerpPose(q, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0, 0.6));
+        drawFigure(ctx, { x: x - F * 0.05, y, pose: q, F, facing: 1, kind: pe.kind, alpha: personDim(S), noArc: true });
       } else {
         // montado en la bici: las dos ruedas apoyadas en la colina (la bici se inclina con la pendiente)
         // y los pedales giran según lo que avanza
@@ -1202,7 +1238,7 @@ SCENES.camino = {
         const rider = { ...pe, act: 'montar-bici' };
         ctx.save();
         ctx.translate(x, yHip); ctx.rotate(ang); ctx.translate(-x, -yHip);
-        drawFigure(ctx, { x, y: yHip, pose: POSES.stand, F, facing: 1, kind: pe.kind, pe: rider, alpha: personDim(S), travel: dist });
+        drawFigure(ctx, { x, y: yHip, pose: POSES.stand, F, facing: 1, kind: pe.kind, pe: rider, alpha: personDim(S), travel: dist, noArc: true });
         ctx.restore();
       }
       return;
@@ -1324,7 +1360,7 @@ SCENES.abrazo = {
   },
   draw(ctx, S) {
     const { w, F, t } = S;
-    const crack = !S.good ? smooth(S.p * 0.5 + S.r * 0.6) * F * 0.18 : 0;
+    const crack = !S.good ? smooth(S.r * 0.9) * F * 0.18 : 0;
     groundLine(ctx, F, -w / 2, -crack);
     groundLine(ctx, F, crack, w / 2);
     if (crack > 1) {
@@ -1344,7 +1380,7 @@ SCENES.abrazo = {
       const stepK = cy.done ? S.C : cy.k + smooth((cy.ph - 0.3) / 0.6);
       const walking = !cy.done && cy.ph > 0.3 && cy.ph < 0.9;
       if (act === 'acercarse' || act === 'perdonar') {
-        const endX = S.good ? F * 0.12 : F * 0.6;
+        const endX = F * 0.12;
         x = side * lerp(startX, endX, stepK / S.C);
         pose = walking ? walkDist(startX - Math.abs(x), F) : breathe(POSES.stand, t);
         if (S.r > 0) {
@@ -1378,7 +1414,7 @@ SCENES.abrazo = {
       glow(ctx, 0, hy - S.r * F * 0.15, F * 0.55 * k, RED, 0.5 + 0.4 * S.r);
       heart(ctx, 0, hy - S.r * F * 0.15, F * 0.16 * k * (1 + 0.05 * Math.sin(t * 4)), RED, 1);
     } else {
-      const shrink = 1 - 0.35 * smooth(S.p);
+      const shrink = 1 - 0.35 * smooth(S.r);
       const sp = smooth((S.r - 0.15) / 0.6);
       const col = sp > 0.3 ? '#7A3638' : RED;
       glow(ctx, 0, hy, F * 0.4 * shrink * (1 - sp), RED, 0.5);
