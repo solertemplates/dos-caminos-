@@ -167,8 +167,10 @@ function buildJob(script, idx, opts) {
   const ownTitle = (en ? E.title : hasTitle ? script.title : '') || '';
   opts.finals = opts.finals || {};
   opts.usedFinals = opts.usedFinals || [];
-  if (!ownTitle.trim() && !opts.finals[idx]) opts.finals[idx] = pickFinal(lang, opts.usedFinals);
-  const phrase = ownTitle.trim() || opts.finals[idx];
+  if (!((en ? E.phrase : script.phrase) || '').trim() && !ownTitle.trim() && !opts.finals[idx]) opts.finals[idx] = pickFinal(lang, opts.usedFinals);
+  // FRASE (tal cual, con sus *palabras en rojo*) > TITULO > frase de reserva
+  const frase = ((en ? E.phrase : script.phrase) || '').trim();
+  const phrase = frase || ownTitle.trim() || opts.finals[idx];
   const signature = '';
   const sideTexts = isTime
     ? (en ? E.stages : script.stages).map((lbl) => ({ title: lbl, sub: (en && E.sides?.[0]?.sub) || script.sides[0].sub }))
@@ -185,12 +187,12 @@ function buildJob(script, idx, opts) {
     texts: {
       hook: (en ? E.hook : script.hook) || '',
       phrase,
-      postPhrase: (en ? E.phrase : script.phrase) || '',
+      postPhrase: frase.replace(/\*/g, ''),
       question: (en ? E.question : script.question) || defQ,
       signature,
       sides: sideTexts,
     },
-    title: ownTitle.trim() || phrase,
+    title: ownTitle.trim() || phrase.replace(/\*/g, ''),
   };
 }
 

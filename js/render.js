@@ -304,11 +304,24 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const topY = layout.endY;
     const pa = smooth((e - 0.35) / 0.8);
     ctx.globalAlpha = pa;
-    const fs = job.texts.phrase.length > 70 ? 38 : 44;
-    ctx.font = `300 ${fs}px ${FONT}`;
-    const lines = wrap(ctx, job.texts.phrase, 920, 1);
-    let y = topY;
-    for (const ln of lines.slice(0, 4)) { spaced(ctx, ln, W / 2, y, 1); y += fs * 1.32; }
+    // frase final grande y centrada; las palabras entre *asteriscos* salen en rojo
+    const plain = job.texts.phrase.replace(/\*/g, '');
+    const fs = plain.length > 70 ? 46 : plain.length > 40 ? 54 : 64;
+    // velo negro suave detrás del cierre para que la frase se lea limpia sobre la escena
+    {
+      const v = smooth((e - 0.1) / 0.6);
+      const g = ctx.createLinearGradient(0, topY - 160, 0, topY + 430);
+      g.addColorStop(0, `rgba(0,0,0,${0.85 * v})`);
+      g.addColorStop(0.45, `rgba(0,0,0,${0.78 * v})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = g;
+      ctx.fillRect(0, topY - 160, W, 590);
+      ctx.fillStyle = WHITE;
+      ctx.globalAlpha = pa;
+    }
+    let y = topY + fs * 0.25;
+    y = richText(ctx, job.texts.phrase, W / 2, y, 940, fs, pa);
     if (job.texts.signature) {
       ctx.globalAlpha = pa * 0.55;
       ctx.font = `300 24px ${FONT}`;
@@ -331,6 +344,46 @@ export function renderFrame(ctx, job, t, scale = 1) {
     }
     ctx.restore();
   }
+}
+
+// Texto con palabras clave en rojo: «El tiempo no *vuelve*». Centrado, con salto de línea por palabras.
+export function parseRich(text) {
+  const words = [];
+  let red = false;
+  for (const part of String(text).split(/(\*)/)) {
+    if (part === '*') { red = !red; continue; }
+    for (const w of part.split(/\s+/)) if (w) words.push({ w, red });
+  }
+  return words;
+}
+function richText(ctx, text, cx, y, maxW, fs, alpha) {
+  ctx.save();
+  ctx.font = `400 ${fs}px ${FONT}`;
+  ctx.textAlign = 'left';
+  const space = ctx.measureText(' ').width;
+  const words = parseRich(text).map((o) => ({ ...o, wd: ctx.measureText(o.w).width }));
+  const lines = [];
+  let cur = [], cw = 0;
+  for (const o of words) {
+    const add = (cur.length ? space : 0) + o.wd;
+    if (cur.length && cw + add > maxW) { lines.push({ cur, cw }); cur = [o]; cw = o.wd; } else { cur.push(o); cw += add; }
+  }
+  if (cur.length) lines.push({ cur, cw });
+  for (const { cur: ln, cw: lw } of lines.slice(0, 4)) {
+    let x = cx - lw / 2;
+    for (const o of ln) {
+      if (o.red) {
+        glow(ctx, x + o.wd / 2, y - fs * 0.33, fs * 1.1, RED, 0.45 * alpha);
+        ctx.fillStyle = RED;
+      } else ctx.fillStyle = WHITE;
+      ctx.globalAlpha = alpha;
+      ctx.fillText(o.w, x, y);
+      x += o.wd + space;
+    }
+    y += fs * 1.22;
+  }
+  ctx.restore();
+  return y;
 }
 
 function drawMiniHeart(ctx, x, y, s) {

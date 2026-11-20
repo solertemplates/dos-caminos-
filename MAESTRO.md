@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA DE ORO para escribir guiones).
+Última actualización: 20 nov 2026 (FRASE opcional como frase final, grande y centrada, con *palabras* en rojo).
 
 ---
 
@@ -63,21 +63,21 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 | 1,8 – 2,6 s | **Igualdad y elección**: los dos iguales, «DÍA 1»; cada uno elige distinto. |
 | hasta el resultado | La diferencia crece; contador animado. |
 | resultado (2–3 s) | Uno florece (corazón grande y brillante), el otro se apaga. |
-| cierre (3,5–6,5 s) | **Frase final = el TITULO del guion** (TITULO_EN en inglés) + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
+| cierre (3,5–6,5 s) | **Frase final** (FRASE tal cual; si no hay, el TITULO), grande, centrada y en blanco, con las palabras entre *asteriscos* en rojo + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
 
 ## 5. Formato de guion
 
 Un guion tras otro, separados por una línea `---`:
 
 ```
-TITULO: título corto (es también la FRASE FINAL del video; distinto en cada guion)
+TITULO: título corto (distinto en cada guion)
+FRASE: frase final del video, tal cual (opcional; *palabra* en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-FRASE: reflexión final corta
 PREGUNTA: pregunta final corta
 TITULO_EN: short title
 GANCHO_EN: hook in natural US English
@@ -88,7 +88,18 @@ PREGUNTA_EN: closing question in natural US English
 ---
 ```
 
-- **Frase final del video = `TITULO`** (y `TITULO_EN` en inglés), para que ningún video termine igual que otro. Si el guion no tiene `TITULO`, se usa una frase de una lista de 60 (`js/finals.js`, español e inglés) que **no se repite dentro del mismo lote**. `FRASE` ya no sale en el video: solo se usa en los textos para publicar.
+- **Frase final del video** (la que aparece después de los dos caminos), en este orden:
+  1. **`FRASE`** (línea opcional, justo debajo de `TITULO`): se muestra **tal cual, sin cambiarla**. En inglés, `FRASE_EN`.
+  2. Si no hay `FRASE`: el **`TITULO`** (`TITULO_EN` en inglés).
+  3. Si tampoco hay `TITULO`: una frase de una lista de 60 (`js/finals.js`) que **no se repite dentro del mismo lote**.
+- La frase final sale **grande, centrada y en blanco**, sobre un velo negro suave para que se lea limpia. Las palabras entre **asteriscos** salen en **rojo** con un brillo suave:
+
+  ```
+  TITULO: El tiempo
+  FRASE: El tiempo no *vuelve*
+  FRASE_EN: Time never comes *back*
+  ```
+  → en el video: «El tiempo no **vuelve**» con «vuelve» en rojo. En los textos para publicar la frase va sin asteriscos.
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas. TITULO ≤ 10 palabras. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
 - **Contador animado:** `{inicio-fin}` dentro del subtítulo → `DÍA {1-45}` va de «DÍA 1» a «DÍA 45».
 - Si falta `TEMA`, se usa `constancia`. Si falta `EMOCION`, la del tema. Si falta `PREGUNTA`, «¿Cuál de los dos eres tú?» / «Which one are you?».
@@ -99,12 +110,12 @@ Se escribe con **una sola línea `A:`** (sin `B:`). El contador se reparte solo:
 
 ```
 TITULO: Un poco cada semana
+FRASE: Lo pequeño, repetido, se vuelve *grande*.
 TEMA: dinero
 EMOCION: inspiracional
 DIVISION: tiempo
 GANCHO: Solo cinco dólares.
 A: AHORRA CADA SEMANA | {0-260} DÓLARES | alcancia | hombre | ahorrar | se llena
-FRASE: Lo pequeño, repetido, se vuelve grande.
 PREGUNTA: ¿Dónde quieres estar dentro de un año?
 TITULO_EN: A little every week
 GANCHO_EN: Just five dollars.

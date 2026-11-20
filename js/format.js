@@ -10,20 +10,20 @@ Antes de escribir, busca en la web qué temas y formatos de reels son virales ah
 
 Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
 
-TITULO: título corto (es la FRASE FINAL que se ve al terminar el video: que sea una frase con sentido, distinta en cada guion)
+TITULO: título corto (distinto en cada guion)
+FRASE: frase final que aparece grande al terminar el video, tal cual (opcional; pon *una palabra clave* entre asteriscos para que salga en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-FRASE: frase corta para el texto de publicación
 PREGUNTA: pregunta final corta
-TITULO_EN: short title (also the closing line of the video)
+TITULO_EN: short title
 GANCHO_EN: hook, natural US English
 A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
 B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
-FRASE_EN: closing line, natural US English (not a literal translation)
+FRASE_EN: closing line shown big at the end, natural US English (not a literal translation; *keyword* in red)
 PREGUNTA_EN: closing question, natural US English
 ---
 
@@ -35,17 +35,17 @@ A: NOMBRE DEL HÁBITO | SUBTÍTULO CON CONTADOR | escena | personajes | acciones
 - Opcional: ETAPAS: HOY | EN UN MES | EN UN AÑO (y ETAPAS_EN: TODAY | IN A MONTH | IN A YEAR) para cambiar los nombres.
 Ejemplo:
 TITULO: Un poco cada semana
+FRASE: Lo pequeño, repetido, se vuelve *grande*.
 TEMA: dinero
 EMOCION: inspiracional
 DIVISION: tiempo
 GANCHO: Solo cinco dólares.
 A: AHORRA CADA SEMANA | {0-260} DÓLARES | alcancia | hombre | ahorrar | se llena
-FRASE: Lo pequeño, repetido, se vuelve grande.
 PREGUNTA: ¿Dónde quieres estar dentro de un año?
 TITULO_EN: A little every week
 GANCHO_EN: Just five dollars.
 A_EN: SAVES EVERY WEEK | {0-260} DOLLARS
-FRASE_EN: Small things, repeated, become big things.
+FRASE_EN: Small things, repeated, become *big* things.
 PREGUNTA_EN: Where do you want to be a year from now?
 ---
 
@@ -59,7 +59,7 @@ REGLAS DE LA HISTORIA
 REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.
 - Contador animado: {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
-- TITULO: máximo 10 palabras y nunca repetido entre guiones (es la frase con la que termina el video). FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
+- TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (opcional): máximo 14 palabras; es la frase final del video y sale tal cual; si no hay FRASE, sale el TITULO. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
 - personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla.
@@ -98,19 +98,19 @@ VOCABULARIO (usa solo estas palabras)
 
 EJEMPLO
 TITULO: El puente
+FRASE: El amor se construye desde los *dos* lados.
 TEMA: pareja
 EMOCION: romantica
 DIVISION: arriba-abajo
 GANCHO: Un mismo puente. Dos historias.
 A: LOS DOS CONSTRUYEN | DÍA {1-90} | puente | hombre+mujer | construir+construir | se unen
 B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | nunca se completa
-FRASE: El amor se construye desde los dos lados.
 PREGUNTA: ¿Cuál de los dos eres tú?
 TITULO_EN: The bridge
 GANCHO_EN: Same bridge. Two stories.
 A_EN: BOTH OF THEM BUILD | DAY {1-90}
 B_EN: ONE BUILDS, ONE WAITS | DAY {1-90}
-FRASE_EN: Love is built from both sides.
+FRASE_EN: Love is built from *both* sides.
 PREGUNTA_EN: Which one are you?
 ---
 

@@ -183,7 +183,8 @@ export function parseScripts(text) {
       if (!m) continue;
       const key = KEY[norm(m[1])];
       if (!key) continue;
-      const val = m[3].trim().replace(/^\*+\s*/, '').replace(/\*+$/, '').trim();
+      // solo se limpian las negritas de Markdown (**…**); los *asteriscos* sueltos marcan palabras en rojo
+      const val = m[3].trim().replace(/^\*\*\s*/, '').replace(/\s*\*\*$/, '').trim();
       if (m[2]) f.en[key] = val; else f[key] = val;
     }
     const isTime = /tiempo|time/.test(norm(f.layout));
