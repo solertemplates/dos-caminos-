@@ -50,7 +50,9 @@ PREGUNTA_EN: Where do you want to be a year from now?
 ---
 
 REGLAS DE LA HISTORIA
-0. REGLA FIJA DEL ARCO: los dos caminos empiezan exactamente iguales y hacen lo mismo; a los dos les llega a la vez un momento difícil (caerse, cansarse, un obstáculo); el bueno se levanta y sigue; el malo lo intenta un poco y se desanima. Escribe A y B con la misma escena y los mismos personajes; la acción de B dice cómo se queda al rendirse (por ejemplo celular, sentarse, esperar).
+0. DOS TIPOS DE LADO MALO:
+   · «Se rinde»: úsalo con caer, levantarse, caer-bici o levantarse-bici, o con el final «se queda». Los dos empiezan iguales y hacen lo mismo; el momento difícil les llega a la vez; el bueno se levanta y sigue; el malo lo intenta un poco y se desanima. A y B con la misma escena y personajes; la acción de B dice cómo se queda al rendirse (celular, sentarse, esperar).
+   · «Luchar solo» (como el puente): en B uno trabaja y el otro espera o mira el móvil desde el principio; el que trabaja lucha solo y llega agotado. Final: llega-agotado. Ej: B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | llega-agotado
 1. (En arriba-abajo y lados) Los dos caminos empiezan en igualdad de condiciones: misma escena, mismos personajes, mismo punto de partida.
 2. En los primeros segundos se ve el momento en que cada uno elige distinto (uno toma la tabla, el otro saca el móvil).
 3. Desde ahí la diferencia crece poco a poco hasta el final: uno crece o se une; el otro se seca, se queda atrás o se cae.
@@ -91,7 +93,7 @@ VOCABULARIO (usa solo estas palabras)
   telefono: llamar, ignorar
   regalo: dar, guardar (el 2.º personaje recibe: esperar)
 - final bueno: crece, florece, se unen, se llena, llega, ganan, se abrazan, se despiertan, se secan (solo en lluvia)
-- final malo: se seca, se apaga, se vacía, se mojan, pierden, se queda, se queda atrás, nunca se completa, se cae, se alejan
+- final malo: se seca, se apaga, se vacía, se mojan, pierden, se queda, se queda atrás, nunca se completa, se cae, se alejan, llega-agotado
 - Varía las escenas: que cada guion use una escena distinta para que los videos no se repitan.
 - OBJETOS: si el TITULO o el título/subtítulo de un lado nombra uno de estos objetos, la escena lo dibuja en lugar del objeto genérico. Úsalos cuando le den sentido a la historia:
   flor, carta, pan, pelota, libro, dinero, moneda, llave, anillo, taza (café), bicicleta, regalo, maleta, guitarra, vela, mochila, zapatos (tenis), foto, estrella, globo, cometa, sombrero, gafas (lentes), botella (agua), plato (comida, cena), manzana, pastel (cumpleaños), osito (peluche, juguete), maceta (planta), martillo, lápiz, cuaderno, trofeo (medalla), cámara, auriculares, candado, semilla, corona.
@@ -109,7 +111,7 @@ EMOCION: romantica
 DIVISION: arriba-abajo
 GANCHO: Un mismo puente. Dos historias.
 A: LOS DOS CONSTRUYEN | DÍA {1-90} | puente | hombre+mujer | construir+construir | se unen
-B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | nunca se completa
+B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | llega-agotado
 PREGUNTA: ¿Cuál de los dos eres tú?
 TITULO_EN: The bridge
 GANCHO_EN: Same bridge. Two stories.

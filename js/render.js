@@ -56,10 +56,24 @@ export function pathInv(tl, pe, role) {
   return pD + dp + ((pe - pD) * (1 - pD - dp)) / (1 - pD);
 }
 // papeles: en dos caminos con un final bueno y uno malo → 'good' / 'bad'; si no (tiempo, dos buenos…), sin arco
+// Dos tipos de lado malo:
+//  · «se rinde»: caída común y el malo se desanima. Solo si el guion tiene caer, levantarse, caer-bici,
+//    levantarse-bici, o el final del lado malo es «se queda».
+//  · «luchar solo» (resto, como el puente): cada lado hace lo suyo desde el principio; sin caída común.
+const FALL_ACTS = new Set(['caer', 'levantarse', 'caer-bici', 'levantarse-bici']);
+const nrm = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+export function arcModeOf(sides) {
+  if (!sides || sides.length !== 2) return null;
+  const bad = sides.find((s) => !s.good);
+  if (!bad || sides.filter((s) => s.good).length !== 1) return null;
+  if (sides.some((s) => s.people.some((p) => FALL_ACTS.has(p.act)))) return 'rinde';
+  if (/se queda/.test(nrm(bad.result))) return 'rinde';
+  return 'solo';
+}
 export function rolesOf(job) {
   if (!job.sides || job.sides.length !== 2 || job.layout?.kind === 'time') return null;
-  const g = job.sides.filter((s) => s.good).length;
-  return g === 1 ? job.sides.map((s) => (s.good ? 'good' : 'bad')) : null;
+  if (arcModeOf(job.sides) !== 'rinde') return null;
+  return job.sides.map((s) => (s.good ? 'good' : 'bad'));
 }
 export function arcTime(tl) { return tOfP(tl, ARC.pD); }
 // estado del arco en el tiempo t (fall, rise, tryK, quit entre 0 y 1)
@@ -268,7 +282,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const sp = role ? pathP(tl, ps.p, role) : ps.p;
     const S = {
       w: pn.stageW, F: pn.F, people: side.people, good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
-      p: sp, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role,
+      p: sp, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,

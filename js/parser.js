@@ -115,6 +115,8 @@ export function classifyResult(res, scene) {
   const r = norm(res);
   // en la lluvia, «se secan» es el final feliz
   if (scene === 'lluvia' && /seca|dry/.test(r)) return { good: true, bad: null };
+  // «llega-agotado»: lucha solo, llega sin fuerzas y no puede recibir el corazón o el abrazo
+  if (/agotad|exhaust|sin fuerzas/.test(r)) return { good: false, bad: 'tired' };
   for (const k of ['fall', 'apart', 'decay', 'stall']) if (BAD[k].some((w) => r.includes(w))) return { good: false, bad: k };
   if (GOOD.some((w) => r.includes(w))) return { good: true, bad: null };
   if (/\bno\b|\bnot\b/.test(r)) return { good: false, bad: 'stall' };

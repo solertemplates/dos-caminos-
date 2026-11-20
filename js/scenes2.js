@@ -84,7 +84,7 @@ SCENES.cocina = {
     if (cooks) {
       // vapor que crece y platos servidos
       smoke(ctx, F, px, pt, (0.3 + 0.7 * smooth(S.p)) * (1 - neutral) * (S.good ? 1 : 1 - smooth(S.r / 0.4)), t, false);
-      if (!S.good) { flame(ctx, px, -ch - 0.002, 0.12 * smooth(S.r / 0.3) * (1 - smooth((S.r - 0.5) / 0.4)), F * 0.6, t); smoke(ctx, F, px, pt, smooth(S.r / 0.5), t); }
+      if (!S.good && S.bad !== 'tired') { flame(ctx, px, -ch - 0.002, 0.12 * smooth(S.r / 0.3) * (1 - smooth((S.r - 0.5) / 0.4)), F * 0.6, t); smoke(ctx, F, px, pt, smooth(S.r / 0.5), t); }
       const plates = S.object ? 0 : Math.min(4, Math.floor(S.p * 4.99));
       setLine(ctx, F, 0.85, 0.7);
       for (let i = 0; i < plates; i++) { ctx.beginPath(); ctx.ellipse(cx + cw * 0.28, -ch - F * 0.012 - i * F * 0.022, F * 0.1, F * 0.012, 0, 0, Math.PI * 2); ctx.stroke(); }

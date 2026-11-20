@@ -34,6 +34,17 @@ function arcPoses(pose, badAct) {
     quit: phone ? { ...POSES.floorPhone, tr: 0.32, hd: 0.8 } : { ...POSES.floor, tr: 0.46, hd: 1.0, fa1: 0.35, fa2: 0.22, ba1: 0.3, ba2: 0.18 },
   };
 }
+// Final «llega-agotado» (luchar solo): el que trabajó solo se tambalea con los hombros caídos y los brazos
+// colgando; el que esperaba (o miraba el móvil) le ofrece el corazón o el abrazo, y él no tiene fuerzas para recibirlo.
+const IDLE_ACTS = new Set(['esperar', 'celular', 'phone', 'ignorar', 'descansar', 'sentarse', 'dormir', 'olvidar', 'perder', 'guardar']);
+function exhaustedPose(pose, t) {
+  const sw = Math.sin(t * 2.3);
+  const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
+  if (chair) return { ...POSES.sitSlump, tr: 0.45 + 0.07 * sw, hd: 0.85, fa1: 0.15, fa2: 0.1, ba1: 0.1, ba2: 0.05 };
+  return { tr: 0.32 + 0.07 * sw, hd: 0.75, fa1: 0.06, fa2: 0.04, ba1: 0.02, ba2: 0.02, fl1: 0.16 + 0.05 * sw, fl2: -0.1, bl1: -0.14 + 0.05 * sw, bl2: -0.04 };
+}
+const OFFER_HEART = { ...POSES.heart, tr: 0.06, hd: 0.05, fa1: 1.0, fa2: 1.55, ba1: 0.95, ba2: 1.5 };
+
 function applyArc(pose, A, badAct) {
   const P = arcPoses(pose, badAct);
   if (!P) return pose;
@@ -58,7 +69,24 @@ function drawFigure(ctx, o) {
   // en bici empieza ya montado (quieto, sin pedalear), igual en los dos lados
   const riding = use && use.legs === 'ride';
   if (NEUTRAL > 0.001 && o.neutral !== 'none' && !riding) o = { ...o, pose: lerpPose(o.pose, o.neutral === 'stand' ? POSES.stand : neutralPose(o.pose), NEUTRAL) };
+  // final «llega-agotado»
+  let offerHeart = 0;
+  if (!A && CUR && CUR.bad === 'tired' && !CUR.good && CUR.r > 0 && o.pe && o.neutral !== 'none' && !o.noArc && o.pose.tr < 1.2) {
+    const k = smooth(CUR.r / 0.4);
+    if (!IDLE_ACTS.has(o.pe.act)) o = { ...o, x: o.x + Math.sin(CUR.t * 2.3) * o.F * 0.03 * k, pose: lerpPose(o.pose, exhaustedPose(o.pose, CUR.t), k) };
+    else {
+      const heartOffer = o.pe.act === 'esperar' || o.pe.act === 'guardar';
+      o = { ...o, pose: lerpPose(o.pose, heartOffer ? OFFER_HEART : POSES.reach, k) };
+      if (heartOffer && CUR.sceneName !== 'puente') offerHeart = k; // en el puente el corazón ya lo dibuja la escena
+    }
+  }
   const fig = rawFigure(ctx, o);
+  if (offerHeart > 0) {
+    const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
+    const dim = 1 - 0.5 * smooth((CUR.r - 0.5) / 0.4);
+    glow(ctx, hx, hy, o.F * 0.32, RED, 0.45 * offerHeart * dim);
+    heart(ctx, hx, hy - o.F * 0.01, o.F * 0.12, dim > 0.7 ? RED : '#8E3A3D', offerHeart * dim);
+  }
   if (A && A.role === 'bad' && A.quit > 0.6 && o.pe && /celular|phone|ignorar/.test(o.pe.badAct || '')) phoneAt(ctx, fig.fh, o.F);
   if (use && (NEUTRAL < 0.5 || riding)) {
     const st = CUR ? { ...objState(CUR) } : {};
@@ -305,7 +333,9 @@ SCENES.puente = {
     const N = S.C * 2;
     // el mismo plan en los dos lados: la diferencia la pone el arco (el malo se rinde y deja de construir)
     let tL = 0, tR = 0;
-    if (nb === 2) { tL = S.C; tR = S.C; } else if (bL) tL = N; else if (bR) tR = N;
+    const good = S.good || !!S.arc; // con el arco «se rinde» los dos lados siguen el plan bueno
+    if (nb === 2) { tL = good ? S.C : S.C - 1; tR = good ? S.C : S.C - 1; }
+    else { const tgt = good ? N : S.C; if (bL) tL = tgt; else if (bR) tR = tgt; }
     return { bL, bR, N, tL, tR };
   },
   events(S) {
@@ -810,7 +840,7 @@ SCENES.casa = {
         ctx.rotate(rot * k);
         ctx.translate(-(bx + bw / 2), -(by + bh / 2));
       }
-      if (!S.good) {
+      if (!S.good && S.bad !== 'tired') {
         // ladrillos rectos pero desalineados: unos un poco más arriba y otros más abajo,
         // cada vez más desparejos (la diferencia crece) hasta que la pared se cae
         const q = (i / Math.max(1, total - 1)) * smooth(S.r / 0.35);

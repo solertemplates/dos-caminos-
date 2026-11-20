@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA FIJA DEL ARCO: empiezan iguales, momento difícil a la vez, el bueno se levanta, el malo lo intenta y se rinde).
+Última actualización: 20 nov 2026 (dos tipos de lado malo: «se rinde» y «luchar solo» con el final llega-agotado).
 
 ---
 
@@ -69,7 +69,27 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 
 ## 3. Regla de los guiones (historia)
 
-### ⭐ REGLA FIJA DEL ARCO (todos los videos, todas las escenas y todas las acciones)
+### ⭐ DOS TIPOS DE LADO MALO
+
+| Tipo | Cuándo se usa | Cómo se ve |
+|---|---|---|
+| **«Se rinde»** | Solo si el guion tiene `caer`, `levantarse`, `caer-bici` o `levantarse-bici`, o el final del lado malo es «se queda» (también «se queda atrás») | Los dos lados empiezan iguales y hacen lo mismo; el momento difícil les llega a la vez; el bueno se levanta y sigue; el malo lo intenta un poco y se desanima (regla del arco, abajo). |
+| **«Luchar solo»** | Todos los demás guiones (como el puente) | Cada lado hace lo suyo desde los primeros segundos: en el malo uno trabaja y el otro espera o mira el móvil. El que trabaja lucha tanto como en el lado bueno, pero solo. Con el final **`llega-agotado`** llega sin fuerzas: se tambalea, hombros caídos, cabeza baja y brazos colgando, y no puede recibir el corazón o el abrazo que le ofrecen (el que esperaba se lo tiende; el corazón se va apagando). |
+
+Ejemplo «luchar solo» (el puente, como siempre):
+```
+A: LOS DOS CONSTRUYEN | DÍA {1-90} | puente | hombre+mujer | construir+construir | se unen
+B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | llega-agotado
+```
+Él pone tablas solo desde el principio y llega hasta la mitad; ella espera en la otra orilla con el corazón rojo. Al final él se tambalea agotado en la punta de su mitad, ella le tiende el corazón y él no tiene fuerzas para tomarlo.
+
+Ejemplo «se rinde» (la bici):
+```
+A: SE VUELVE A MONTAR | INTENTO {1-20} | camino | nina | montar-bici | llega
+B: SE RINDE | INTENTO {1-20} | camino | nina | caer-bici | se queda
+```
+
+### ⭐ REGLA FIJA DEL ARCO (tipo «se rinde»)
 
 1. **Los dos lados empiezan exactamente iguales y hacen lo mismo durante los primeros segundos.** Ningún personaje empieza en su estado final (el video ya no empieza mostrando el final: desde el primer fotograma los dos lados son idénticos).
 2. **El momento difícil les llega a los dos a la vez** (caerse, cansarse, un obstáculo, un problema). La línea divisoria late y suena un golpe suave en los dos lados.
@@ -79,7 +99,7 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 
 Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno se vuelve a montar y llega a la cima; el otro se agacha a levantar la bici, no puede, y se queda sentado a su lado con la cabeza baja.
 
-**Cómo lo hace la app (para cualquier guion con un lado bueno y uno malo):**
+**Cómo lo hace la app (en los guiones de tipo «se rinde»):**
 - El lado malo dibuja **la misma escena y las mismas acciones que el bueno** hasta el momento difícil; sus propias acciones (`B:`) solo deciden cómo se queda al rendirse.
 - Momento difícil al **38 %** del desarrollo (≈ 9,9 s en un video de 30 s). Los dos caen (o, sentados, se desploman de cansancio) en 0,45 s.
 - Bueno: en el suelo ~1 s, se levanta (1,0–1,75 s después) y sigue; su avance se pausa mientras está caído.
@@ -356,6 +376,7 @@ El personaje **usa el objeto como lo haría una persona**: el objeto va **en su 
 | Se queda | `se queda`, `se queda atrás`, `nunca se completa` | Queda a medias; el personaje se sienta, abatido | `... \| montana \| hombre \| sentarse \| se queda` |
 | Se cae | `se cae` | Ladrillos o tablas se vienen abajo; el coche choca | `... \| coche \| hombre \| celular \| se cae` |
 | Se alejan | `se alejan` | La distancia crece y el otro se va | `... \| carta \| mujer+hombre \| olvidar+esperar \| se alejan` |
+| Llega agotado | `llega-agotado` | (luchar solo) El que trabajó solo llega tambaleándose, hombros caídos, y no puede recibir el corazón o el abrazo que le ofrecen | `... \| puente \| hombre+mujer \| construir+esperar \| llega-agotado` |
 
 Ejemplos de cada final nuevo:
 - `se mojan` → `B: SIN PARAGUAS \| DÍA {1-7} \| lluvia \| mujer+nino \| paraguas+mojarse \| se mojan`

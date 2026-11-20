@@ -6,7 +6,7 @@ EMOCION: romantica
 DIVISION: arriba-abajo
 GANCHO: Un mismo puente. Dos historias.
 A: LOS DOS CONSTRUYEN | DÍA {1-90} | puente | hombre+mujer | construir+construir | se unen
-B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | nunca se completa
+B: UNO CONSTRUYE, EL OTRO ESPERA | DÍA {1-90} | puente | hombre+mujer | construir+esperar | llega-agotado
 PREGUNTA: ¿Cuál de los dos eres tú?
 TITULO_EN: The bridge
 GANCHO_EN: One bridge. Two stories.
