@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (botones de primer comentario: 10 comentarios por red y por video).
+Última actualización: 20 nov 2026 (REGLA DE ORO DE GUIONES, punto 6: textos de A y B claros y literales; títulos de cada lado hasta 8 palabras).
 
 ---
 
@@ -27,6 +27,11 @@ El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta
 3. **Alguien carga solo, espera o es ignorado**, como en el video del puente.
 4. **Final que duele** y hace pensar «esto me pasa a mí».
 5. **Siempre con FRASE fuerte y con A-MOMENTOS y B-MOMENTOS de 8 sucesos**, para que funcione en 15, 30 y 45 segundos. (En 15 s la app usa 5 de los 8: el primero, el último y tres de en medio; en 30 s cada suceso dura ~2,8 s; en 45 s la app intercala sucesos suaves para no pasar de 3 s.)
+
+6. **Los textos de A y B son claros y literales:** dicen exactamente lo que hace cada personaje, para que cualquiera lo entienda a la primera. Nada de frases que haya que adivinar.
+   - Mal: «AJÁ, AJÁ...»
+   - Bien: «ÉL SIGUE EN EL MÓVIL Y NO LA ESCUCHA»
+   (Por eso los títulos de cada lado pueden tener hasta 8 palabras.)
 
 **Ejemplo modelo** (probado en 15, 30 y 45 s, arriba-abajo y lados):
 
@@ -214,7 +219,7 @@ PREGUNTA_EN: closing question in natural US English
   B-MOMENTOS: llueve > él se cubre solo > ella tropieza > él no lo ve > ella se aleja
   ```
   En el tipo «tiempo», `A-MOMENTOS` (o `MOMENTOS:` con `>`).
-- Títulos de cada lado: máximo 5 palabras, en mayúsculas. TITULO ≤ 10 palabras. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
+- Títulos de cada lado: máximo 8 palabras, en mayúsculas, claros y literales (dicen lo que hace cada personaje; regla de oro de guiones, punto 6). TITULO ≤ 10 palabras. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
 - **Contador animado:** `{inicio-fin}` dentro del subtítulo → `DÍA {1-45}` va de «DÍA 1» a «DÍA 45».
 - Si falta `TEMA`, se usa `constancia`. Si falta `EMOCION`, la del tema. Si falta `PREGUNTA`, «¿Cuál de los dos eres tú?» / «Which one are you?».
 - Los campos `_EN` se usan cuando en la app se elige *English (US)*. Deben ser inglés natural, no traducción literal.

@@ -8,7 +8,7 @@ y, si toca el formato, también `js/format.js`, en el mismo commit.
 
 **REGLA FIJA DE MOVIMIENTO:** todos los movimientos deben ser como los de una persona real (piernas, brazos, manos y objetos coordinados y en la dirección correcta). Cada acción nueva se comprueba en imágenes en los dos lados de la división (arriba-abajo y lados), con adulto y niño, antes de subirla. Ver MAESTRO.md §2.8.
 
-**REGLA DE ORO DE GUIONES:** el error del lado malo se ve desde el primer segundo; dolor real entre dos personas (pareja, padres e hijos, amistad, familia); alguien carga solo, espera o es ignorado; final que duele («esto me pasa a mí»); siempre FRASE fuerte y A-MOMENTOS y B-MOMENTOS de 8 sucesos. Ejemplo modelo: «Espera, hijo, un momento». Ver MAESTRO.md.
+**REGLA DE ORO DE GUIONES:** el error del lado malo se ve desde el primer segundo; dolor real entre dos personas (pareja, padres e hijos, amistad, familia); alguien carga solo, espera o es ignorado; final que duele («esto me pasa a mí»); siempre FRASE fuerte y A-MOMENTOS y B-MOMENTOS de 8 sucesos; textos de A y B claros y literales (mal: «AJÁ, AJÁ...»; bien: «ÉL SIGUE EN EL MÓVIL Y NO LA ESCUCHA»). Ejemplo modelo: «Espera, hijo, un momento». Ver MAESTRO.md.
 
 **REGLA FIJA DE EMOCIONES:** los personajes ACTÚAN con gestos que cuentan la historia; cada gesto tiene un significado claro y es un gancho; nada de moverse por moverse. Gestos: ansiedad, esperar-con-ilusion, tristeza, distraido, dar-corazon, recibir-corazon, estoy-contigo, pedir, alegria, abrazo-largo. Lado bueno: se pasan corazoncitos cuando no hay otro suceso; lado malo: uno pide o espera y el otro está distraído. Ver MAESTRO.md «Gestos de emoción».
 

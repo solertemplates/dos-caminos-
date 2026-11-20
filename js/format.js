@@ -14,6 +14,9 @@ REGLA DE ORO DE GUIONES (cómo tiene que doler)
 3. Alguien carga solo, espera o es ignorado, como en el video del puente.
 4. Final que duele y hace pensar «esto me pasa a mí».
 5. Siempre con FRASE fuerte y con A-MOMENTOS y B-MOMENTOS de 8 sucesos, para que funcione en 15, 30 y 45 segundos.
+6. Los textos de A y B deben ser claros y literales: dicen exactamente lo que hace cada personaje, para que cualquiera lo entienda a la primera. Nada de frases que haya que adivinar.
+   Mal: "AJÁ, AJÁ..."
+   Bien: "ÉL SIGUE EN EL MÓVIL Y NO LA ESCUCHA"
 Ejemplo modelo:
 TITULO: Espera, hijo, un momento
 FRASE: Tu hijo no necesita un papá perfecto. Necesita un papá *presente*.
@@ -102,7 +105,7 @@ REGLA FIJA DE EMOCIONES
 Los personajes ACTÚAN con gestos que cuentan la historia. Cada gesto tiene un significado claro y es un gancho para quien mira. Nada de moverse por moverse. Usa los gestos de emoción en A-MOMENTOS y B-MOMENTOS: en el lado bueno, corazones que se dan y se guardan, alegría, abrazo largo; en el malo, el contraste: uno pide o espera con ilusión y el otro está distraído, y después ansiedad y tristeza.
 
 REGLAS DEL TEXTO
-- Títulos de cada lado: máximo 5 palabras, en mayúsculas.
+- Títulos de cada lado: máximo 8 palabras, en mayúsculas, claros y literales (dicen lo que hace cada personaje).
 - Contador animado: {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
 - TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (siempre, fuerte): máximo 14 palabras; es la frase final del video y sale tal cual. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
 
