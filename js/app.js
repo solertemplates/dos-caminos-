@@ -402,10 +402,12 @@ function deviceInfo() {
   return { ios: ios || (ipad ? 'iPadOS (ver Safari)' : ''), safari, standalone: !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches), ua, canShareFiles: !!(navigator.canShare && (() => { try { return navigator.canShare({ files: [new File([new Uint8Array(8)], 'x.mp4', { type: 'video/mp4' })] }); } catch (e) { return false; } })()) };
 }
 function saveDiag(d) { try { localStorage.setItem('dc.diag', JSON.stringify(d)); } catch (e) {} }
-function logShare(kind, file, result) {
+function logShare(kind, file, result, copied) {
   try {
+    let prev = {};
+    try { prev = JSON.parse(localStorage.getItem('dc.diagShare') || '{}'); } catch (e) {}
     localStorage.setItem('dc.diagShare', JSON.stringify({ when: new Date().toISOString(), kind, name: file?.name, type: file?.type, size: file?.size,
-      canShare: !!(navigator.canShare && file && navigator.canShare({ files: [file] })), result }));
+      canShare: !!(navigator.canShare && file && navigator.canShare({ files: [file] })), result, copied, copies: prev.copies || [] }));
   } catch (e) {}
 }
 const yes = (b) => (b === null || b === undefined ? '—' : b ? 'sí' : 'NO');
@@ -446,6 +448,8 @@ function diagText() {
     L.push('', `ÚLTIMO «DESCARGAR»: ${s.kind} · ${new Date(s.when).toLocaleString()}`);
     L.push(`Archivo: ${s.name} · ${s.type} · ${mb(s.size || 0)} · menú compartir disponible: ${yes(s.canShare)}`);
     L.push(`Resultado: ${s.result}`);
+    if (s.copied !== undefined && s.copied !== null) L.push(`Texto copiado antes del menú: ${yes(s.copied)}`);
+    for (const c of s.copies || []) L.push(` · ${c}`);
   }
   let rmx = null;
   try { rmx = JSON.parse(localStorage.getItem('dc.diagRemusic') || 'null'); } catch (e) {}
@@ -459,7 +463,7 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v24';
+const APP_VERSION = 'v25';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -543,12 +547,99 @@ function download(blob, name) {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
 }
 // Comparte sin esperas previas, para que iPhone no pierda el permiso del toque.
-async function shareFiles(files, text) {
-  if (text) { try { navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {} }
+// ---------- Copiar el texto para publicar (pensado para Safari de iPhone) ----------
+// En iPhone el portapapeles solo se puede escribir dentro de un toque. navigator.clipboard.writeText es asíncrono
+// y se puede perder si justo después se abre el menú compartir; por eso primero se copia de forma SÍNCRONA
+// (textarea + execCommand('copy')) en el mismo toque, y además con writeText.
+function copySync(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;';
+  document.body.appendChild(ta);
+  const sel = document.getSelection();
+  const prev = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  if (prev && sel) { sel.removeAllRanges(); sel.addRange(prev); }
+  return ok;
+}
+const copiedMsg = (label) => `Texto copiado. En ${label || 'la app'}, mantén el dedo en el cuadro y toca Pegar.`;
+// copia en el mismo toque (no esperar nada antes de llamarla)
+function copyNow(text) {
+  const ok = copySync(text);
+  let p = Promise.resolve(false);
+  try { if (navigator.clipboard?.writeText) p = navigator.clipboard.writeText(text).then(() => true, () => false); } catch (e) {}
+  return { ok, later: p };
+}
+// texto pendiente: se vuelve a copiar después de cerrar el menú compartir y al volver a la app
+let pendingCopy = null;
+function rememberCopy(text, label) { pendingCopy = { text, label, until: Date.now() + 15 * 60e3, need: false }; }
+async function recopy(reason) {
+  const pc = pendingCopy;
+  if (!pc || Date.now() > pc.until) { pendingCopy = null; hideCopyBanner(); return; }
+  let ok = false;
+  try { await navigator.clipboard.writeText(pc.text); ok = true; } catch (e) {}
+  logCopy(reason, ok);
+  if (ok) { pc.need = false; hideCopyBanner(); if (reason === 'al volver') toast(copiedMsg(pc.label), 4500); }
+  else { pc.need = true; showCopyBanner(pc.label); } // iPhone no deja copiar sin un toque: el siguiente toque lo copia
+}
+function showCopyBanner(label) {
+  let b = document.getElementById('copyBanner');
+  if (!b) {
+    b = document.createElement('button');
+    b.id = 'copyBanner';
+    b.type = 'button';
+    document.body.appendChild(b);
+  }
+  b.textContent = `Toca aquí para copiar otra vez el texto de ${label || 'la publicación'}`;
+  b.hidden = false;
+  const t = document.getElementById('toast'); if (t) t.hidden = true; // que no diga «copiado» a la vez
+}
+function hideCopyBanner() { const b = document.getElementById('copyBanner'); if (b) b.hidden = true; }
+// el siguiente toque en cualquier sitio de la app vuelve a copiar el texto (iPhone sí lo permite dentro de un toque)
+document.addEventListener('touchend', onAnyTap, true);
+document.addEventListener('click', onAnyTap, true);
+function onAnyTap() {
+  const pc = pendingCopy;
+  if (!pc || !pc.need) return;
+  if (Date.now() > pc.until) { pendingCopy = null; hideCopyBanner(); return; }
+  const r = copyNow(pc.text);
+  pc.need = false;
+  hideCopyBanner();
+  logCopy('toque al volver', r.ok);
+  toast(copiedMsg(pc.label), 4500);
+}
+// al volver a la app (desde Facebook, Instagram…): se copia otra vez
+document.addEventListener('visibilitychange', () => { if (!document.hidden && pendingCopy) recopy('al volver'); });
+window.addEventListener('pageshow', () => { if (pendingCopy) recopy('al volver'); });
+function logCopy(when, ok) {
+  try {
+    const d = JSON.parse(localStorage.getItem('dc.diagShare') || '{}');
+    d.copies = [...(d.copies || []).slice(-5), `${new Date().toLocaleTimeString()} ${when}: ${ok ? 'copiado' : 'iPhone no dejó copiar (se copia con el siguiente toque)'}`];
+    localStorage.setItem('dc.diagShare', JSON.stringify(d));
+  } catch (e) {}
+}
+
+async function shareFiles(files, text, label) {
+  // 1) copiar el texto ANTES, en el mismo toque y de forma síncrona
+  let copied = null;
+  if (text) { copied = copyNow(text); rememberCopy(text, label); }
   if (navigator.canShare && navigator.canShare({ files })) {
-    try { await navigator.share({ files }); logShare('compartir', files[0], 'menú abierto y elegido'); return true; }
-    catch (e) { logShare('compartir', files[0], `${e.name}: ${e.message}`); if (e.name === 'AbortError') return false; }
-  } else logShare('compartir', files[0], 'el menú compartir no acepta el archivo: se descargó');
+    try {
+      await navigator.share({ files });
+      logShare('compartir', files[0], 'menú abierto y elegido', copied?.ok);
+      if (text) recopy('después del menú'); // 2) y otra vez DESPUÉS de cerrar el menú compartir
+      return true;
+    } catch (e) {
+      logShare('compartir', files[0], `${e.name}: ${e.message}`, copied?.ok);
+      if (text) recopy('después del menú');
+      if (e.name === 'AbortError') return false;
+    }
+  } else logShare('compartir', files[0], 'el menú compartir no acepta el archivo: se descargó', copied?.ok);
   for (const f of files) download(f, f.name);
   return true;
 }
@@ -586,7 +677,7 @@ async function showVideos(highlight = new Set()) {
   picked = new Set([...picked].filter((id) => list.some((r) => r.id === id)));
   const box = $('#videoList');
   box.innerHTML = '';
-  $('#videosInfo').textContent = list.length ? `${list.length} ${list.length === 1 ? 'video guardado' : 'videos guardados'} en este teléfono. Cada botón de red copia el texto y abre el menú para publicar; el ✓ marca dónde ya lo publicaste.` : 'Aún no hay videos. Pega guiones y pulsa «Crear videos».';
+  $('#videosInfo').textContent = list.length ? `${list.length} ${list.length === 1 ? 'video guardado' : 'videos guardados'} en este teléfono. Cada botón de red copia el texto y abre el menú para publicar (el ✓ marca dónde ya lo publicaste). «Copiar texto» solo copia el texto de esa red: en la app, mantén el dedo en el cuadro y toca Pegar.` : 'Aún no hay videos. Pega guiones y pulsa «Crear videos».';
   $('#batchBtns').hidden = list.length < 2;
   for (const rec of list) {
     const file = fileOf(rec);
@@ -623,15 +714,34 @@ async function showVideos(highlight = new Set()) {
       b.textContent = n.label;
       b.classList.toggle('done', !!rec.posted?.[n.id]);
       b.addEventListener('click', async () => {
-        const ok = await shareFiles([file], rec.texts[n.id]);
+        toast(copiedMsg(n.label), 4500);
+        const ok = await shareFiles([file], rec.texts[n.id], n.label);
         if (ok) {
           rec.posted = { ...(rec.posted || {}), [n.id]: true };
           b.classList.add('done');
           videos.update(rec.id, { posted: rec.posted });
-          toast(`Texto de ${n.label} copiado. Pégalo al publicar.`);
+          toast(copiedMsg(n.label), 4500);
         }
       });
       nets.appendChild(b);
+    }
+    // botones grandes «Copiar texto» de cada red (aparte de compartir)
+    const copies = document.createElement('div');
+    copies.className = 'copies';
+    for (const n of NETWORKS) {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.innerHTML = `Copiar texto<small>${n.label}</small>`;
+      c.addEventListener('click', () => {
+        const r = copyNow(rec.texts[n.id]);
+        rememberCopy(rec.texts[n.id], n.label);
+        logCopy(`botón Copiar texto ${n.label}`, r.ok);
+        r.later.then((ok2) => { if (!r.ok && !ok2) toast('No pude copiar. Abre «Ver textos para publicar» y copia a mano.', 4500); });
+        toast(copiedMsg(n.label), 4500);
+        c.classList.add('copied');
+        setTimeout(() => c.classList.remove('copied'), 1500);
+      });
+      copies.appendChild(c);
     }
     const acts = document.createElement('div');
     acts.className = 'vacts';
@@ -674,7 +784,7 @@ async function showVideos(highlight = new Set()) {
     un.textContent = 'Quitar las marcas ✓';
     un.addEventListener('click', () => { rec.posted = {}; videos.update(rec.id, { posted: {} }); nets.querySelectorAll('button').forEach((x) => x.classList.remove('done')); });
     det.appendChild(un);
-    card.append(thumb, head, meta, nets, acts, det);
+    card.append(thumb, head, meta, nets, copies, acts, det);
     box.appendChild(card);
   }
   paintDelBar();
@@ -701,7 +811,7 @@ $('#delAll').addEventListener('click', async () => {
 });
 $('#openVideos').addEventListener('click', () => showVideos());
 $('#saveAll').addEventListener('click', async () => {
-  await shareFiles(shown.map(fileOf), allTexts(shown));
+  await shareFiles(shown.map(fileOf), allTexts(shown), 'cada red');
   toast('Textos de todos los videos copiados.');
 });
 $('#zipAll').addEventListener('click', async () => {
