@@ -1,6 +1,7 @@
 // Dos Caminos — lectura de guiones en formato sencillo.
 import { SCENE_NAMES } from './scenes.js';
 import { findObject } from './objects.js';
+import { USES, USE_ALIAS } from './uses.js';
 
 export const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
@@ -94,6 +95,10 @@ const SCENE_ACTS = {
 };
 function resolveAct(raw, scene) {
   const a = raw.replace(/\s+/g, '-');
+  // acciones de uso real de objetos (tocar-guitarra, beber-cafe, montar-bici…) valen en cualquier escena
+  if (USES[a]) return a;
+  if (USE_ALIAS[a]) return USE_ALIAS[a];
+  if (a === 'caer-bici' || a === 'levantarse-bici') return a;
   if (SCENE_ACTS[scene]?.includes(a)) return a;
   return ACT_ALIAS[a] || ACT_ALIAS[raw] || a;
 }

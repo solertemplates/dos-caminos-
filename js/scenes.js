@@ -1,20 +1,36 @@
 // Dos Caminos — escenas. Cada escena se dibuja en coordenadas de escenario:
 // x desde -w/2 a w/2, y = 0 es el suelo, y negativo hacia arriba.
 import { drawObject } from './objects.js';
+import { USES, usePose, useLift, drawUseProp } from './uses.js';
 import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
 export const RED = '#E5484D';
 // Al empezar, los dos caminos están en igualdad: todos de pie (o sentados a la mesa), sin objetos.
 let NEUTRAL = 0;
 export function setNeutral(v) { NEUTRAL = v; }
+// estado de la escena que se está dibujando (lo fija render.js) para las acciones con objetos
+let CUR = null;
+export function setCurrent(S) { CUR = S; }
 function neutralPose(pose) {
   const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
   return chair ? POSES.sit : POSES.stand;
 }
 function drawFigure(ctx, o) {
+  // acción de uso real de un objeto (tocar-guitarra, beber-cafe…): pose propia y el objeto en la mano o el cuerpo
+  const use = o.pe && USES[o.pe.act];
+  const k = CUR ? { t: CUR.t, p: CUR.p, r: CUR.r, good: CUR.good, F: o.F } : { t: 0, p: 0, r: 0, good: true, F: o.F };
+  if (use) {
+    o = { ...o, pose: usePose(use, o.pose, k), y: (o.y || 0) - useLift(use, o.F) };
+    if (CUR && CUR.object === use.obj) CUR.objHand = true;
+  }
   // o.neutral: 'stand' fuerza de pie al inicio; 'none' no cambia la pose (p. ej. acostados en la cama)
   if (NEUTRAL > 0.001 && o.neutral !== 'none') o = { ...o, pose: lerpPose(o.pose, o.neutral === 'stand' ? POSES.stand : neutralPose(o.pose), NEUTRAL) };
-  return rawFigure(ctx, o);
+  const fig = rawFigure(ctx, o);
+  if (use && NEUTRAL < 0.5) {
+    const st = CUR ? objState(CUR) : {};
+    drawUseProp(ctx, use, fig, { ...o, y: (o.y || 0) + useLift(use, o.F) }, k, st);
+  }
+  return fig;
 }
 export const GOLD = '#F4A259';
 export const AMBER = '#F4B860';
@@ -214,7 +230,7 @@ export function companion(ctx, S, pe, x, facing, opts = {}) {
     line(ctx, x - F * 0.09, seatY, x - F * 0.09, 0);
     line(ctx, x + F * 0.09, seatY, x + F * 0.09, 0);
   }
-  const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+  const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
   if (NEUTRAL < 0.5 && prop) {
     const h = fig.fh;
     setLine(ctx, F, 1, 0.75);
@@ -361,7 +377,7 @@ SCENES.puente = {
         else if (act === 'descansar' || act === 'sentarse') pose = POSES.floor;
         else pose = breathe(POSES.stand, t);
       }
-      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (holding) plankAt(ctx, fig.fh, F, facing);
       if (pe.act === 'celular' || pe.act === 'phone') phoneAt(ctx, fig.fh, F);
       if (hearts.length && hearts[hearts.length - 1].i === i) {
@@ -549,7 +565,7 @@ SCENES.arbol = {
         pose = breathe(POSES.stand, t);
         if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.look, resultBlend(S)) : lerpPose(pose, POSES.slump, resultBlend(S));
       }
-      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if ((act === 'celular' || act === 'phone' || act === 'ignorar' || act === 'orar-domingo') && !(S.r > 0.5)) {
         const pr = act === 'orar-domingo' ? (cy.done ? 0 : bump(cy.ph, 0.02, 0.2, 0.06)) : 0;
         if (pr < 0.5) phoneAt(ctx, fig.fh, F, 1 - pr * 2);
@@ -674,7 +690,7 @@ SCENES.alcancia = {
       }
     } else pose = breathe(POSES.stand, t);
     if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.look, resultBlend(S)) : lerpPose(pose, POSES.slump, resultBlend(S));
-    const fig = drawFigure(ctx, { x: px, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x: px, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, jx + F * (0.45 + j * 0.4), -1, { kind: p2.act === 'gastar' ? 'stand' : 'drop', phase: 0.5 }));
     if (S.good) S.focus = S.focus || [jx, -jh - F * 0.6];
     if (NEUTRAL > 0.5) coin = null;
@@ -806,7 +822,7 @@ SCENES.casa = {
     const wr = wl + cols * bw + bw * 0.25;
     S.objSpot = [wl - F * 0.66, 0];
     S.people.slice(1, 3).forEach((p2, j) => companion(ctx, S, p2, wr + F * (0.32 + j * 0.42), -1, { kind: BUILD.has(p2.act) && (share >= 1 || !S.good) ? 'work' : 'stand' }));
-    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.75); ctx.strokeRect(fig.fh[0] - bw / 2 + F * 0.03, fig.fh[1] - bh * 0.6, bw - 3, bh - 3); }
     if ((pe.act === 'celular' || pe.act === 'descansar' || pe.act === 'gastar') && !working && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     void wallTop;
@@ -874,7 +890,7 @@ SCENES.escalera = {
         pose = breathe(POSES.floorPhone, t);
         if (S.r > 0.3) pose = lerpPose(pose, { ...POSES.floor, hd: -0.2 }, resultBlend(S, 0.3, 0.6));
       }
-      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (!(act === 'subir' || act === 'climb') && S.r < 0.35) phoneAt(ctx, fig.fh, F);
     });
   },
@@ -938,7 +954,7 @@ SCENES.mesa = {
         pose = { ...POSES.sitTalk, fa1: 0.5 + 0.45 * g, fa2: 1.5 + 0.5 * g, hd: -0.05 + 0.1 * Math.sin(t * 1.3 + s.x) };
       }
       if (S.r > 0) pose = S.good ? lerpPose(pose, POSES.sitReach, resultBlend(S, 0.1, 0.5)) : lerpPose(pose, POSES.sitSlump, resultBlend(S));
-      const fig = drawFigure(ctx, { x: s.x, pose, F: FF, facing: -side, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x: s.x, pose, F: FF, facing: -side, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if ((act === 'celular' || act === 'phone') && S.r < 0.6) phoneAt(ctx, fig.fh, FF);
     }
     if (S.good) S.focus = [0, -th - FF * 0.55];
@@ -1047,7 +1063,7 @@ SCENES.fogata = {
         x = fx + side * (F * 0.6 + smooth(S.p) * (w * 0.5 - F * 0.75));
         pose = S.p < 1 ? walkPose(S.p * 30) : POSES.stand;
         if (S.r > 0) pose = lerpPose(POSES.stand, POSES.cold, resultBlend(S));
-        drawFigure(ctx, { x, pose, F, facing: side, kind: pe.kind, alpha: personDim(S) * (1 - 0.35 * smooth(S.p)) });
+        drawFigure(ctx, { x, pose, F, facing: side, kind: pe.kind, pe: pe, alpha: personDim(S) * (1 - 0.35 * smooth(S.p)) });
         return;
       } else {
         pose = breathe(POSES.sitPhone, t + i);
@@ -1061,7 +1077,7 @@ SCENES.fogata = {
         setLine(ctx, F, 0.55, 0.8);
         ctx.strokeRect(x - F * 0.13, -0.24 * H, F * 0.26, 0.24 * H);
       }
-      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (holding && NEUTRAL < 0.5) { setLine(ctx, F, 1, 0.9); line(ctx, fig.fh[0] - F * 0.08, fig.fh[1], fig.fh[0] + F * 0.08, fig.fh[1] - F * 0.03); }
       if (phone) phoneAt(ctx, fig.fh, F);
     });
@@ -1121,8 +1137,13 @@ SCENES.camino = {
   },
   walker(ctx, S, pe, j, hill, xe) {
     const { w, F, t } = S;
-    const act = pe.act;
-    const run = act === 'correr' || act === 'levantarse' || act === 'caer';
+    // bici: «montar-bici», o caer/levantarse cuando el guion habla de bicicleta (o caer-bici / levantarse-bici)
+    let act = pe.act;
+    const bike = act === 'montar-bici' || act === 'caer-bici' || act === 'levantarse-bici' || ((act === 'caer' || act === 'levantarse') && S.object === 'bicicleta');
+    if (act === 'caer-bici') act = 'caer';
+    if (act === 'levantarse-bici') act = 'levantarse';
+    if (bike) S.objHand = true;
+    const run = act === 'correr' || act === 'levantarse' || act === 'caer' || bike;
     const lag = j * F * 0.38;
     const start = -w * 0.42 + (j ? F * 0.05 : 0), end = xe + w * 0.03 - lag;
     let x, pose;
@@ -1130,7 +1151,7 @@ SCENES.camino = {
       x = start + F * 0.1 + j * F * 0.3;
       pose = breathe(POSES.floorPhone, t);
       if (S.r > 0.3) pose = lerpPose(pose, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0.3, 0.7));
-      const fig = drawFigure(ctx, { x, y: 0, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, y: 0, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (S.r < 0.3) phoneAt(ctx, fig.fh, F);
       return;
     }
@@ -1150,11 +1171,26 @@ SCENES.camino = {
     pose = walkPose((dist / (F * (run ? 0.55 : 0.4))) * Math.PI, run);
     if (prog >= (act === 'caer' || !S.good ? Math.min(prog, 0.5) : 1) && S.p >= 1) pose = POSES.stand;
     if (fallen > 0) pose = lerpPose(pose, { ...POSES.floor, hd: 0.5 }, fallen);
+    if (bike) {
+      const y = hill(x);
+      if (fallen > 0.5 || (act === 'caer' && S.p > 0.45)) {
+        // se cayó de la bici: la bici queda tumbada al lado y el personaje en el suelo
+        drawObject(ctx, 'bicicleta', x + F * 0.42, y, F * 0.42, { ...objState(S), fall: 1, hot: 0 });
+        if (S.r > 0) pose = lerpPose({ ...POSES.floor, hd: 0.5 }, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0, 0.6));
+        drawFigure(ctx, { x: x - F * 0.05, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+      } else {
+        // montado en la bici (al final feliz, levanta un brazo sin bajarse)
+        const rider = { ...pe, act: 'montar-bici' };
+        const fig = drawFigure(ctx, { x, y, pose: POSES.stand, F, facing: 1, kind: pe.kind, pe: rider, alpha: personDim(S) });
+        void fig;
+      }
+      return;
+    }
     if (S.r > 0) {
       if (S.good) pose = lerpPose(POSES.stand, POSES.armsUp, resultBlend(S, 0.1, 0.5));
       else pose = lerpPose(fallen > 0.5 ? { ...POSES.floor, hd: 0.5 } : POSES.stand, { ...POSES.floor, hd: 0.9 }, resultBlend(S, 0, 0.6));
     }
-    drawFigure(ctx, { x, y: hill(x), pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    drawFigure(ctx, { x, y: hill(x), pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
   },
 };
 
@@ -1232,7 +1268,7 @@ SCENES.libros = {
       const r2 = p2.act === 'leer' || p2.act === 'read' || p2.act === 'estudiar';
       companion(ctx, S, p2, sx + F * (0.5 + j * 0.45), -1, { kind: r2 ? 'read' : 'stand', sit: true });
     });
-    const fig = drawFigure(ctx, { x, y, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, y, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (reads && NEUTRAL < 0.5 && !(S.good && S.r > 0.1)) {
       // libro abierto en las manos, o volando a la pila
       const flying = !cy.done && cy.ph > 0.75;
@@ -1305,7 +1341,7 @@ SCENES.abrazo = {
         if (S.r > 0) pose = lerpPose(pose, POSES.slump, resultBlend(S));
       }
       xs.push(x);
-      drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
     });
     // corazón entre los dos
     const hy = -F * 1.15;

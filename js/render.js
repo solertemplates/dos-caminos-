@@ -1,6 +1,7 @@
 // Dos Caminos — composición del video: fondo de estrellas, división, textos, escenas y línea de tiempo.
-import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral, objState } from './scenes.js';
+import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral, setCurrent, objState } from './scenes.js';
 import { drawObject } from './objects.js';
+import { USES } from './uses.js';
 import { WHITE } from './figure.js';
 import './scenes2.js';
 
@@ -224,7 +225,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const S = {
       w: pn.stageW, F: pn.F, people: side.people, good: side.good, bad: side.bad,
       p: ps.p, r: ps.r, t, C: tl.C, seed: isTime ? job.seed : job.seed + i * 13,
-      dimmed: !side.good && ps.r > 0.4, focus: null, object: side.object || null,
+      dimmed: !side.good && ps.r > 0.4, focus: null,
+      // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
+      object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
     };
     let a = endDim * hookIn * ps.show;
     if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.5 * smooth(st.endK * 2.5);
@@ -239,11 +242,12 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const scene = SCENES[side.scene] || SCENES.arbol;
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
     setNeutral(ps.neutral);
+    setCurrent(S);
     withAlpha(ctx, sceneAlpha, () => scene.draw(ctx, S));
     setNeutral(0);
+    setCurrent(null);
     // objeto concreto del guion en su sitio fijo (si la escena no lo usó en una ranura propia)
-    if (S.object == null && side.object) S.object = side.object;
-    if (side.object && !S.objHand && S.objSpot) drawObject(ctx, side.object, S.objSpot[0], S.objSpot[1], pn.F * 0.3, { ...objState(S), fade: objState(S).fade * (ps.neutral > 0.5 ? 0 : 1) });
+    if (S.object && !S.objHand && S.objSpot) drawObject(ctx, S.object, S.objSpot[0], S.objSpot[1], pn.F * 0.3, { ...objState(S), fade: objState(S).fade * (ps.neutral > 0.5 ? 0 : 1) });
     // final feliz: corazón grande y brillante sobre el objeto principal de la escena
     if (side.good && S.focus && ps.r > 0.45) {
       const k = smooth((ps.r - 0.45) / 0.4);

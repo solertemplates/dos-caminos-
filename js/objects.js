@@ -141,6 +141,7 @@ export function drawObject(ctx, name, x, y, s, st = {}) {
     ctx.globalAlpha = 1;
     ctx.fillRect(-s * 1.3, -s * 1.8, s * 2.6, s * 2.6);
   }
+  if (st.rot) { ctx.translate(0, -s * 0.5); ctx.rotate(st.rot); ctx.translate(0, s * 0.5); }
   if (fall > 0) { ctx.translate(s * 0.4, 0); ctx.rotate(fall * 1.25); ctx.translate(-s * 0.4, 0); }
   ctx.globalAlpha = 1 - 0.55 * fade;
   ctx.strokeStyle = WHITE;

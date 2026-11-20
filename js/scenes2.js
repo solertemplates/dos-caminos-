@@ -101,7 +101,7 @@ SCENES.cocina = {
       pose = { ...breathe(POSES.stand, t), tr: 0.1, hd: 0.35, fa1: 1.1 + 0.15 * Math.sin(t * 4), fa2: 1.7 + 0.25 * Math.cos(t * 4), ba1: 0.2 };
       pose = fin(S, pose, POSES.look, POSES.slump);
     } else pose = fin(S, breathe(POSES.phone, t), POSES.look, POSES.slump);
-    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (cooks && S.r < 0.3 && neutral < 0.5) { setLine(ctx, F, 1, 0.6); line(ctx, fig.fh[0], fig.fh[1], px - F * 0.02, pt + F * 0.06); }
     if (!cooks && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     // quien espera para comer
@@ -111,7 +111,7 @@ SCENES.cocina = {
       chair(ctx, F, x2, H, -1);
       let pose2 = isPhone(p2.act) ? breathe(POSES.sitPhone, t + 1) : { ...breathe(POSES.sitTalk, t + 1), fa1: 0.5 + 0.2 * Math.sin(t * 2), fa2: 1.6 };
       pose2 = fin(S, pose2, POSES.sitReach, POSES.sitSlump);
-      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: -1, kind: p2.kind, alpha: personDim(S) });
+      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: -1, kind: p2.kind, pe: p2, alpha: personDim(S) });
       if (isPhone(p2.act) && S.r < 0.4) phoneAt(ctx, f2.fh, F);
     }
   },
@@ -161,7 +161,7 @@ SCENES.oficina = {
     else if (pe.act === 'dormir') pose = breathe({ ...POSES.sitSlump, tr: 0.75, hd: 0.9, fa1: 1.2, fa2: 1.8 }, t * 0.6, 2);
     else pose = breathe(POSES.sitPhone, t);
     pose = fin(S, pose, { ...POSES.sitReach, fa1: 2.6, fa2: 2.8, hd: -0.2 }, POSES.sitSlump);
-    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (isPhone(pe.act) && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     // compañero al otro lado de la mesa
     const p2 = S.people[1];
@@ -171,7 +171,7 @@ SCENES.oficina = {
       const w2 = p2.act === 'trabajar' || p2.act === 'construir';
       let pose2 = w2 ? { ...POSES.typing, fa2: 1.5 + 0.12 * Math.sin(t * 11 + 2) } : p2.act === 'dormir' ? { ...POSES.sitSlump, tr: 0.75, hd: 0.9 } : breathe(POSES.sitPhone, t + 1);
       pose2 = fin(S, pose2, POSES.sitReach, POSES.sitSlump);
-      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: -1, kind: p2.kind, alpha: personDim(S) });
+      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: -1, kind: p2.kind, pe: p2, alpha: personDim(S) });
       if (isPhone(p2.act) && S.r < 0.4) phoneAt(ctx, f2.fh, F);
     }
   },
@@ -224,7 +224,7 @@ SCENES.parque = {
         if (S.good) { x = lerp(x, (i ? 1 : -1) * F * 0.12 - w * 0.08, smooth(S.r / 0.4)); facing = i ? -1 : 1; pose = S.r < 0.4 ? walkPose(S.r * 20) : lerpPose(POSES.stand, POSES.hug, smooth((S.r - 0.4) / 0.2)); }
         else pose = isPhone(pe.act) ? lerpPose(pose, POSES.sitSlump, resultBlend(S)) : lerpPose(pose, { ...POSES.floor, hd: 0.8 }, resultBlend(S));
       }
-      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       figs.push(fig);
       if (isPhone(pe.act) && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     });
@@ -307,14 +307,14 @@ SCENES.coche = {
     // conductor
     let pose = drives ? breathe(POSES.drive, t) : breathe({ ...POSES.sitPhone, tr: 0.1 }, t);
     pose = fin(S, pose, { ...POSES.drive, hd: -0.15 }, POSES.sitSlump);
-    const fig = drawFigure(ctx, { x: -L * 0.05, y: by - F * 0.02, pose, F: F * 0.78, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x: -L * 0.05, y: by - F * 0.02, pose, F: F * 0.78, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (drives) { setLine(ctx, F, 0.8, 0.6); circle(ctx, fig.fh[0] + F * 0.03, fig.fh[1], F * 0.05); }
     else if (S.r < 0.5) phoneAt(ctx, fig.fh, F * 0.8);
     const p2 = S.people[1];
     if (p2) {
       let pose2 = isPhone(p2.act) ? breathe(POSES.sitPhone, t + 1) : { ...breathe(POSES.sitTalk, t + 1), fa1: 0.5 + 0.2 * Math.sin(t * 2) };
       pose2 = fin(S, pose2, POSES.sitReach, POSES.sitSlump);
-      const f2 = drawFigure(ctx, { x: -L * 0.32, y: by - F * 0.02, pose: pose2, F: F * 0.78, facing: 1, kind: p2.kind, alpha: personDim(S) });
+      const f2 = drawFigure(ctx, { x: -L * 0.32, y: by - F * 0.02, pose: pose2, F: F * 0.78, facing: 1, kind: p2.kind, pe: p2, alpha: personDim(S) });
       if (isPhone(p2.act) && S.r < 0.5) phoneAt(ctx, f2.fh, F * 0.8);
     }
     ctx.restore();
@@ -356,7 +356,7 @@ SCENES.gimnasio = {
         if (S.r > 0) pose = lerpPose(pose, POSES.sitSlump, resultBlend(S));
       }
       const xx = trains ? x : bx - F * 0.1 + i * F * 0.25;
-      const fig = drawFigure(ctx, { x: xx, y: 0, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S), neutral: 'stand' });
+      const fig = drawFigure(ctx, { x: xx, y: 0, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S), neutral: 'stand' });
       if (neutral < 0.5 && trains) {
         setLine(ctx, F, 0.95, 0.8);
         if (bar) {
@@ -420,7 +420,7 @@ SCENES.cama = {
         } else if (up > 0.3) x = bx - bl * 0.1;
       } else if (isPhone(act)) { pose = breathe(POSES.liePhone, t); phone = S.r < 0.6; if (S.r > 0.4) { pose = lerpPose(POSES.lie, { ...POSES.floor, hd: 0.9, tr: 0.5 }, resultBlend(S, 0.4, 0.8)); x = bx - bl * 0.1; facing = 1; } }
       else { pose = breathe(POSES.lie, t * 0.5, 2); if (S.r > 0.4) { pose = lerpPose(POSES.lie, { ...POSES.floor, hd: 0.9, tr: 0.5 }, resultBlend(S, 0.4, 0.8)); x = bx - bl * 0.1; facing = 1; } }
-      const fig = drawFigure(ctx, { x, y, pose, F: F * sc, facing, kind: pe.kind, alpha: personDim(S), neutral: 'none' });
+      const fig = drawFigure(ctx, { x, y, pose, F: F * sc, facing, kind: pe.kind, pe: pe, alpha: personDim(S), neutral: 'none' });
       if (phone) phoneAt(ctx, fig.fh, F);
       // manta sobre las piernas mientras está acostado
       if (pose.tr > 1 && y < 0) { setLine(ctx, F, 0.7, 0.7); ctx.beginPath(); ctx.moveTo(bx - bl * 0.05, top - F * 0.01); ctx.quadraticCurveTo(bx + bl * 0.2, top - F * 0.1, bx + bl / 2, top - F * 0.02); ctx.stroke(); }
@@ -467,7 +467,7 @@ SCENES.sofa = {
       else pose = { ...POSES.sitTalk, fa1: 0.5 + 0.4 * (0.5 + 0.5 * Math.sin(t * 2.3 + i * 2)), fa2: 1.6, hd: -0.05 + 0.1 * Math.sin(t * 1.4 + i) };
       if (S.r > 0) { if (S.good) { pose = lerpPose(pose, { ...POSES.sitReach, fa1: 1.3, fa2: 2.3 }, resultBlend(S, 0.1, 0.45)); facing = side ? -side : 1; } else pose = lerpPose(pose, POSES.sitSlump, resultBlend(S)); }
       const H = figureSize(pe.kind, F);
-      const fig = drawFigure(ctx, { x, y: seat + 0.245 * H * 0.98, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, y: seat + 0.245 * H * 0.98, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (isPhone(pe.act) && S.r < 0.5) phoneAt(ctx, fig.fh, F);
     });
     if (S.good) S.focus = [0, -F * 1.25];
@@ -524,7 +524,7 @@ SCENES.huerto = {
       pose = lerpPose(POSES.water, { ...POSES.water, fa1: 1.25, fa2: 1.9 }, pour); can = true;
     } else { x = -w * 0.33; pose = breathe(isPhone(pe.act) ? POSES.floorPhone : { ...POSES.floor, hd: 0.8 }, t); }
     pose = fin(S, pose, POSES.look, pe.act === 'descansar' || isPhone(pe.act) ? { ...POSES.floor, hd: 0.9 } : POSES.slump);
-    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (can && neutral < 0.5 && S.r < 0.3) { setLine(ctx, F, 0.95, 0.8); rect(ctx, fig.fh[0] - F * 0.02, fig.fh[1] - F * 0.01, F * 0.09, F * 0.08); line(ctx, fig.fh[0] + F * 0.07, fig.fh[1] + F * 0.01, fig.fh[0] + F * 0.16, fig.fh[1] - F * 0.04); }
     if (pe.act !== 'sembrar' && pe.act !== 'regar' && isPhone(pe.act) && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     const p2 = S.people[1];
@@ -534,7 +534,7 @@ SCENES.huerto = {
     const { F, t } = S;
     let pose = p2.act === 'sembrar' || p2.act === 'regar' ? lerpPose(breathe(POSES.stand, t + 1), POSES.crouch, 0.5 + 0.5 * Math.sin(t * 2)) : breathe(isPhone(p2.act) ? POSES.phone : POSES.stand, t + 1);
     pose = fin(S, pose, POSES.armsUp, POSES.slump);
-    const f = drawFigure(ctx, { x, pose, F, facing: 1, kind: p2.kind, alpha: personDim(S) });
+    const f = drawFigure(ctx, { x, pose, F, facing: 1, kind: p2.kind, pe: p2, alpha: personDim(S) });
     if (isPhone(p2.act) && S.r < 0.4) phoneAt(ctx, f.fh, F);
   },
 };
@@ -582,7 +582,7 @@ SCENES.montana = {
         pose = breathe(isPhone(act) ? POSES.floorPhone : POSES.floor, t + i);
         if (S.r > 0.3) pose = lerpPose(pose, { ...POSES.floor, hd: -0.25 }, resultBlend(S, 0.3, 0.7));
       }
-      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x, y, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (!(act === 'escalar' || act === 'caer') && S.r < 0.3) phoneAt(ctx, fig.fh, F);
     });
     // bandera naranja en la cima al llegar (o el objeto del guion, que espera allí desde el principio)
@@ -635,7 +635,7 @@ SCENES.lluvia = {
       else if (covered) pose = breathe(POSES.stand, t + i);
       else pose = { ...breathe(POSES.cold, t * 3 + i, 1.5), tr: 0.15 + 0.02 * Math.sin(t * 20) };
       if (S.r > 0) pose = S.good ? lerpPose(pose, umb ? { ...POSES.umbrella, hd: -0.25 } : POSES.look, resultBlend(S)) : lerpPose(pose, covered ? POSES.stand : POSES.cold, resultBlend(S));
-      const fig = drawFigure(ctx, { x: xs[i], pose, F, facing: list.length > 1 ? (i ? -1 : 1) : 1, kind: pe.kind, alpha: personDim(S) });
+      const fig = drawFigure(ctx, { x: xs[i], pose, F, facing: list.length > 1 ? (i ? -1 : 1) : 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if (umb && getNeutral() < 0.5) {
         const h = fig.fh, top = h[1] - F * 0.22, rr = F * 0.32 * umb;
         const cxu = umb > 1 ? (xs[0] + xs[1]) / 2 : h[0];
@@ -696,7 +696,7 @@ SCENES.tienda = {
     if (sells) pose = lerpPose(breathe(POSES.stand, t), POSES.reach, bump(frac(S.p * S.C), 0.45, 0.8, 0.1));
     else pose = breathe({ ...POSES.floorPhone }, t);
     pose = fin(S, pose, POSES.armsUp, { ...POSES.floor, hd: 0.9 });
-    const fig = drawFigure(ctx, { x: vx, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x: vx, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (!sells && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     // cliente: viene a comprar, o pasa de largo
     const p2 = S.people[1];
@@ -713,7 +713,7 @@ SCENES.tienda = {
         pose2 = walkPose(S.p * 60);
       }
       if (S.r > 0) { x2 = sx + sw / 2 + F * 0.2; facing2 = -1; pose2 = S.good ? lerpPose(POSES.stand, POSES.look, resultBlend(S)) : POSES.stand; if (!S.good) x2 = w * 0.47; }
-      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, alpha: personDim(S) });
+      const f2 = drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, pe: p2, alpha: personDim(S) });
       if (sells && ph > 0.6 && ph < 1 && !getNeutral()) { setLine(ctx, F, 0.85, 0.6); rect(ctx, f2.fh[0] - F * 0.05, f2.fh[1] - F * 0.02, F * 0.1, F * 0.11); }
     }
   },
@@ -750,7 +750,7 @@ SCENES.carta = {
     chair(ctx, F, dx - F * 0.1, H, 1);
     let pose = writes ? { ...POSES.typing, fa1: 1.05 + 0.08 * Math.sin(t * 6), fa2: 1.5 + 0.1 * Math.cos(t * 6), hd: 0.45 } : breathe(POSES.sitPhone, t);
     pose = fin(S, pose, POSES.sitReach, POSES.sitSlump);
-    const fig = drawFigure(ctx, { x: dx - F * 0.1, pose, F, facing: 1, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x: dx - F * 0.1, pose, F, facing: 1, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (!writes && S.r < 0.4) phoneAt(ctx, fig.fh, F);
     // carta en vuelo: de la mesa al buzón
     if (writes && !cy.done && getNeutral() < 0.5 && cy.ph > 0.55) {
@@ -768,7 +768,7 @@ SCENES.carta = {
     if (writes) { pose2 = received > 0 ? { ...breathe(POSES.heart, t), fa2: 2.0 } : breathe(POSES.stand, t); }
     else { const look = bump(frac(S.p * 3), 0.2, 0.6, 0.1); x2 = lerp(rx - F * 0.3, mx + F * 0.3, look); pose2 = lerpPose(breathe(POSES.stand, t), POSES.reach, look * 0.6); }
     if (S.r > 0) { if (S.good) pose2 = lerpPose(pose2, POSES.heart, resultBlend(S)); else { facing2 = 1; x2 = lerp(x2, rx + F * 0.05, resultBlend(S)); pose2 = lerpPose(pose2, POSES.slump, resultBlend(S)); } }
-    const f2 = S.people[1] ? drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, alpha: personDim(S) }) : null;
+    const f2 = S.people[1] ? drawFigure(ctx, { x: x2, pose: pose2, F, facing: facing2, kind: p2.kind, pe: p2, alpha: personDim(S) }) : null;
     if (f2 && writes && received > 0 && getNeutral() < 0.5) {
       const hx = (f2.fh[0] + f2.bh[0]) / 2, hy = (f2.fh[1] + f2.bh[1]) / 2;
       if (S.object) obj(ctx, S, hx, hy + F * 0.07, F * 0.15);
@@ -823,7 +823,7 @@ SCENES.reloj = {
     } else if (uses) { x = rx2 - F * 0.35; pose = breathe(POSES.stand, t); }
     else { x = -w * 0.12; pose = breathe(POSES.floorPhone, t); }
     pose = fin(S, pose, POSES.armsUp, { ...POSES.floor, hd: -0.3 });
-    const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, alpha: personDim(S) });
+    const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe: pe, alpha: personDim(S) });
     if (uses && !cy.done && cy.ph < 0.45 && getNeutral() < 0.5) { if (S.object) { drawObjectHeld(ctx, S, fig.fh, F); } else { setLine(ctx, F, 1, 0.8); rect(ctx, fig.fh[0] - bs / 2, fig.fh[1] - bs * 0.7, bs, bs * 0.9); } }
     S.objSpot = [rx2, -done * bs];
     if (!uses && S.r < 0.4) phoneAt(ctx, fig.fh, F);
@@ -831,7 +831,7 @@ SCENES.reloj = {
     if (p2) {
       let pose2 = p2.act === 'aprovechar' ? lerpPose(breathe(POSES.stand, t + 1), POSES.crouch, 0.5 + 0.5 * Math.sin(t * 2.4)) : breathe(POSES.floorPhone, t + 1);
       pose2 = fin(S, pose2, POSES.armsUp, { ...POSES.floor, hd: 0.9 });
-      const f2 = drawFigure(ctx, { x: p2.act === 'aprovechar' ? rx2 + F * 0.32 : -w * 0.3, pose: pose2, F, facing: -1, kind: p2.kind, alpha: personDim(S) });
+      const f2 = drawFigure(ctx, { x: p2.act === 'aprovechar' ? rx2 + F * 0.32 : -w * 0.3, pose: pose2, F, facing: -1, kind: p2.kind, pe: p2, alpha: personDim(S) });
       if (p2.act !== 'aprovechar' && S.r < 0.4) phoneAt(ctx, f2.fh, F);
     }
   },
@@ -876,14 +876,14 @@ SCENES.telefono = {
     // quien llama
     let poseA = a.act === 'llamar' ? breathe(POSES.phoneEar, t) : breathe(POSES.phone, t);
     poseA = fin(S, poseA, { ...POSES.phoneEar, hd: -0.15 }, POSES.slump, 0.1, 0.6);
-    drawFigure(ctx, { x: rooms[0], pose: poseA, F, facing: 1, kind: a.kind, alpha: personDim(S) });
+    drawFigure(ctx, { x: rooms[0], pose: poseA, F, facing: 1, kind: a.kind, pe: a, alpha: personDim(S) });
     if (b) {
       let poseB, facing = -1;
       const ring = bump(frac(S.p * S.C), 0.1, 0.5, 0.1) * (1 - neutral);
       if (b.act === 'llamar') poseB = breathe(POSES.phoneEar, t + 1);
       else { poseB = breathe(POSES.phone, t + 1); facing = 1; }
       poseB = fin(S, poseB, { ...POSES.phoneEar, hd: -0.15 }, POSES.phone);
-      const fb = drawFigure(ctx, { x: rooms[1], pose: poseB, F, facing, kind: b.kind, alpha: personDim(S) });
+      const fb = drawFigure(ctx, { x: rooms[1], pose: poseB, F, facing, kind: b.kind, pe: b, alpha: personDim(S) });
       if (b.act !== 'llamar') {
         phoneAt(ctx, fb.fh, F);
         // el teléfono de la mesa vibra y nadie contesta
@@ -939,14 +939,14 @@ SCENES.regalo = {
       holding = k < 0.5 && neutral < 0.5;
       if (S.r > 0) { pose = lerpPose(POSES.stand, POSES.slump, resultBlend(S)); holding = false; facing = 1; }
     }
-    const fa = drawFigure(ctx, { x, pose, F, facing, kind: a.kind, alpha: personDim(S) });
+    const fa = drawFigure(ctx, { x, pose, F, facing, kind: a.kind, pe: a, alpha: personDim(S) });
     if (holding && neutral < 0.5) { if (S.object) obj(ctx, S, fa.fh[0], fa.fh[1] + F * 0.08, F * 0.18); else gift(ctx, F, fa.fh[0], fa.fh[1] + F * 0.06, F * 0.18); }
     if (b) {
       let pb = breathe(POSES.stand, t + 1), fb = -1;
       if (gives) pb = lerpPose(pb, POSES.reach, smooth(S.p) * 0.4);
       else pb = lerpPose(pb, POSES.heart, 0.3 * (1 - smooth(S.p)));
       if (S.r > 0) { if (S.good) pb = lerpPose(POSES.reach, POSES.heart, resultBlend(S, 0.3, 0.6)); else { pb = lerpPose(pb, POSES.slump, resultBlend(S)); fb = 1; } }
-      const fbf = drawFigure(ctx, { x: recX, pose: pb, F, facing: fb, kind: b.kind, alpha: personDim(S) });
+      const fbf = drawFigure(ctx, { x: recX, pose: pb, F, facing: fb, kind: b.kind, pe: b, alpha: personDim(S) });
       if (gives && S.r >= 0.3) { const k = smooth((S.r - 0.3) / 0.4); if (S.object) obj(ctx, S, recX - F * 0.2, 0, F * 0.22, { hot: k }); else gift(ctx, F, recX - F * 0.2, 0, F * 0.2, k, true); glow(ctx, recX - F * 0.2, -F * 0.25, F * 0.5 * k, ORANGE, 0.8); }
       void fbf;
     }

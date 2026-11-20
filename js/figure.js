@@ -190,5 +190,5 @@ export function drawFigure(ctx, o) {
   }
   ctx.restore();
   const w = (p) => [p[0] + x, p[1] + y];
-  return { fh: w(P.fh), bh: w(P.bh), head: w(P.head), hip: w(P.hip), shoulder: w(P.shoulder), r: P.r, H };
+  return { fh: w(P.fh), bh: w(P.bh), head: w(P.head), hip: w(P.hip), shoulder: w(P.shoulder), ff: w(P.ff), bf: w(P.bf), r: P.r, H };
 }

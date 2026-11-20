@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (FRASE opcional como frase final, grande y centrada, con *palabras* en rojo).
+Última actualización: 20 nov 2026 (acciones con objetos: el personaje usa el objeto en la mano o en el cuerpo; montar-bici, caer de la bici).
 
 ---
 
@@ -258,6 +258,56 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |
 
+### Acciones con objetos (38, valen en cualquier escena)
+
+El personaje **usa el objeto como lo haría una persona**: el objeto va **en su mano o en su cuerpo** (cabeza, espalda, pies), no en un sitio fijo lejos de él. Cualquier escena las acepta: la escena coloca al personaje y él hace la acción. En el lado bueno el objeto se enciende en rojo o naranja al final; en el malo se apaga, el personaje baja los brazos y, si el final es `se cae` o `se alejan`, el objeto se cae.
+
+- Si un personaje usa el objeto que nombra el título (por ejemplo «Su primera bicicleta» con `montar-bici`), el objeto va solo con él y no se repite en otro sitio de la escena.
+- **Bicicleta en el camino:** `montar-bici` va montado todo el camino. Si el título o subtítulo dice «bicicleta», `caer` = **se cae de la bici** (la bici queda tumbada al lado) y `levantarse` = **se cae y se vuelve a montar**. También se puede escribir directamente `caer-bici` o `levantarse-bici`.
+
+| Acción | Objeto | Qué hace | Ejemplo |
+|---|---|---|---|
+| `tocar-guitarra` | guitarra | Toca la guitarra | `sofa \| hombre+mujer \| tocar-guitarra+beber-cafe \| se abrazan` |
+| `leer-libro` | libro | Lee un libro con las dos manos | `parque \| mujer+nina \| leer-libro+leer-libro \| crece` |
+| `beber-cafe` | taza | Bebe de su taza de café | `mesa \| hombre+mujer \| beber-cafe+hablar \| crece` |
+| `dar-flor` | flor | Ofrece una flor con la mano | `puente \| hombre+mujer \| construir+dar-flor \| se unen` |
+| `lanzar-pelota` | pelota | Lanza la pelota hacia arriba y la atrapa | `parque \| hombre+nino \| lanzar-pelota+jugar \| se abrazan` |
+| `escribir-lapiz` | lapiz | Escribe con un lápiz en su libreta | `casa \| mujer+nina \| construir+escribir-lapiz \| crece` |
+| `llevar-mochila` | mochila | Lleva la mochila a la espalda | `camino \| nino \| llevar-mochila \| llega` |
+| `ponerse-sombrero` | sombrero | Se pone el sombrero | `tienda \| hombre \| ponerse-sombrero \| ganan` |
+| `hacer-foto` | camara | Hace una foto con la cámara | `parque \| mujer+nina \| hacer-foto+jugar \| se abrazan` |
+| `dar-carta` | carta | Entrega una carta con la mano | `abrazo \| hombre+mujer \| dar-carta+acercarse \| se unen` |
+| `comer-pan` | pan | Come un trozo de pan | `cocina \| mujer+nino \| cocinar+comer-pan \| crece` |
+| `contar-dinero` | dinero | Cuenta billetes en las manos | `alcancia \| hombre \| contar-dinero \| se llena` |
+| `contar-monedas` | moneda | Lanza una moneda al aire y la recoge | `alcancia \| nina \| contar-monedas \| se llena` |
+| `usar-llave` | llave | Abre con la llave (gira la mano) | `casa \| hombre \| usar-llave \| crece` |
+| `dar-anillo` | anillo | De rodillas, ofrece un anillo | `abrazo \| hombre+mujer \| dar-anillo+acercarse \| se unen` |
+| `montar-bici` | bicicleta | Va montado en bicicleta | `camino \| nina \| montar-bici \| llega` |
+| `dar-regalo` | regalo | Ofrece un regalo con las dos manos | `regalo \| hombre+nina \| dar-regalo+esperar \| se unen` |
+| `llevar-maleta` | maleta | Lleva la maleta de la mano | `camino \| mujer \| llevar-maleta \| llega` |
+| `encender-vela` | vela | Sostiene una vela encendida | `mesa \| hombre+mujer \| encender-vela+hablar \| crece` |
+| `atarse-zapatos` | zapatos | Se ata los zapatos | `gimnasio \| mujer \| atarse-zapatos \| crece` |
+| `mirar-foto` | foto | Mira una foto entre las manos | `sofa \| mujer \| mirar-foto \| se queda` |
+| `alcanzar-estrella` | estrella | Alcanza una estrella con la mano | `escalera \| nino \| alcanzar-estrella \| llega` |
+| `sostener-globo` | globo | Sostiene un globo del hilo | `parque \| hombre+nina \| jugar+sostener-globo \| se abrazan` |
+| `volar-cometa` | cometa | Vuela una cometa | `parque \| hombre+nino \| volar-cometa+jugar \| se abrazan` |
+| `ponerse-gafas` | gafas | Lleva gafas puestas (y se las ajusta) | `libros \| hombre \| ponerse-gafas \| crece` |
+| `beber-agua` | botella | Bebe agua de una botella | `gimnasio \| hombre \| beber-agua \| crece` |
+| `servir-plato` | plato | Lleva un plato de comida con las dos manos | `mesa \| mujer+nino \| servir-plato+hablar \| crece` |
+| `comer-manzana` | manzana | Come una manzana | `arbol \| nina \| comer-manzana \| crece` |
+| `llevar-pastel` | pastel | Lleva un pastel con la vela encendida | `mesa \| mujer+nina \| llevar-pastel+hablar \| crece` |
+| `abrazar-osito` | osito | Abraza un osito de peluche | `cama \| nina \| abrazar-osito \| se despiertan` |
+| `llevar-planta` | maceta | Lleva una plantita en maceta | `huerto \| mujer \| llevar-planta \| crece` |
+| `martillar` | martillo | Martilla un clavo | `casa \| hombre \| martillar \| crece` |
+| `escribir-cuaderno` | cuaderno | Escribe en su cuaderno | `oficina \| mujer \| escribir-cuaderno \| ganan` |
+| `levantar-trofeo` | trofeo | Levanta un trofeo con las dos manos | `gimnasio \| mujer \| levantar-trofeo \| ganan` |
+| `escuchar-musica` | auriculares | Escucha música con auriculares | `sofa \| nino \| escuchar-musica \| se queda` |
+| `cerrar-candado` | candado | Cierra un candado con la mano | `puente \| hombre+mujer \| construir+cerrar-candado \| se unen` |
+| `sembrar-semilla` | semilla | Se agacha y siembra una semilla | `huerto \| hombre+nino \| sembrar-semilla+sembrar-semilla \| crece` |
+| `ponerse-corona` | corona | Lleva una corona en la cabeza | `regalo \| nina+mujer \| ponerse-corona+esperar \| se unen` |
+| `caer-bici` | bicicleta | Va en bici por el camino, se cae de la bici y se queda en el suelo | `camino \| nina \| caer-bici \| se queda` |
+| `levantarse-bici` | bicicleta | Va en bici, se cae a mitad del camino y se vuelve a montar | `camino \| nina \| levantarse-bici \| llega` |
+
 ### Finales
 
 | Tipo | Palabras | Qué se ve | Ejemplo |
@@ -309,6 +359,7 @@ Ejemplos de cada final nuevo:
 | `js/scenes.js` | Las 10 primeras escenas y herramientas comunes |
 | `js/scenes2.js` | Las 15 escenas nuevas |
 | `js/objects.js` | Los 38 objetos concretos y las palabras que los activan |
+| `js/uses.js` | Las acciones con objetos (pose y dónde va el objeto) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |
