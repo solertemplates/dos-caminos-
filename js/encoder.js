@@ -30,6 +30,28 @@ export async function detectSupport(width, height) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// iOS solo deja sonar el audio de un AudioContext creado/activado en un toque del usuario:
+// se crea uno al pulsar «Crear» (o «Continuar») y se reutiliza para todas las grabaciones en tiempo real.
+let sharedAC = null;
+export function unlockAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!sharedAC || sharedAC.state === 'closed') sharedAC = new AC({ sampleRate: 48000 });
+    sharedAC.resume();
+    // un sonido inaudible en el mismo toque termina de desbloquearlo en iPhone
+    const b = sharedAC.createBuffer(1, 1, 48000), s = sharedAC.createBufferSource();
+    s.buffer = b; s.connect(sharedAC.destination); s.start(0);
+  } catch (e) { console.warn('audio', e); }
+}
+
+// Configuración AAC-LC (AudioSpecificConfig) para el MP4, por si el navegador no la da.
+function aacConfig(sampleRate, channels) {
+  const idx = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000].indexOf(sampleRate);
+  const i = idx < 0 ? 3 : idx;
+  return new Uint8Array([(2 << 3) | (i >> 1), ((i & 1) << 7) | (channels << 3)]);
+}
+
 export async function encodeVideo({ canvas, job, audio, D, scale, onProgress, signal }) {
   const width = Math.round(W * scale), height = Math.round(H * scale);
   canvas.width = width;
@@ -60,8 +82,32 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   let err = null;
   const venc = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: (e) => (err = e) });
   venc.configure({ codec, width, height, bitrate: scale >= 1 ? 7_000_000 : 4_000_000, framerate: FPS, avc: { format: 'avc' } });
-  const aenc = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: (e) => (err = e) });
-  aenc.configure({ codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, bitrate: 160000 });
+  // AAC: Safari puede entregarlo con cabeceras ADTS y sin configuración; se normaliza para el MP4
+  // (sin esto el MP4 sale con la pista de audio vacía o ilegible = video sin música)
+  let audioChunks = 0, audioUs = 0, sentConfig = false;
+  const asc = aacConfig(audio.sampleRate, 2);
+  const aenc = new AudioEncoder({
+    output: (c, m) => {
+      let data = new Uint8Array(c.byteLength);
+      c.copyTo(data);
+      if (data.length > 7 && data[0] === 0xff && (data[1] & 0xf6) === 0xf0) data = data.subarray(data[1] & 1 ? 7 : 9);
+      if (!data.length) return;
+      let meta;
+      if (!sentConfig) {
+        const dc = m && m.decoderConfig;
+        const desc = dc && dc.description && dc.description.byteLength ? dc.description : asc;
+        meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, description: desc } };
+        sentConfig = true;
+      }
+      const dur = c.duration || Math.round((1024 / audio.sampleRate) * 1e6);
+      muxer.addAudioChunkRaw(data, 'key', c.timestamp, dur, meta);
+      audioChunks++;
+      audioUs += dur;
+    },
+    error: (e) => (err = e),
+  });
+  const acfg = { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, bitrate: 160000 };
+  try { aenc.configure({ ...acfg, aac: { format: 'aac' } }); } catch (e) { aenc.configure(acfg); }
 
   // audio primero (rápido)
   const L = audio.getChannelData(0), R = audio.getChannelData(1);
@@ -90,6 +136,8 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   await venc.flush();
   await aenc.flush();
   if (err) throw err;
+  // comprobación: la música tiene que estar dentro del MP4 de principio a fin
+  if (audioChunks === 0 || audioUs < D * 1e6 * 0.9) throw new Error(`audio incompleto (${(audioUs / 1e6).toFixed(1)} s de ${D} s)`);
   muxer.finalize();
   venc.close();
   aenc.close();
@@ -97,7 +145,8 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
 }
 
 async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgress, signal }) {
-  const ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audio.sampleRate });
+  const own = !(sharedAC && sharedAC.state !== 'closed');
+  const ac = own ? new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audio.sampleRate }) : sharedAC;
   await ac.resume();
   const dest = ac.createMediaStreamDestination();
   const src = ac.createBufferSource();
@@ -128,7 +177,7 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   rec.stop();
   await done;
   try { src.stop(); } catch (e) {}
-  ac.close();
+  if (own) ac.close();
   if (signal?.aborted) throw new DOMException('cancelado', 'AbortError');
   const type = mime.split(';')[0];
   return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type, realtime: true };

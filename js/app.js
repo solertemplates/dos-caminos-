@@ -3,7 +3,7 @@ import { parseScripts } from './parser.js';
 import { EXAMPLES } from './examples.js';
 import { makeTimeline, layoutFor, makeStars } from './render.js';
 import { renderAudio } from './audio.js';
-import { encodeVideo } from './encoder.js';
+import { encodeVideo, unlockAudio } from './encoder.js';
 import { settings, phrases, draft, counters, songs, videos, queue, persist } from './storage.js';
 import { addSongFiles, pickSong, CATS, CAT_LABEL } from './music.js';
 import { postText, NETWORKS } from './publish.js';
@@ -238,6 +238,7 @@ async function saveVideo(rec) {
 }
 
 function startBatch(scripts) {
+  unlockAudio(); // en el mismo toque, para que iPhone deje grabar la música
   const q = queue.get();
   if (q && q.idx < q.items.length && !confirm('Hay una tanda sin terminar. ¿Empezar una nueva y descartarla?')) return;
   queue.set({ items: scripts, idx: 0, opts: { duration: S.duration, lang: S.lang, total: scripts.length }, ids: [] });
@@ -287,7 +288,7 @@ async function runQueue() {
   refreshHome();
 }
 $('#cancel').addEventListener('click', () => { if (confirm('¿Detener la tanda? Los videos ya terminados quedan guardados en «Mis videos».')) abort?.abort(); });
-$('#resumeGo').addEventListener('click', () => runQueue());
+$('#resumeGo').addEventListener('click', () => { unlockAudio(); runQueue(); });
 $('#resumeDrop').addEventListener('click', () => { if (confirm('¿Descartar los videos que faltaban por crear?')) { queue.clear(); refreshHome(); } });
 
 // ---------- Mis videos ----------
@@ -353,7 +354,7 @@ async function showVideos(highlight = new Set()) {
     thumb.textContent = '▶  Ver video';
     thumb.addEventListener('click', () => {
       const v = document.createElement('video');
-      v.playsInline = true; v.controls = true; v.autoplay = true;
+      v.playsInline = true; v.controls = true; v.autoplay = true; v.muted = false;
       const u = URL.createObjectURL(file); urls.push(u);
       v.src = u;
       v.className = 'vthumb';
