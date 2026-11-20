@@ -10,6 +10,7 @@ import { postText, NETWORKS } from './publish.js';
 import { makeZip } from './zip.js';
 import { CLAUDE_PROMPT } from './format.js';
 import { pickFinal } from './finals.js';
+import { stripAudio } from './mp4strip.js';
 
 const $ = (s) => document.querySelector(s);
 let S = settings.get();
@@ -318,7 +319,7 @@ async function shareFiles(files, text) {
 async function saveToPhotos(file) {
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     toast('En el menú, elige «Guardar video» para guardarlo en Fotos.', 4500);
-    try { await navigator.share({ files: [file] }); return true; } catch (e) { if (e.name === 'AbortError') return false; }
+    try { await navigator.share({ files: [file] }); return true; } catch (e) { if (e.name === 'AbortError') return false; if (e.name === 'NotAllowedError') throw e; }
   }
   download(file, file.name);
   toast('Video descargado.');
@@ -392,15 +393,35 @@ async function showVideos(highlight = new Set()) {
     }
     const acts = document.createElement('div');
     acts.className = 'vacts';
+    // Descargar con música: el MP4 tal cual (la canción va dentro)
     const dl = document.createElement('button');
     dl.className = 'dlv' + (rec.saved ? ' done' : '');
-    dl.textContent = 'Descargar video';
+    dl.textContent = 'Descargar con música';
     dl.addEventListener('click', async () => {
-      if (await saveToPhotos(file)) { rec.saved = true; dl.classList.add('done'); videos.update(rec.id, { saved: true }); }
+      try { if (await saveToPhotos(file)) { rec.saved = true; dl.classList.add('done'); videos.update(rec.id, { saved: true }); } }
+      catch (e) { toast('Toca otra vez para guardar el video.'); }
+    });
+    // Descargar sin música: el mismo MP4 sin pista de audio (para poner música en Instagram, TikTok o YouTube)
+    const dlm = document.createElement('button');
+    dlm.className = 'dlv mute' + (rec.savedMute ? ' done' : '');
+    dlm.textContent = 'Descargar sin música';
+    let muteFile = null;
+    dlm.addEventListener('click', async () => {
+      try {
+        if (!muteFile) {
+          const { data } = stripAudio(await file.arrayBuffer());
+          muteFile = new File([data], rec.name.replace(/(\.\w+)$/, '-sin-musica$1'), { type: rec.mime });
+        }
+        if (await saveToPhotos(muteFile)) { rec.savedMute = true; dlm.classList.add('done'); dlm.textContent = 'Descargar sin música'; videos.update(rec.id, { savedMute: true }); }
+      } catch (e) {
+        // iPhone puede no abrir el menú si pasó tiempo desde el toque: el archivo ya está listo, basta tocar otra vez
+        if (muteFile) { dlm.textContent = 'Sin música lista · toca para guardar'; toast('El video sin música está listo. Toca otra vez para guardarlo.'); }
+        else toast('No pude preparar el video sin música.');
+      }
     });
     const del = document.createElement('button'); del.textContent = 'Borrar';
     del.addEventListener('click', async () => { if (confirm(`¿Borrar «${rec.title}» del teléfono?`)) { await videos.del(rec.id); picked.delete(rec.id); showVideos(); refreshHome(); } });
-    acts.append(dl, del);
+    acts.append(dl, dlm, del);
     const det = document.createElement('details');
     det.innerHTML = '<summary>Ver textos para publicar</summary><pre></pre>';
     det.querySelector('pre').textContent = NETWORKS.map((n) => `— ${n.label} —\n${rec.texts[n.id]}`).join('\n\n');

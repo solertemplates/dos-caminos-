@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (arreglo: la música vuelve a ir dentro del MP4 en iPhone; comprobación del audio).
+Última actualización: 20 nov 2026 (Mis videos: Descargar con música / Descargar sin música).
 
 ---
 
@@ -399,7 +399,7 @@ Ejemplos de cada final nuevo:
 - **Pantalla principal:** Pegar guiones · Duración (15/30/45) · Idioma (Español / English US) · Crear videos. Arriba: «Mis videos» y Ajustes.
 - **Pegar guiones:** cada guion aparece con su casilla; botones **Crear seleccionados** y **Crear todos**.
 - **Creación en tanda:** cada video se guarda en el teléfono (IndexedDB) **en cuanto termina**. La tanda se guarda; si la app se cierra o el teléfono se bloquea, al volver aparece «Continuar» y sigue donde se quedó. Se pide mantener la pantalla encendida (y se usa Wake Lock cuando el iPhone lo permite).
-- **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene **Descargar video**, que abre el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (queda marcado con ✓). El MP4 lleva siempre la música dentro (H.264 + AAC); **Guardar todos** y **ZIP** (con los textos). Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden).
+- **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene dos botones que abren el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (cada uno queda marcado con ✓): **Descargar con música** (el MP4 con la canción dentro, H.264 + AAC) y **Descargar sin música** (el mismo MP4 sin pista de audio, para ponerle música dentro de Instagram, TikTok o YouTube; se obtiene al instante quitando la pista de audio sin volver a codificar, `js/mp4strip.js`, y se guarda con «-sin-musica» en el nombre); **Guardar todos** y **ZIP** (con los textos). Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden).
 - **Música:** cada video sale **con la música ya metida en el MP4** (sirve para Facebook), sonando desde el primer segundo. Garantías: (1) si el navegador entrega el AAC con cabeceras ADTS o sin configuración (Safari de iOS), la app las quita y escribe la configuración AAC-LC correcta; (2) tras crear el MP4 comprueba que el audio cubre todo el video y, si no, lo rehace grabando en tiempo real; (3) el audio se desbloquea en el mismo toque de «Crear»/«Continuar», como exige iOS. Banco de música en el teléfono (MP3/M4A), categoría automática editable (romántica, tensión, triste, emotiva, inspiracional, alegre); se elige según la emoción y sin repetir siempre la misma. Sin canciones, la app genera una música suave propia.
 - **Efectos de sonido:** pocos, suaves, sincronizados con lo que pasa; generados por código y publicados bajo **CC0**.
 - **Ajustes:** formato de guion (copiar instrucciones para Claude), banco de frases, banco de música, video (división, calidad, efectos, estrellita), acerca de.
@@ -420,6 +420,7 @@ Ejemplos de cada final nuevo:
 | `js/scenes2.js` | Las 15 escenas nuevas |
 | `js/objects.js` | Los 38 objetos concretos y las palabras que los activan |
 | `js/uses.js` | Las acciones con objetos (pose y dónde va el objeto) |
+| `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |

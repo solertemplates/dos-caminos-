@@ -161,4 +161,7 @@ textarea.short { flex: 0 0 auto; min-height: 110px; height: 22vh; }
 .vacts { display: flex; gap: 8px; margin-top: 8px; }
 .vacts .dlv { flex: 2; background: var(--fg); color: #000; border-color: var(--fg); font-weight: 400; }
 .vacts .dlv.done::before { content: '✓ '; }
+.vacts .dlv.mute { background: none; color: var(--fg); border-color: rgba(244, 242, 236, 0.6); }
+.vacts { flex-wrap: wrap; }
+.vacts .dlv { flex: 1 1 45%; }
 .vacts button { flex: 1; border: 1px solid var(--line); background: none; border-radius: 12px; padding: 11px 6px; font-size: 14px; color: var(--muted); }
