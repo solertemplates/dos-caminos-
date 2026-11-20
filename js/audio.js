@@ -145,7 +145,7 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
   mus.gain.setValueAtTime(musicVol, Math.max(0.3, D - 1.8));
   mus.gain.linearRampToValueAtTime(0.0001, D);
   mus.connect(master);
-  let usedSong = false;
+  let usedSong = false, songInfo = { given: !!musicData };
   if (musicData) {
     try {
       const buf = await ctx.decodeAudioData(musicData.slice(0));
@@ -157,7 +157,9 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
       src.connect(mus);
       src.start(0, offset);
       usedSong = true;
+      songInfo = { given: true, decoded: true, seconds: +buf.duration.toFixed(1), sampleRate: buf.sampleRate, startAt: +offset.toFixed(1), loop: src.loop };
     } catch (e) {
+      songInfo = { given: true, decoded: false, error: `${e.name}: ${e.message}` };
       console.warn('No se pudo leer la canción', e);
     }
   }
@@ -209,5 +211,10 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
     } else if (isTime) [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
     play('ping', tl.endStart + 0.5, { vol: 0.8 });
   }
-  return await ctx.startRendering();
+  const rendered = await ctx.startRendering();
+  // nivel de la mezcla (para el Diagnóstico)
+  const ch = rendered.getChannelData(0);
+  const lvl = (a, b) => { let s = 0, pk = 0; const i0 = Math.floor(a * SR), i1 = Math.min(ch.length, Math.floor(b * SR)); for (let i = i0; i < i1; i++) { s += ch[i] * ch[i]; pk = Math.max(pk, Math.abs(ch[i])); } return { rms: +Math.sqrt(s / Math.max(1, i1 - i0)).toFixed(3), peak: +pk.toFixed(3) }; };
+  rendered.__info = { song: songInfo, usedSong, padMusic: !usedSong, firstSecond: lvl(0, 1), whole: lvl(0, D) };
+  return rendered;
 }

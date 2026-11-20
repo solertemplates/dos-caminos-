@@ -10,7 +10,7 @@ import { postText, NETWORKS } from './publish.js';
 import { makeZip } from './zip.js';
 import { CLAUDE_PROMPT } from './format.js';
 import { pickFinal } from './finals.js';
-import { stripAudio } from './mp4strip.js';
+import { stripAudio, inspectMp4 } from './mp4strip.js';
 
 const $ = (s) => document.querySelector(s);
 let S = settings.get();
@@ -214,10 +214,30 @@ async function makeOne(sc, idx, opts) {
   const D = opts.duration;
   const song = await pickSong(sc.emotion);
   const audio = await renderAudio({ job, D, musicData: song?.data, sfxOn: S.sfx, sfxVol: S.sfxVol, musicVol: S.musicVol });
-  const out = await encodeVideo({
-    canvas: $('#stage'), job, audio, D, scale: S.quality, signal: abort.signal,
+  const enc = (force) => encodeVideo({
+    canvas: $('#stage'), job, audio, D, scale: S.quality, signal: abort.signal, force,
     onProgress: (k) => { $('#progBar').style.width = `${((idx + k) / opts.total) * 100}%`; },
   });
+  let out = await enc();
+  let mp4 = await inspectOut(out);
+  const encDiag = [...out.diag.tried];
+  // comprobación final dentro del archivo: si el MP4 no trae la música entera, se rehace en tiempo real
+  if (out.method === 'webcodecs' && !audioOk(mp4, D) && out.diag.support.mediaRecorder) {
+    encDiag.push({ method: 'comprobación del MP4', ok: false, error: mp4 ? `audio en el MP4: ${mp4.audio ? mp4.audio.seconds.toFixed(1) + ' s' : 'ninguno'}` : 'no se pudo leer el MP4' });
+    const out2 = await enc('realtime');
+    const mp42 = await inspectOut(out2);
+    encDiag.push(...out2.diag.tried);
+    out = out2; mp4 = mp42;
+  }
+  saveDiag({
+    when: new Date().toISOString(), title: job.title, duration: D, lang: opts.lang,
+    device: deviceInfo(), support: out.diag.support, method: out.method, tries: encDiag,
+    song: song ? { name: song.name, category: song.category || '', ...(audio.__info?.song || {}) } : { name: '(ninguna en el banco: música propia de la app)' },
+    mix: audio.__info ? { firstSecond: audio.__info.firstSecond, whole: audio.__info.whole } : null,
+    file: { mime: out.mime, ext: out.ext, size: out.blob.size, mp4 },
+    audioOk: audioOk(mp4, D), retried: wasHidden && !!out.realtime,
+  });
+  if (mp4 && !audioOk(mp4, D)) toast('Aviso: este video salió sin música completa. Mira Ajustes → Diagnóstico.', 5000);
   const n = counters.next('videos');
   const v = { title: job.title, phrase: job.texts.postPhrase, question: job.texts.question, theme: sc.theme, lang: opts.lang, star: S.starNote && n % 4 === 0 };
   const texts = Object.fromEntries(NETWORKS.map((nw) => [nw.id, postText(nw.id, v)]));
@@ -228,6 +248,77 @@ async function makeOne(sc, idx, opts) {
     mime: out.mime, ext: out.ext, blob: out.blob, realtime: !!out.realtime, size: out.blob.size, song: song?.name || '', texts, posted: {},
   };
 }
+
+// ---------- Diagnóstico ----------
+async function inspectOut(out) {
+  if (out.ext !== 'mp4') return null;
+  try { const m = inspectMp4(await out.blob.arrayBuffer()); return { brand: m.brand, fragmented: m.fragmented, tracks: m.tracks }; }
+  catch (e) { return { error: `${e.name}: ${e.message}`, tracks: [] }; }
+}
+function audioOk(mp4, D) {
+  if (!mp4) return null; // webm: no se puede comprobar
+  const a = (mp4.tracks || []).find((t) => t.kind === 'audio');
+  return !!(a && a.samples > 0 && a.seconds >= D * 0.9);
+}
+function deviceInfo() {
+  const ua = navigator.userAgent;
+  const ios = (ua.match(/OS (\d+)[_.](\d+)(?:[_.](\d+))? like Mac OS X/) || []).slice(1).filter(Boolean).join('.');
+  const safari = (ua.match(/Version\/([\d.]+)/) || [])[1] || '';
+  const ipad = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  return { ios: ios || (ipad ? 'iPadOS (ver Safari)' : ''), safari, standalone: !!(navigator.standalone || matchMedia('(display-mode: standalone)').matches), ua, canShareFiles: !!(navigator.canShare && (() => { try { return navigator.canShare({ files: [new File([new Uint8Array(8)], 'x.mp4', { type: 'video/mp4' })] }); } catch (e) { return false; } })()) };
+}
+function saveDiag(d) { try { localStorage.setItem('dc.diag', JSON.stringify(d)); } catch (e) {} }
+function logShare(kind, file, result) {
+  try {
+    localStorage.setItem('dc.diagShare', JSON.stringify({ when: new Date().toISOString(), kind, name: file?.name, type: file?.type, size: file?.size,
+      canShare: !!(navigator.canShare && file && navigator.canShare({ files: [file] })), result }));
+  } catch (e) {}
+}
+const yes = (b) => (b === null || b === undefined ? '—' : b ? 'sí' : 'NO');
+const mb = (n) => `${(n / 1048576).toFixed(1)} MB`;
+function diagText() {
+  let d = null, s = null;
+  try { d = JSON.parse(localStorage.getItem('dc.diag') || 'null'); s = JSON.parse(localStorage.getItem('dc.diagShare') || 'null'); } catch (e) {}
+  const L = [];
+  const dev = d?.device || deviceInfo();
+  L.push('DOS CAMINOS — DIAGNÓSTICO', `App: ${APP_VERSION}`);
+  L.push(`iOS: ${dev.ios || '(no es iPhone)'} · Safari: ${dev.safari || '—'} · ${dev.standalone ? 'app en pantalla de inicio' : 'en Safari'}`);
+  L.push(`Menú compartir con archivos: ${yes(dev.canShareFiles)}`);
+  if (!d) { L.push('', 'Todavía no hay datos: crea un video y vuelve aquí.'); }
+  else {
+    const f = d.file || {}, m = f.mp4;
+    const a = m?.tracks?.find((t) => t.kind === 'audio'), v = m?.tracks?.find((t) => t.kind === 'video');
+    L.push('', `ÚLTIMO VIDEO: «${d.title}» (${d.duration} s) · ${new Date(d.when).toLocaleString()}`);
+    L.push(`¿Tiene música dentro?: ${d.audioOk === null ? 'no se puede comprobar (WebM)' : d.audioOk ? 'SÍ' : 'NO'}`);
+    L.push(`Formato: ${f.mime} · ${mb(f.size || 0)}${m ? ` · ${m.fragmented ? 'MP4 fragmentado' : 'MP4 normal'} (${m.brand})` : ''}`);
+    if (v) L.push(`Pista de video: ${v.codec} · ${v.seconds.toFixed(1)} s · ${v.samples} fotogramas`);
+    L.push(a ? `Pista de audio: ${a.codec} · ${a.seconds.toFixed(1)} s · ${a.samples} bloques${a.esds ? ` · configuración AAC: ${a.esds.configBytes ? 'sí' : 'FALTA'}` : ''}` : 'Pista de audio: NINGUNA');
+    if (m?.error) L.push(`Error al leer el MP4: ${m.error}`);
+    L.push(`Método usado: ${d.method === 'webcodecs' ? 'rápido (WebCodecs)' : 'tiempo real (MediaRecorder)'}`);
+    for (const t of d.tries || []) {
+      const extra = Object.entries(t).filter(([k]) => !['method', 'ok', 'error'].includes(k)).map(([k, x]) => `${k}=${x}`).join(', ');
+      L.push(` · ${t.method}: ${t.ok ? 'bien' : 'falló'}${t.error ? ` — ${t.error}` : ''}${extra ? ` (${extra})` : ''}`);
+    }
+    const sp = d.support || {};
+    L.push(`Soporte: WebCodecs ${yes(sp.webcodecs)} (${sp.videoCodec || '—'}) · MediaRecorder ${sp.mediaRecorder || 'NO'}`);
+    const sg = d.song || {};
+    L.push(`Canción: ${sg.name || '—'}${sg.category ? ` [${sg.category}]` : ''}${sg.decoded === false ? ` · NO SE PUDO LEER: ${sg.error}` : sg.decoded ? ` · leída (${sg.seconds} s, empieza en ${sg.startAt} s)` : ''}`);
+    if (d.mix) L.push(`Volumen de la mezcla: primer segundo ${d.mix.firstSecond.rms} (pico ${d.mix.firstSecond.peak}) · todo ${d.mix.whole.rms}${d.mix.whole.peak < 0.01 ? ' · ¡MEZCLA EN SILENCIO!' : ''}`);
+  }
+  if (s) {
+    L.push('', `ÚLTIMO «DESCARGAR»: ${s.kind} · ${new Date(s.when).toLocaleString()}`);
+    L.push(`Archivo: ${s.name} · ${s.type} · ${mb(s.size || 0)} · menú compartir disponible: ${yes(s.canShare)}`);
+    L.push(`Resultado: ${s.result}`);
+  }
+  L.push('', `Navegador: ${dev.ua}`);
+  return L.join('\n');
+}
+const APP_VERSION = 'v19';
+$('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
+$('#diagCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
+  catch (e) { toast('No pude copiar. Mantén pulsado el texto para seleccionarlo.'); }
+});
 
 async function saveVideo(rec) {
   try { await videos.put(rec); }
@@ -309,8 +400,9 @@ function download(blob, name) {
 async function shareFiles(files, text) {
   if (text) { try { navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {} }
   if (navigator.canShare && navigator.canShare({ files })) {
-    try { await navigator.share({ files }); return true; } catch (e) { if (e.name === 'AbortError') return false; }
-  }
+    try { await navigator.share({ files }); logShare('compartir', files[0], 'menú abierto y elegido'); return true; }
+    catch (e) { logShare('compartir', files[0], `${e.name}: ${e.message}`); if (e.name === 'AbortError') return false; }
+  } else logShare('compartir', files[0], 'el menú compartir no acepta el archivo: se descargó');
   for (const f of files) download(f, f.name);
   return true;
 }
@@ -319,8 +411,12 @@ async function shareFiles(files, text) {
 async function saveToPhotos(file) {
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     toast('En el menú, elige «Guardar video» para guardarlo en Fotos.', 4500);
-    try { await navigator.share({ files: [file] }); return true; } catch (e) { if (e.name === 'AbortError') return false; if (e.name === 'NotAllowedError') throw e; }
-  }
+    try { await navigator.share({ files: [file] }); logShare('guardar en Fotos', file, 'menú abierto y se eligió una opción'); return true; }
+    catch (e) {
+      logShare('guardar en Fotos', file, e.name === 'AbortError' ? 'menú cerrado sin elegir (o iOS lo canceló)' : `${e.name}: ${e.message}`);
+      if (e.name === 'AbortError') return false; if (e.name === 'NotAllowedError') throw e;
+    }
+  } else logShare('guardar en Fotos', file, 'el menú compartir no acepta el archivo: se descargó a Archivos');
   download(file, file.name);
   toast('Video descargado.');
   return true;

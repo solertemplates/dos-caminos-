@@ -52,22 +52,28 @@ function aacConfig(sampleRate, channels) {
   return new Uint8Array([(2 << 3) | (i >> 1), ((i & 1) << 7) | (channels << 3)]);
 }
 
-export async function encodeVideo({ canvas, job, audio, D, scale, onProgress, signal }) {
+export async function encodeVideo({ canvas, job, audio, D, scale, onProgress, signal, force }) {
   const width = Math.round(W * scale), height = Math.round(H * scale);
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d', { alpha: false });
   const sup = await detectSupport(width, height);
-  if (sup.webcodecs) {
+  const diag = { support: { webcodecs: sup.webcodecs, videoCodec: sup.vcodec, mediaRecorder: sup.mr }, tried: [] };
+  if (sup.webcodecs && force !== 'realtime') {
     try {
-      return await encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, height, codec: sup.vcodec, onProgress, signal });
+      const out = await encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, height, codec: sup.vcodec, onProgress, signal });
+      diag.tried.push({ method: 'rápido (WebCodecs)', ok: true, ...out.diag });
+      return { ...out, method: 'webcodecs', diag };
     } catch (e) {
       if (signal?.aborted) throw e;
+      diag.tried.push({ method: 'rápido (WebCodecs)', ok: false, error: `${e.name}: ${e.message}` });
       console.warn('WebCodecs falló, uso MediaRecorder', e);
     }
   }
   if (!sup.mr) throw new Error('Este navegador no puede crear video. Actualiza iOS/Safari.');
-  return await encodeRealtime({ canvas, ctx, job, audio, D, scale, mime: sup.mr, onProgress, signal });
+  const out = await encodeRealtime({ canvas, ctx, job, audio, D, scale, mime: sup.mr, onProgress, signal });
+  diag.tried.push({ method: 'tiempo real (MediaRecorder)', ok: true, ...out.diag });
+  return { ...out, method: 'realtime', diag };
 }
 
 async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, height, codec, onProgress, signal }) {
@@ -84,18 +90,19 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   venc.configure({ codec, width, height, bitrate: scale >= 1 ? 7_000_000 : 4_000_000, framerate: FPS, avc: { format: 'avc' } });
   // AAC: Safari puede entregarlo con cabeceras ADTS y sin configuración; se normaliza para el MP4
   // (sin esto el MP4 sale con la pista de audio vacía o ilegible = video sin música)
-  let audioChunks = 0, audioUs = 0, sentConfig = false;
+  let audioChunks = 0, audioUs = 0, sentConfig = false, adts = 0, descFromEncoder = null;
   const asc = aacConfig(audio.sampleRate, 2);
   const aenc = new AudioEncoder({
     output: (c, m) => {
       let data = new Uint8Array(c.byteLength);
       c.copyTo(data);
-      if (data.length > 7 && data[0] === 0xff && (data[1] & 0xf6) === 0xf0) data = data.subarray(data[1] & 1 ? 7 : 9);
+      if (data.length > 7 && data[0] === 0xff && (data[1] & 0xf6) === 0xf0) { data = data.subarray(data[1] & 1 ? 7 : 9); adts++; }
       if (!data.length) return;
       let meta;
       if (!sentConfig) {
         const dc = m && m.decoderConfig;
-        const desc = dc && dc.description && dc.description.byteLength ? dc.description : asc;
+        descFromEncoder = !!(dc && dc.description && dc.description.byteLength);
+        const desc = descFromEncoder ? dc.description : asc;
         meta = { decoderConfig: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, description: desc } };
         sentConfig = true;
       }
@@ -141,12 +148,13 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   muxer.finalize();
   venc.close();
   aenc.close();
-  return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4' };
+  return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4', diag: { videoCodec: codec, aacChunks: audioChunks, aacSeconds: +(audioUs / 1e6).toFixed(2), adtsHeadersRemoved: adts, aacConfigFromSafari: descFromEncoder } };
 }
 
 async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgress, signal }) {
   const own = !(sharedAC && sharedAC.state !== 'closed');
   const ac = own ? new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audio.sampleRate }) : sharedAC;
+  const acBefore = ac.state;
   await ac.resume();
   const dest = ac.createMediaStreamDestination();
   const src = ac.createBufferSource();
@@ -180,5 +188,5 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   if (own) ac.close();
   if (signal?.aborted) throw new DOMException('cancelado', 'AbortError');
   const type = mime.split(';')[0];
-  return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type, realtime: true };
+  return { blob: new Blob(parts, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm', mime: type, realtime: true, diag: { recorderMime: mime, audioContext: own ? 'nuevo' : 'desbloqueado al tocar', audioStateBefore: acBefore, audioTracks: dest.stream.getAudioTracks().length } };
 }

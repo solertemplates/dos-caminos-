@@ -105,7 +105,7 @@ export async function pickSong(emotion) {
     const choice = pool[0];
     await songs.update(choice.id, { lastUsed: Date.now(), uses: (choice.uses || 0) + 1 });
     const full = await songs.get(choice.id);
-    return { id: full.id, name: full.name, data: full.data };
+    return { id: full.id, name: full.name, category: full.category, data: full.data };
   }
   return null;
 }

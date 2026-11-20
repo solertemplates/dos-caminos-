@@ -165,3 +165,6 @@ textarea.short { flex: 0 0 auto; min-height: 110px; height: 22vh; }
 .vacts { flex-wrap: wrap; }
 .vacts .dlv { flex: 1 1 45%; }
 .vacts button { flex: 1; border: 1px solid var(--line); background: none; border-radius: 12px; padding: 11px 6px; font-size: 14px; color: var(--muted); }
+
+/* Diagnóstico */
+.diag { white-space: pre-wrap; word-break: break-word; font: 12px/1.45 ui-monospace, Menlo, monospace; background: #0b0b0f; border: 1px solid #222; border-radius: 10px; padding: 10px; margin: 10px 0; color: #ddd; user-select: text; -webkit-user-select: text; max-height: 60vh; overflow: auto; }
