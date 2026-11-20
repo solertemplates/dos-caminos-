@@ -3,16 +3,16 @@ export const CLAUDE_PROMPT = `Escribe guiones para mi app "Dos Caminos" (canal e
 
 Usa EXACTAMENTE este formato, un guion tras otro, separados por una línea con tres guiones (---). No añadas nada más.
 
-TITULO: título corto
+TITULO: título corto (es la FRASE FINAL que se ve al terminar el video: que sea una frase con sentido, distinta en cada guion)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-FRASE: reflexión final corta
+FRASE: frase corta para el texto de publicación
 PREGUNTA: pregunta final corta
-TITULO_EN: short title
+TITULO_EN: short title (also the closing line of the video)
 GANCHO_EN: hook, natural US English
 A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
 B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
@@ -52,7 +52,7 @@ REGLAS DE LA HISTORIA
 REGLAS DEL TEXTO
 - Títulos de cada lado: máximo 5 palabras, en mayúsculas.
 - Contador animado: {inicio-fin} dentro del subtítulo. Ej: DÍA {1-45}, AÑO {1-10}, SEMANA {1-52}.
-- FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
+- TITULO: máximo 10 palabras y nunca repetido entre guiones (es la frase con la que termina el video). FRASE: máximo 14 palabras. PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
 - personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla.

@@ -9,6 +9,7 @@ import { addSongFiles, pickSong, CATS, CAT_LABEL } from './music.js';
 import { postText, NETWORKS } from './publish.js';
 import { makeZip } from './zip.js';
 import { CLAUDE_PROMPT } from './format.js';
+import { pickFinal } from './finals.js';
 
 const $ = (s) => document.querySelector(s);
 let S = settings.get();
@@ -150,12 +151,6 @@ $('#create').addEventListener('click', () => {
 });
 
 // ---------- creación (con tanda que se retoma) ----------
-const SPANISH = /[áéíóúñ¿¡]|\b(el|la|los|las|que|de|y|en|un|una|es|no|se|tu|su|con|por|para)\b/gi;
-const ENGLISH = /\b(the|and|you|is|of|to|your|it|in|that|what|with|for|are|be|who)\b/gi;
-function phraseLang(t) {
-  const es = (t.match(SPANISH) || []).length, en = (t.match(ENGLISH) || []).length;
-  return en > es ? 'en' : 'es';
-}
 function slug(s) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
 }
@@ -166,19 +161,15 @@ function buildJob(script, idx, opts) {
   const E = script.en || {};
   const isTime = script.layout === 'time';
   const defQ = isTime ? (en ? 'Where do you want to be a year from now?' : '¿Dónde quieres estar dentro de un año?') : en ? 'Which one are you?' : '¿Cuál de los dos eres tú?';
-  let phrase = (en ? E.phrase : script.phrase) || (en ? 'Small choices, repeated every day, become your life.' : 'Las pequeñas decisiones, repetidas cada día, se vuelven tu vida.');
-  let signature = '';
-  const bank = phrases.list().filter((p) => phraseLang(p.text) === lang);
-  if (bank.length && Math.random() < S.phraseChance) {
-    const used = new Set(JSON.parse(sessionStorage.getItem('dc.usedPhrases') || '[]'));
-    let pool = bank.filter((p) => !used.has(p.id));
-    if (!pool.length) { pool = bank; used.clear(); }
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    used.add(pick.id);
-    sessionStorage.setItem('dc.usedPhrases', JSON.stringify([...used]));
-    phrase = pick.text;
-    if (S.signPhrases) signature = '— René Soler Rasua';
-  }
+  // Frase final = el TITULO del guion (TITULO_EN en inglés), para que nunca se repita.
+  // Sin título: una frase de reserva que no se repite dentro del lote (se guarda con el lote).
+  const hasTitle = script.hasTitle ?? !!script.title;
+  const ownTitle = (en ? E.title : hasTitle ? script.title : '') || '';
+  opts.finals = opts.finals || {};
+  opts.usedFinals = opts.usedFinals || [];
+  if (!ownTitle.trim() && !opts.finals[idx]) opts.finals[idx] = pickFinal(lang, opts.usedFinals);
+  const phrase = ownTitle.trim() || opts.finals[idx];
+  const signature = '';
   const sideTexts = isTime
     ? (en ? E.stages : script.stages).map((lbl) => ({ title: lbl, sub: (en && E.sides?.[0]?.sub) || script.sides[0].sub }))
     : script.sides.map((sd, i) => (en && E.sides?.[i]) || { title: sd.title, sub: sd.sub });
@@ -194,11 +185,12 @@ function buildJob(script, idx, opts) {
     texts: {
       hook: (en ? E.hook : script.hook) || '',
       phrase,
+      postPhrase: (en ? E.phrase : script.phrase) || '',
       question: (en ? E.question : script.question) || defQ,
       signature,
       sides: sideTexts,
     },
-    title: (en ? E.title : script.title) || script.title,
+    title: ownTitle.trim() || phrase,
   };
 }
 
@@ -224,7 +216,7 @@ async function makeOne(sc, idx, opts) {
     onProgress: (k) => { $('#progBar').style.width = `${((idx + k) / opts.total) * 100}%`; },
   });
   const n = counters.next('videos');
-  const v = { title: job.title, phrase: job.texts.phrase, question: job.texts.question, theme: sc.theme, lang: opts.lang, star: S.starNote && n % 4 === 0 };
+  const v = { title: job.title, phrase: job.texts.postPhrase, question: job.texts.question, theme: sc.theme, lang: opts.lang, star: S.starNote && n % 4 === 0 };
   const texts = Object.fromEntries(NETWORKS.map((nw) => [nw.id, postText(nw.id, v)]));
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   return {

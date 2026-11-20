@@ -57,5 +57,5 @@ export function postText(net, v) {
     if (net === 'facebook' && v.star) lines.push('', L === 'en' ? 'If this one touched you, you can support the page with a Star. ⭐' : 'Si este mensaje te tocó, puedes apoyar con una estrellita. ⭐');
     lines.push('', uniq.join(' '));
   }
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return lines.filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }

@@ -206,6 +206,7 @@ export function parseScripts(text) {
     scripts.push({
       id: `${Date.now().toString(36)}-${scripts.length}`,
       title: f.title || A.title,
+      hasTitle: !!(f.title && f.title.trim()),
       theme,
       emotion: EMO_ALIAS[norm(f.emotion)] || THEME_EMO[theme],
       layout,

@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 19 nov 2026 (Mis videos: casillas, Borrar seleccionados y Borrar todo).
+Última actualización: 20 nov 2026 (la frase final de cada video es su TITULO; lista de reserva sin repetir por lote).
 
 ---
 
@@ -48,14 +48,14 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 | 1,8 – 2,6 s | **Igualdad y elección**: los dos iguales, «DÍA 1»; cada uno elige distinto. |
 | hasta el resultado | La diferencia crece; contador animado. |
 | resultado (2–3 s) | Uno florece (corazón grande y brillante), el otro se apaga. |
-| cierre (3,5–6,5 s) | Frase de reflexión + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
+| cierre (3,5–6,5 s) | **Frase final = el TITULO del guion** (TITULO_EN en inglés) + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
 
 ## 5. Formato de guion
 
 Un guion tras otro, separados por una línea `---`:
 
 ```
-TITULO: título corto
+TITULO: título corto (es también la FRASE FINAL del video; distinto en cada guion)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
@@ -73,7 +73,8 @@ PREGUNTA_EN: closing question in natural US English
 ---
 ```
 
-- Títulos de cada lado: máximo 5 palabras, en mayúsculas. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
+- **Frase final del video = `TITULO`** (y `TITULO_EN` en inglés), para que ningún video termine igual que otro. Si el guion no tiene `TITULO`, se usa una frase de una lista de 60 (`js/finals.js`, español e inglés) que **no se repite dentro del mismo lote**. `FRASE` ya no sale en el video: solo se usa en los textos para publicar.
+- Títulos de cada lado: máximo 5 palabras, en mayúsculas. TITULO ≤ 10 palabras. FRASE ≤ 14 palabras. PREGUNTA ≤ 9 palabras.
 - **Contador animado:** `{inicio-fin}` dentro del subtítulo → `DÍA {1-45}` va de «DÍA 1» a «DÍA 45».
 - Si falta `TEMA`, se usa `constancia`. Si falta `EMOCION`, la del tema. Si falta `PREGUNTA`, «¿Cuál de los dos eres tú?» / «Which one are you?».
 - Los campos `_EN` se usan cuando en la app se elige *English (US)*. Deben ser inglés natural, no traducción literal.
@@ -216,7 +217,7 @@ Ejemplos de cada final nuevo:
 - **Música:** cada video sale **con la música ya metida en el MP4** (sirve para Facebook). Banco de música en el teléfono (MP3/M4A), categoría automática editable (romántica, tensión, triste, emotiva, inspiracional, alegre); se elige según la emoción y sin repetir siempre la misma. Sin canciones, la app genera una música suave propia.
 - **Efectos de sonido:** pocos, suaves, sincronizados con lo que pasa; generados por código y publicados bajo **CC0**.
 - **Ajustes:** formato de guion (copiar instrucciones para Claude), banco de frases, banco de música, video (división, calidad, efectos, estrellita), acerca de.
-- **Banco de frases de René Soler Rasua:** pegar una o muchas, ver, editar, borrar. A veces se usan como reflexión final (firmadas «— René Soler Rasua»), solo en el idioma del video.
+- **Banco de frases de René Soler Rasua:** pegar una o muchas, ver, editar, borrar. Quedan guardadas, pero **ya no reemplazan la frase final** (que es siempre el TITULO del guion).
 - **Textos para publicar:** título corto, frase, pregunta, «Sígueme para más» / «Follow Two Paths Stories for more.», hashtags por tema y red. En Facebook, 1 de cada 4 videos: «Si este mensaje te tocó, puedes apoyar con una estrellita.» / «If this one touched you, you can support the page with a Star.»
 
 ## 9. Archivos

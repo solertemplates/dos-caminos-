@@ -143,7 +143,8 @@
       <summary data-i18n="sPhrases">Banco de frases de René Soler Rasua</summary>
       <textarea id="phraseInput" rows="4" data-i18n-ph="phrasePh" placeholder="Pega una o muchas frases, una por línea."></textarea>
       <div class="row-btns"><button class="chip strong" id="addPhrases" data-i18n="savePhrases">Guardar frases</button></div>
-      <label class="field"><span data-i18n="phraseUse">Usar como reflexión final</span>
+      <p class="hint">La frase final de cada video es su TITULO (así nunca se repite). Tus frases quedan guardadas aquí.</p>
+      <label class="field" hidden><span data-i18n="phraseUse">Usar como reflexión final</span>
         <select id="phraseChance">
           <option value="0" data-i18n="never">Nunca</option>
           <option value="0.3" data-i18n="sometimes">A veces</option>
@@ -151,7 +152,7 @@
           <option value="1" data-i18n="always">Siempre</option>
         </select>
       </label>
-      <label class="field"><span data-i18n="sign">Firmar con el nombre</span><input type="checkbox" id="signPhrases"></label>
+      <label class="field" hidden><span data-i18n="sign">Firmar con el nombre</span><input type="checkbox" id="signPhrases"></label>
       <ul class="list" id="phraseList"></ul>
     </details>
 
