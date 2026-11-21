@@ -5,6 +5,7 @@ import { USES } from './uses.js';
 import { WHITE } from './figure.js';
 import './scenes2.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
+import { drawAbsent } from './ausente.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
@@ -293,7 +294,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     const side = role === 'bad' ? { ...side0, scene: gSide.scene, people: gSide.people.map((p, j) => ({ ...p, badAct: (side0.people[j] || side0.people[0] || p).act })) } : side0;
     const sp = role ? pathP(tl, ps.p, role) : ps.p;
     const S = {
-      w: pn.stageW, F: pn.F, people: side.people, good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
+      // «ausente»: no está en la escena principal (solo salen los presentes); se dibuja aparte, pequeño, en otro lugar
+      w: pn.stageW, F: pn.F, people: side.people.filter((p) => p.act !== 'ausente'), allPeople: side.people, absent: side.people.filter((p) => p.act === 'ausente'), good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
       p: sp, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
@@ -316,7 +318,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
     setNeutral(ps.neutral);
     setCurrent(S);
-    withAlpha(ctx, sceneAlpha, () => scene.draw(ctx, S));
+    withAlpha(ctx, sceneAlpha, () => { scene.draw(ctx, S); if (S.absent.length) drawAbsent(ctx, S, S.absent); });
+    if (job.countFigs) job.countFigs[i] = Math.max(job.countFigs[i] || 0, S._figs || 0);
     setNeutral(0);
     setCurrent(null);
     // sucesos del escenario: lluvia, sol, alguien llega, algo cae, se enciende…

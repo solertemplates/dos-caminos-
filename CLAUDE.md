@@ -10,6 +10,8 @@ y, si toca el formato, también `js/format.js`, en el mismo commit.
 
 **REGLA DE ORO DE GUIONES:** el error del lado malo se ve desde el primer segundo; dolor real entre dos personas (pareja, padres e hijos, amistad, familia); alguien carga solo, espera o es ignorado; final que duele («esto me pasa a mí»); siempre FRASE fuerte y A-MOMENTOS y B-MOMENTOS de 8 sucesos; textos de A y B claros y literales (mal: «AJÁ, AJÁ...»; bien: «ÉL SIGUE EN EL MÓVIL Y NO LA ESCUCHA»). Ejemplo modelo: «Espera, hijo, un momento». Ver MAESTRO.md.
 
+**REGLA FIJA: LO QUE SE VE COINCIDE CON EL TEXTO.** Si el texto dice que alguien no viene, no está o se fue, NO puede aparecer en la escena con el otro: va con la acción `ausente` (pequeño en una esquina, en otro lugar). Nunca sale un personaje que el guion no nombra (ninguna escena ni suceso añade personas). Ver MAESTRO.md §2.11–12.
+
 **REGLA FIJA DE EMOCIONES:** los personajes ACTÚAN con gestos que cuentan la historia; cada gesto tiene un significado claro y es un gancho; nada de moverse por moverse. Gestos: ansiedad, esperar-con-ilusion, tristeza, distraido, dar-corazon, recibir-corazon, estoy-contigo, pedir, alegria, abrazo-largo. Lado bueno: se pasan corazoncitos cuando no hay otro suceso; lado malo: uno pide o espera y el otro está distraído. Ver MAESTRO.md «Gestos de emoción».
 
 **REGLA FIJA DE RITMO:** en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida. Lo hacen los sucesos (`A-MOMENTOS` / `B-MOMENTOS`, o los que elige la app). Ver MAESTRO.md «Ritmo y sucesos» y la lista de sucesos en §6.

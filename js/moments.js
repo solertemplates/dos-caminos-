@@ -111,8 +111,10 @@ export function classifyMoment(text, people) {
   // si llega alguien nuevo: de qué tipo (el que nombre la frase y no esté ya en escena)
   let newcomer = null;
   if (type === 'llega') {
+    // solo llega alguien si la frase lo nombra (su hijo, un amigo, la abuela…); si no, nadie nuevo sale en pantalla
     for (const [re, k] of PERSON_WORDS) if (re.test(n)) { newcomer = k; break; }
-    newcomer = newcomer || (kinds.includes('nino') || kinds.includes('nina') ? 'hombre' : 'nino');
+    if (!newcomer && /\bamig[oa]s?\b|\bvecin[oa]\b|\bfriend\b|\bneighbou?r\b/.test(n)) newcomer = /amiga|vecina/.test(n) ? 'mujer' : 'hombre';
+    if (!newcomer) return { type: 'sorpresa', who: kinds.length > 1 ? 'all' : 0, target: -1, newcomer: null, text: String(text || '').trim() };
   }
   return { type, who: who < 0 ? 0 : who, target, newcomer, text: String(text || '').trim() };
 }
@@ -131,7 +133,8 @@ function rng(seed) {
 // «Nada de moverse por moverse»: la app solo elige sucesos con significado.
 // Lado bueno: cuando no hay otro suceso se pasan corazoncitos. Lado malo: contraste (uno pide o espera, el otro distraído).
 const POOL = {
-  good: ['dar-corazon', 'alegria', 'rie', 'corazon', 'enciende', 'contador', 'viento', 'fugaz', 'sol', 'llega', 'celebra'],
+  // (la app nunca añade por su cuenta a alguien que llega: solo salen los personajes del guion)
+  good: ['dar-corazon', 'alegria', 'rie', 'corazon', 'enciende', 'contador', 'viento', 'fugaz', 'sol', 'celebra'],
   bad: ['contraste', 'tristeza', 'ansiedad', 'cansa', 'apaga', 'contador', 'viento', 'llueve', 'noche', 'cae', 'rayo'],
   goodLate: ['dar-corazon', 'abrazo-largo', 'alegria', 'corazon', 'celebra', 'enciende'],
   badLate: ['contraste', 'tristeza', 'llora', 'apaga', 'noche', 'cansa'],
@@ -141,7 +144,7 @@ const POOL = {
 const ONCE = new Set(['llega', 'sol', 'noche', 'llueve', 'nieva', 'fugaz', 'rayo', 'celebra', 'abraza', 'abrazo-largo']);
 // quien está «en otra cosa» en el lado malo
 const CONTRAST = new Set(['distraido', 'pedir', 'ilusion', 'contraste']);
-const DISTRACT = new Set(['celular', 'phone', 'ignorar', 'olvidar', 'perder', 'guardar', 'dormir']);
+const DISTRACT = new Set(['celular', 'phone', 'ignorar', 'olvidar', 'perder', 'guardar', 'dormir', 'ausente']);
 
 function autoPick(R, pool, ctx) {
   const ok = pool.filter((t) => {
@@ -173,7 +176,8 @@ function autoMoment(type, R, people, ctx) {
   const M = MOMENTS[type];
   // en el lado malo, la tristeza, la ansiedad o el cansancio son de quien pide o espera (no del distraído)
   if (ctx.pair && ['tristeza', 'ansiedad', 'cansa', 'llora', 'pedir', 'ilusion'].includes(type)) return { type, who: ctx.pair.ask, target: ctx.pair.dis, auto: true, x: R() };
-  if (type === 'contraste') return { type, ask: ctx.pair.ask, dis: ctx.pair.dis, askType: R() < 0.5 ? 'pedir' : 'ilusion', auto: true };
+  // si el otro está ausente, quien espera no le pide a nadie: espera con ilusión, se agobia o se pone triste
+  if (type === 'contraste') return { type, ask: ctx.pair.ask, dis: ctx.pair.dis, askType: people[ctx.pair.dis]?.act === 'ausente' ? ['ilusion', 'ansiedad', 'tristeza'][Math.floor(R() * 3)] : R() < 0.5 ? 'pedir' : 'ilusion', auto: true };
   let who = 0;
   if (type === 'dar-corazon') {
     ctx.giver = ctx.giver == null ? (R() < 0.5 ? 0 : 1) : (ctx.giver + 1) % n;

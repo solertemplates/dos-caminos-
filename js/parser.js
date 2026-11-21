@@ -100,6 +100,8 @@ function resolveAct(raw, scene) {
   if (USES[a]) return a;
   if (USE_ALIAS[a]) return USE_ALIAS[a];
   if (a === 'caer-bici' || a === 'levantarse-bici') return a;
+  // «ausente»: no está en la escena; se dibuja pequeño en otro lugar (vale en cualquier escena)
+  if (['ausente', 'no-viene', 'no-esta', 'no-llega', 'se-fue', 'absent', 'away', 'not-there'].includes(a)) return 'ausente';
   if (SCENE_ACTS[scene]?.includes(a)) return a;
   return ACT_ALIAS[a] || ACT_ALIAS[raw] || a;
 }
@@ -159,6 +161,10 @@ function parseSide(val, theme, errs, label) {
   let acts = norm(actsRaw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => resolveAct(a, scene));
   if (!acts.length) acts = ['construir'];
   const people = kinds.slice(0, 4).map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)] }));
+  // REGLA: lo que se ve coincide con lo que dice el texto. Si dice que alguien no viene / no está / se fue, va con «ausente».
+  const said = norm(`${title} ${sub}`);
+  if (/\b(no viene|no vino|no llega|nunca llega|nunca viene|no esta|no estan|se fue|se va de casa|no aparece|doesn'?t come|never comes|isn'?t there|not there|never shows)\b/.test(said) && !people.some((p) => p.act === 'ausente') && people.length > 1)
+    errs.push(`${label}: el texto dice que alguien no viene o no está, pero sale en la escena. Pon «ausente» en la acción de esa persona (ej.: esperar+ausente).`);
   const cls = classifyResult(resRaw, scene);
   return { title, sub, scene, people, result: resRaw, ...cls };
 }

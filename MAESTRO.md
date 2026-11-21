@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 20 nov 2026 (REGLA DE ORO DE GUIONES, punto 6: textos de A y B claros y literales; títulos de cada lado hasta 8 palabras).
+Última actualización: 21 nov 2026 (REGLA FIJA: lo que se ve coincide con el texto; acción «ausente»; nunca sale un personaje que el guion no nombra).
 
 ---
 
@@ -82,6 +82,9 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 8. **REGLA FIJA DE MOVIMIENTO: todos los movimientos son como los de una persona real.** Piernas, brazos, manos y objetos se mueven coordinados y en la dirección correcta (ver «Movimiento real» abajo). **Toda acción nueva debe cumplir esta regla y probarse en los dos lados de la división antes de subirla.**
 
 9. **REGLA FIJA DE RITMO: en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos. Nunca más de 3 segundos de la misma acción repetida.** Lo cumplen los **sucesos** (ver «Ritmo y sucesos» en §4 y la lista en §6): los del guion (`A-MOMENTOS` / `B-MOMENTOS`) o, si no hay, los que elige la app para la escena.
+
+11. **REGLA FIJA: lo que se ve coincide con lo que dice el texto.** Si el texto dice que alguien no viene, no está o se fue, **NO puede aparecer en la escena con el otro**: va con la acción **`ausente`** (pequeño, en otro lugar). La app avisa al pegar el guion si el texto de un lado dice «no viene / no está / se fue…» y nadie lleva `ausente`.
+12. **Solo salen los personajes que el guion nombra.** Ninguna escena ni ningún suceso añade personas: la app nunca pone por su cuenta a «alguien que llega»; el suceso `llega` solo trae a alguien si la frase de MOMENTOS lo nombra («llega su hijo», «llega un amigo»). Comprobado en las 25 escenas, con 1 y 2 personas, arriba-abajo y lados. (Los amigos de la fiesta de `ausente` son siluetas apagadas del decorado.)
 
 10. **REGLA FIJA DE EMOCIONES: los personajes ACTÚAN con gestos que cuentan la historia.** Cada gesto tiene un significado claro y es un gancho para quien mira. **Nada de moverse por moverse.** Ver «Gestos de emoción» en §6.
 
@@ -375,7 +378,18 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `aprovechar` / `perder` | Termina tareas una a una / mira el móvil mientras el reloj corre | `reloj \| hombre \| aprovechar` |
 | `llamar` / `ignorar` | Llama o contesta / deja sonar el teléfono | `telefono \| mujer+hombre \| llamar+llamar` |
 | `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
+| `ausente` | **No está en la escena principal.** Se dibuja pequeño en una esquina enmarcada, en otro lugar: luces de fiesta, siluetas apagadas de amigos, se ríe con el móvil, se ríe con ellos, baila. Quien espera se queda solo en su sitio. En `mesa`: su silla vacía, los dos platos (el suyo vacío) y una puerta en su lado; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |
+
+Ejemplo «ausente» (probado en 30 s, arriba-abajo y lados):
+```
+TITULO: Ella ponía dos platos cada domingo
+FRASE: Mamá no necesita regalos. Necesita que *vengas*.
+A: ÉL VIENE Y CENAN JUNTOS | DOMINGO {1-52} | mesa | mujer+hombre | hablar+hablar | se unen
+B: ÉL NO VIENE Y ELLA ESPERA SOLA | DOMINGO {1-52} | mesa | mujer+hombre | esperar+ausente | se alejan
+B-MOMENTOS: ella espera con ilusión > él está distraído > ella mira la puerta > él se ríe con la pantalla > ella tiene ansiedad > el contador salta > ella se pone triste > anochece
+```
+
 
 ### Acciones con objetos (38, valen en cualquier escena)
 

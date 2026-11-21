@@ -80,6 +80,10 @@ FRASE_EN: Small things, repeated, become *big* things.
 PREGUNTA_EN: Where do you want to be a year from now?
 ---
 
+REGLA FIJA: LO QUE SE VE COINCIDE CON EL TEXTO
+Si el texto dice que alguien no viene, no está o se fue, NO puede aparecer en la escena con el otro: ponle la acción «ausente». Se dibuja pequeño en una esquina, en otro lugar (fiesta, amigos, móvil, riéndose), y quien espera se queda solo en su sitio, mirando la puerta, con el plato o la silla vacía a su lado.
+Ejemplo: B: ÉL NO VIENE Y ELLA ESPERA SOLA | DOMINGO {1-52} | mesa | mujer+hombre | esperar+ausente | se alejan
+
 REGLAS DE LA HISTORIA
 0. DOS TIPOS DE LADO MALO:
    · «Se rinde»: úsalo con caer, levantarse, caer-bici o levantarse-bici, o con el final «se queda». Los dos empiezan iguales y hacen lo mismo; el momento difícil les llega a la vez; el bueno se levanta y sigue; el malo lo intenta un poco y se desanima. A y B con la misma escena y personajes; la acción de B dice cómo se queda al rendirse (celular, sentarse, esperar).
@@ -110,7 +114,7 @@ REGLAS DEL TEXTO
 - TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (siempre, fuerte): máximo 14 palabras; es la frase final del video y sale tal cual. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
-- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla.
+- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla, salvo los que lleven la acción «ausente». No aparece nadie que no esté aquí.
 - escena y sus acciones (una acción por personaje, unidas con +):
   puente: construir, esperar, celular, descansar
   arbol: regar, cuidar, celular, dormir, orar, orar-domingo
@@ -145,7 +149,7 @@ VOCABULARIO (usa solo estas palabras)
   Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
 - ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo):
   tocar-guitarra, leer-libro, beber-cafe, dar-flor, lanzar-pelota, escribir-lapiz, llevar-mochila, ponerse-sombrero, hacer-foto, dar-carta, comer-pan, contar-dinero, contar-monedas, usar-llave, dar-anillo, montar-bici, dar-regalo, llevar-maleta, encender-vela, atarse-zapatos, mirar-foto, alcanzar-estrella, sostener-globo, volar-cometa, ponerse-gafas, beber-agua, servir-plato, comer-manzana, llevar-pastel, abrazar-osito, llevar-planta, martillar, escribir-cuaderno, levantar-trofeo, escuchar-musica, cerrar-candado, sembrar-semilla, ponerse-corona
-  Más: caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
+  Más: caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está en la escena: sale pequeño en otro lugar, de fiesta o con el móvil; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
   Ejemplos: «sofa | hombre+mujer | tocar-guitarra+beber-cafe | se abrazan» · «camino | nina | montar-bici | llega» · «puente | hombre+mujer | construir+dar-flor | se unen».
 
 EJEMPLO

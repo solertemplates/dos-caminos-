@@ -85,11 +85,13 @@ function drawFigure(ctx, o) {
   let icons = null, mIdx = -1;
   const bx = o.x;
   if (CUR && CUR.moments && o.pe) {
-    mIdx = CUR.people.indexOf(o.pe);
-    if (mIdx < 0) mIdx = CUR.people.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
+    const everyone = CUR.allPeople || CUR.people; // los índices de los sucesos son los del guion (también el ausente)
+    mIdx = everyone.indexOf(o.pe);
+    if (mIdx < 0) mIdx = everyone.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
     if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName) }); o = r.o; icons = r.icons; }
   }
   const fig = rawFigure(ctx, o);
+  if (CUR) CUR._figs = (CUR._figs || 0) + 1; // para comprobar que solo salen los personajes del guion
   if (mIdx >= 0) recordFigure(CUR.moments, mIdx, bx, o, fig);
   if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons, CUR.moments);
   if (offerHeart > 0) {
@@ -989,8 +991,12 @@ SCENES.mesa = {
   draw(ctx, S) {
     const { w, F, t } = S;
     groundLine(ctx, F, -w / 2, w / 2);
-    const n = S.people.length;
-    const scale = n > 2 ? 0.88 : 1;
+    const all = S.allPeople || S.people;
+    const absentIdx = all.map((p, i) => (p.act === 'ausente' ? i : -1)).filter((i) => i >= 0);
+    const hasAbsent = absentIdx.length > 0;
+    const n = all.length;
+    const narrow = w < 2.5 * F; // pantalla dividida a los lados
+    const scale = (n > 2 ? 0.88 : 1) * (hasAbsent && narrow ? 0.82 : 1);
     const FF = F * scale;
     const tw = FF * 1.0, th = FF * 0.36;
     const apart = !S.good ? smooth(S.r / 0.8) * FF * 0.22 : 0;
@@ -1010,11 +1016,27 @@ SCENES.mesa = {
     line(ctx, -tw / 2 + FF * 0.08 - apart * 0.5, -th, -tw / 2 + FF * 0.08 - apart * 0.5, 0);
     line(ctx, tw / 2 - FF * 0.08 + apart * 0.5, -th, tw / 2 - FF * 0.08 + apart * 0.5, 0);
     const seats = [];
-    S.people.forEach((pe, i) => {
+    all.forEach((pe, i) => {
       const side = i % 2 === 0 ? -1 : 1;
       const slot = Math.floor(i / 2);
-      seats.push({ pe, side, x: side * (tw / 2 + FF * 0.24 + slot * FF * 0.48) + side * apart });
+      seats.push({ pe, side, x: side * (tw / 2 + FF * 0.24 + slot * FF * 0.48) + side * apart, absent: pe.act === 'ausente' });
     });
+    // ausente: platos puestos en la mesa (el suyo vacío), su silla vacía, y una puerta en su lado que quien espera mira
+    if (hasAbsent) {
+      const aSide = seats[absentIdx[0]].side;
+      for (const s of seats) drawObject(ctx, 'plato', s.side * (tw / 2 - FF * 0.2) + s.side * apart * 0.5, -th - FF * 0.015, FF * 0.2, { fade: s.absent ? 0.15 : 0 });
+      const dw = FF * (narrow ? 0.2 : 0.32), dh = FF * 1.12;
+      const dx = aSide * (w / 2 - FF * 0.06) - (aSide > 0 ? dw : 0);
+      setLine(ctx, F, 0.75, 0.85);
+      ctx.strokeRect(dx, -dh, dw, dh);
+      ctx.beginPath(); ctx.arc(dx + (aSide > 0 ? dw * 0.18 : dw * 0.82), -dh * 0.48, FF * 0.012, 0, 7); ctx.stroke();
+      S.door = [dx + dw / 2, -dh * 0.7];
+      // la esquina del «otro lugar»: entre la silla vacía y la puerta, o arriba si no cabe (pantalla a los lados)
+      const seatEdge = Math.abs(seats[absentIdx[0]].x) + FF * 0.16;
+      const room = Math.abs(dx + (aSide > 0 ? 0 : dw)) - seatEdge - FF * 0.06;
+      if (room > 0.55 * F) S.vignette = { x: aSide > 0 ? seatEdge : -seatEdge - room, y: -1.2 * F, w: room, h: 0.66 * F };
+      if (S.object === 'plato') S.objSpot = null;
+    }
     for (const s of seats) {
       const { pe, side } = s;
       const H = figureSize(pe.kind, FF);
@@ -1026,9 +1048,14 @@ SCENES.mesa = {
       line(ctx, cx + side * FF * 0.12, seatY, cx + side * FF * 0.12, seatY - FF * 0.32);
       line(ctx, cx - FF * 0.1, seatY, cx - FF * 0.1, 0);
       line(ctx, cx + FF * 0.1, seatY, cx + FF * 0.1, 0);
+      if (s.absent) continue; // silla vacía: no se dibuja a nadie
       let pose;
       const act = pe.act;
-      if (act === 'celular' || act === 'phone') pose = breathe(POSES.sitPhone, t + s.x);
+      if (hasAbsent && (act === 'esperar' || act === 'hablar')) {
+        // espera sola: manos en la mesa; levanta la vista hacia la puerta y vuelve a mirar el plato vacío
+        const lookDoor = bump(frac(t / 3.4), 0.12, 0.6, 0.12);
+        pose = breathe({ ...POSES.sit, tr: 0.06, fa1: 0.95, fa2: 1.35, ba1: 0.9, ba2: 1.3, hd: lerp(0.42, -0.12, lookDoor) }, t + s.x, 0.6);
+      } else if (act === 'celular' || act === 'phone') pose = breathe(POSES.sitPhone, t + s.x);
       else {
         const g = 0.5 + 0.5 * Math.sin(t * 2.2 + s.x * 0.05);
         pose = { ...POSES.sitTalk, fa1: 0.5 + 0.45 * g, fa2: 1.5 + 0.5 * g, hd: -0.05 + 0.1 * Math.sin(t * 1.3 + s.x) };
@@ -1038,7 +1065,7 @@ SCENES.mesa = {
       if ((act === 'celular' || act === 'phone') && S.r < 0.6) phoneAt(ctx, fig.fh, FF);
     }
     if (S.good) S.focus = [0, -th - FF * 0.55];
-    S.objSpot = [0, -th - F * 0.005];
+    if (!(hasAbsent && S.object === 'plato')) S.objSpot = [0, -th - F * 0.005];
   },
 };
 
