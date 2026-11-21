@@ -1,5 +1,6 @@
 // Dos Caminos — interfaz. Reglas en MAESTRO.md.
 import { parseScripts } from './parser.js';
+import { APP_VERSION } from './version.js';
 import { EXAMPLES } from './examples.js';
 import { makeTimeline, layoutFor, makeStars, renderCover } from './render.js';
 import { renderAudio } from './audio.js';
@@ -214,6 +215,13 @@ function slug(s) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'video';
 }
 
+function scriptSeed(script, opts) {
+  const { id, ...rest } = script;
+  const txt = JSON.stringify(rest) + '|' + opts.duration + '|' + opts.lang;
+  let h = 2166136261;
+  for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) % 100000;
+}
 function buildJob(script, idx, opts) {
   const lang = opts.lang;
   const en = lang === 'en';
@@ -236,7 +244,8 @@ function buildJob(script, idx, opts) {
     : script.sides.map((sd, i) => (en && E.sides?.[i]) || { title: sd.title, sub: sd.sub });
   const layoutKind = opts.layoutKind || (isTime ? 'time' : S.layout === 'auto' ? script.layout || (idx % 3 === 2 ? 'lr' : 'ab') : S.layout);
   const tl = makeTimeline(opts.duration);
-  const seed = opts.seed ?? (Date.now() + idx * 977) % 100000;
+  // la misma semilla para el mismo guion: crear el mismo guion varias veces da el mismo video
+  const seed = opts.seed ?? scriptSeed(script, opts);
   return {
     tl, seed, layoutKind, lang,
     layout: layoutFor(layoutKind),
@@ -499,7 +508,6 @@ function diagText() {
   L.push('', `Navegador: ${dev.ua}`);
   return L.join('\n');
 }
-const APP_VERSION = 'v30';
 $('#diagShow').addEventListener('click', () => { const p = $('#diagOut'); p.textContent = diagText(); p.hidden = false; $('#diagCopy').hidden = false; });
 $('#diagCopy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(diagText()); toast('Diagnóstico copiado. Pégalo en el chat.'); }
@@ -1006,4 +1014,30 @@ $('#musicInput').addEventListener('change', async (e) => {
   paintMusicPick();
 });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+
+// ---------- Siempre la última versión ----------
+// La versión se ve arriba en la pantalla principal. Al abrir (y al volver a la app) se mira la versión publicada:
+// si hay una más nueva, se borran los archivos viejos guardados y la app se recarga sola (una vez).
+$('#appVer').textContent = APP_VERSION;
+async function ensureLatest() {
+  if (running) return;
+  try {
+    const r = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+    const { version } = await r.json();
+    if (!version || version === APP_VERSION) return;
+    const key = 'dc.reloadedFor';
+    if (sessionStorage.getItem(key) === version) { toast(`Hay una versión nueva (${version}). Cierra la app del todo y ábrela otra vez.`, 6000); return; }
+    sessionStorage.setItem(key, version);
+    toast(`Actualizando a la versión ${version}…`, 3000);
+    try {
+      const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
+      await Promise.all(regs.map((g) => g.update().catch(() => {})));
+      await new Promise((ok) => { navigator.serviceWorker?.addEventListener?.('controllerchange', ok, { once: true }); setTimeout(ok, 2500); });
+    } catch (e) {}
+    try { const ks = await caches.keys(); await Promise.all(ks.map((k) => caches.delete(k))); } catch (e) {}
+    location.reload();
+  } catch (e) {}
+}
+ensureLatest();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) ensureLatest(); });

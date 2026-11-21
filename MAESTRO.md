@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 21 nov 2026 («ausente» sin recuadro: al fondo, en la calle, al otro lado de la pared con la puerta cerrada).
+Última actualización: 21 nov 2026 (siempre la última versión, versión visible arriba y el mismo guion da siempre el mismo video).
 
 ---
 
@@ -559,6 +559,8 @@ Ejemplos de cada final nuevo:
 
 ## 8. App (pocos botones)
 
+- **Versión siempre al día:** la versión (p. ej. «v31») se ve arriba, junto al nombre, en la pantalla principal (y en el Diagnóstico). La app pide cada archivo a la red saltándose la caché del navegador (Safari podía guardar copias viejas y mezclar archivos de versiones distintas); la copia guardada solo se usa sin conexión. Al abrir y al volver a la app mira `version.json`: si hay una versión más nueva, borra los archivos viejos y se recarga sola (una vez; si no lo consigue, pide cerrar y abrir la app). La versión está en `js/version.js`, `version.json` y el nombre de la caché de `sw.js`: **al subir cambios se suben las tres juntas**.
+- **El mismo guion da siempre el mismo video:** la «semilla» de cada video (que decide los sucesos que elige la app, las estrellas…) sale del propio guion, la duración y el idioma, no de la hora. Crear el mismo guion 5 veces da el mismo dibujo (comprobado: 5 veces en arriba-abajo y 5 a los lados). La música en modo Aleatoria sí puede cambiar.
 - **Pantalla principal:** Pegar guiones · Duración (15/30/45/60) · Idioma (Español / English US) · **Música** · Crear videos. Arriba: «Mis videos» y Ajustes.
 - **Música** (pantalla principal): lista con **«Aleatoria»** y todas las canciones del banco (con su etiqueta). Botón **▶** para escuchar ~10 s de la canción desde donde empezaría en el video (■ para parar). Con una canción concreta, todos los videos de la tanda la llevan (aunque sea «fuerte»); en **Aleatoria** se elige según la emoción de cada guion y **nunca se usan las «fuertes»** (si todas son fuertes, la app pone su música suave).
 - **Pegar guiones:** cada guion aparece con su casilla; botones **Crear seleccionados** y **Crear todos**.
