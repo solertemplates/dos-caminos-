@@ -9,6 +9,7 @@ Antes de escribir, busca en la web qué temas y formatos de reels son virales ah
 4. Final con sorpresa: un desenlace que emocione y no sea obvio desde el principio, y una pregunta que invite a verlo otra vez.
 
 REGLA DE ORO DE GUIONES (cómo tiene que doler)
+0. ANTES de escribir cualquier guion, busca en internet los videos cortos más virales del momento (Shorts, Reels, TikTok) sobre familia, pareja, padres e hijos y amistad, y basa cada guion en un formato que ya esté funcionando. Di en una frase de qué video viral sale la idea (línea INSPIRACION). Nunca inventes sin buscar primero.
 1. El error del lado malo se ve desde el primer segundo (ej.: papá mira el móvil mientras su hijo quiere jugar). Misma escena y personajes en los dos lados; en cuanto cada uno elige, el error ya está en pantalla.
 2. Dolor real entre dos personas: pareja, padres e hijos, amistad, familia.
 3. Alguien carga solo, espera o es ignorado, como en el video del puente.
@@ -50,6 +51,7 @@ B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | accion
 A-MOMENTOS: 8 sucesos del camino A separados por >
 B-MOMENTOS: 8 sucesos del camino B separados por >
 PREGUNTA: pregunta final corta
+INSPIRACION: en una frase, de qué video viral sale la idea
 TITULO_EN: short title
 GANCHO_EN: hook, natural US English
 A_EN: PATH A TITLE | SUBTITLE WITH COUNTER

@@ -16,6 +16,7 @@ const KEY = {
   frase: 'phrase', reflexion: 'phrase', phrase: 'phrase',
   pregunta: 'question', question: 'question',
   etapas: 'stages', stages: 'stages', momentos: 'stages',
+  inspiracion: 'inspiration', inspiration: 'inspiration', // de qué video viral sale la idea (no se dibuja)
 };
 
 const SCENE_ALIAS = {

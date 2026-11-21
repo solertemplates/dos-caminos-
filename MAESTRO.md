@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 21 nov 2026 (siempre la última versión, versión visible arriba y el mismo guion da siempre el mismo video).
+Última actualización: 21 nov 2026 (REGLA DE ORO DE GUIONES, punto 0: buscar primero los videos virales; línea INSPIRACION).
 
 ---
 
@@ -22,6 +22,7 @@ El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta
 
 ## ⭐ REGLA DE ORO DE GUIONES (cómo tiene que doler)
 
+0. **ANTES de escribir cualquier guion, Claude debe buscar en internet los videos cortos más virales del momento** (Shorts, Reels, TikTok) sobre familia, pareja, padres e hijos y amistad, y **basar cada guion en un formato que ya esté funcionando**. Debe decir en una frase de qué video viral sale la idea (línea `INSPIRACION:` de cada guion). **Nunca inventar sin buscar primero.**
 1. **El error del lado malo se ve desde el primer segundo** (ej.: papá mira el móvil mientras su hijo quiere jugar). Misma escena y mismos personajes en los dos lados; en cuanto cada uno elige (a los ~2 s, justo tras el gancho) el error ya está en pantalla.
 2. **Dolor real entre dos personas:** pareja, padres e hijos, amistad, familia.
 3. **Alguien carga solo, espera o es ignorado**, como en el video del puente.
@@ -195,6 +196,7 @@ B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos separados por >   (la app acepta de 3 a 8; la regla de oro pide 8)
 B-MOMENTOS: 8 sucesos separados por >
 PREGUNTA: pregunta final corta
+INSPIRACION: en una frase, de qué video viral sale la idea (la app no la dibuja)
 TITULO_EN: short title
 GANCHO_EN: hook in natural US English
 A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
