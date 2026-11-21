@@ -1,87 +1,80 @@
-// Dos Caminos — acción «ausente»: el personaje NO está en la escena principal.
-// Se dibuja pequeño en una esquina, en otro lugar (fiesta con luces, amigos apagados de fondo,
-// se ríe con el móvil, baila, se ríe con ellos), lejos de quien lo espera.
-// Los amigos son siluetas apagadas del decorado, no personajes: los únicos personajes son los del guion.
+// Dos Caminos — acción «ausente»: el personaje NO está con quien lo espera.
+// Está en OTRO lugar, en el mismo suelo de la escena pero al fondo y al otro lado, más pequeño por la distancia:
+// en la calle, junto a una farola (y un banco si cabe), riéndose con el móvil o con dos siluetas grises de amigos.
+// Entre los dos, la pared de la casa con la puerta cerrada. Los amigos son siluetas del decorado, no personajes.
 import { drawFigure as rawFigure, POSES, lerpPose, breathe, WHITE } from './figure.js';
-import { kit, glow, AMBER, clamp, smooth } from './scenes.js';
+import { kit, glow, AMBER, smooth } from './scenes.js';
 
-// caja de la esquina «otro lugar» si la escena no dice dónde (S.vignette)
-function defaultBox(S) {
-  const { F, box } = S;
-  const tall = -box.top > 2.6 * F; // pantalla dividida a los lados: hay sitio arriba, bajo el título
-  // en la esquina contraria a quien se queda en la escena
+// dónde está la pared y hacia qué lado queda la calle (la escena «mesa» lo fija en S.outside)
+function outsideOf(S) {
+  if (S.outside) return S.outside;
+  const { F, w } = S;
   const pos = S.moments?.pos || {};
   const xs = Object.entries(pos).filter(([k]) => S.allPeople?.[k] && S.allPeople[k].act !== 'ausente').map(([, v]) => v.x);
-  const right = xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length < 0 : true;
-  if (tall) { const w = Math.min(1.35 * F, box.r - box.l - 0.2 * F); return { x: right ? box.r - w - 0.08 * F : box.l + 0.08 * F, y: -2.05 * F, w, h: 0.72 * F }; }
-  const w = 0.95 * F;
-  return { x: right ? box.r - w - 0.06 * F : box.l + 0.06 * F, y: -1.25 * F, w, h: 0.66 * F };
+  const side = xs.length ? (xs.reduce((a, b) => a + b, 0) / xs.length < 0 ? 1 : -1) : 1;
+  const narrow = w < 2.5 * F;
+  return { side, wallX: side * (w / 2 - (narrow ? 0.62 : 1.25) * F) };
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
-// lo que hace en el otro lugar: se ríe con el móvil → se ríe con los amigos → baila (cada ~2,6 s, con transición suave)
+// lo que hace fuera: se ríe con el móvil → se ríe con los amigos (cada ~2,8 s, con transición suave)
 function absentPose(t, j) {
-  const T = 2.6, q = t / T + j * 0.37, ph = Math.floor(q) % 3, k = q - Math.floor(q);
-  const bounce = Math.abs(Math.sin(t * 13));
+  const T = 2.8, q = t / T + j * 0.37, ph = Math.floor(q) % 2, k = q - Math.floor(q);
+  const b = Math.abs(Math.sin(t * 13));
   const poses = [
-    { ...POSES.phone, tr: 0.02 - 0.04 * bounce, hd: 0.45 - 0.1 * bounce }, // se ríe con la pantalla
-    { ...POSES.stand, tr: -0.08 + 0.03 * Math.sin(t * 16), hd: -0.32 + 0.06 * Math.sin(t * 16), fa1: 0.5, fa2: 2.1, ba1: 0.45, ba2: 1.9 }, // carcajada con los amigos
-    { ...POSES.armsUp, tr: 0.06 * Math.sin(t * 6), fa2: 2.85 + 0.2 * Math.sin(t * 6), ba2: 2.75 - 0.2 * Math.sin(t * 6) }, // baila
+    { ...POSES.phone, tr: 0.02 - 0.04 * b, hd: 0.45 - 0.1 * b },
+    { ...POSES.stand, tr: -0.08 + 0.03 * Math.sin(t * 16), hd: -0.32 + 0.06 * Math.sin(t * 16), fa1: 0.5, fa2: 2.1, ba1: 0.45, ba2: 1.9 },
   ];
-  const a = poses[ph], b = poses[(ph + 1) % 3];
-  return { pose: lerpPose(a, b, smooth((k - 0.85) / 0.15)), phone: ph === 0 && k < 0.9, dance: ph === 2 };
+  return { pose: lerpPose(poses[ph], poses[(ph + 1) % 2], smooth((k - 0.86) / 0.14)), phone: ph === 0 && k < 0.9 };
 }
 
 export function drawAbsent(ctx, S, list) {
   if (!list.length) return;
-  const { F, t } = S;
-  const b = S.vignette || defaultBox(S);
+  const { F, t, w } = S;
+  const { side, wallX } = outsideOf(S);
+  const narrow = w < 2.5 * F;
+  const edge = side * w / 2;
+  const room = Math.abs(edge - wallX); // espacio de la calle
+  const k = narrow ? 0.5 : 0.6; // más pequeño por la distancia
+  const Fv = F * k;
+  // si la escena se dibujó más pequeña para dejar sitio, la calle lleva su propio suelo (el mismo suelo, a ras)
+  if (S.sceneTx && S.sceneTx.s !== 1) kit.groundLine(ctx, F, Math.min(wallX, edge), Math.max(wallX, edge));
   ctx.save();
-  // marco del «otro lugar»
-  ctx.globalAlpha = 0.94; // fondo casi opaco: se lee como otro lugar, no se transparenta la escena
-  ctx.fillStyle = '#050505';
-  roundRect(ctx, b.x, b.y, b.w, b.h, F * 0.06);
-  ctx.fill();
-  ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(1.2, F * 0.007); ctx.globalAlpha = 0.45;
-  ctx.stroke();
-  ctx.save();
-  roundRect(ctx, b.x, b.y, b.w, b.h, F * 0.06);
-  ctx.clip();
-  // luces de fiesta que parpadean
-  for (let i = 0; i < 7; i++) {
-    const x = b.x + b.w * (0.08 + i * 0.14), y = b.y + b.h * 0.12 + Math.sin((i / 6) * Math.PI) * b.h * 0.08;
-    const on = 0.55 + 0.45 * Math.sin(t * 4 + i * 1.7);
-    glow(ctx, x, y, F * 0.07, i % 2 ? AMBER : '#FF7A45', 0.5 * on);
-    ctx.globalAlpha = 0.9 * on; ctx.fillStyle = i % 2 ? AMBER : '#FF7A45';
-    ctx.beginPath(); ctx.arc(x, y, F * 0.012, 0, 7); ctx.fill();
+  // pared de la casa con la puerta cerrada (separa a quien espera de quien no viene)
+  const wh = F * 1.35, dw = F * (narrow ? 0.22 : 0.3), dh = F * 1.02;
+  ctx.strokeStyle = WHITE; ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.85; ctx.lineWidth = Math.max(2, F * 0.016);
+  ctx.beginPath(); ctx.moveTo(wallX, 0); ctx.lineTo(wallX, -wh); ctx.stroke();
+  ctx.globalAlpha = 0.95; ctx.fillStyle = '#000';
+  ctx.fillRect(wallX - dw / 2, -dh, dw, dh);
+  ctx.lineWidth = Math.max(1.6, F * 0.012);
+  ctx.strokeRect(wallX - dw / 2, -dh, dw, dh);
+  ctx.globalAlpha = 0.5; ctx.strokeRect(wallX - dw / 2 + dw * 0.14, -dh + dh * 0.08, dw * 0.72, dh * 0.38);
+  ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.arc(wallX - side * dw * 0.3, -dh * 0.48, F * 0.014, 0, 7); ctx.stroke();
+  // la calle: farola con luz cálida (y un banco si cabe)
+  const at = (f) => wallX + side * room * f;
+  const lx = at(0.2), lh = F * 1.25 * k + F * 0.35;
+  ctx.globalAlpha = 0.7; ctx.lineWidth = Math.max(1.4, F * 0.01);
+  ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, -lh); ctx.lineTo(lx + side * F * 0.12 * k, -lh); ctx.stroke();
+  glow(ctx, lx + side * F * 0.12 * k, -lh + F * 0.04, F * 0.45 * k + F * 0.1, AMBER, 0.55);
+  ctx.globalAlpha = 0.95; ctx.fillStyle = AMBER;
+  ctx.beginPath(); ctx.arc(lx + side * F * 0.12 * k, -lh + F * 0.035, F * 0.028, 0, 7); ctx.fill();
+  if (!narrow && room > 1.2 * F) {
+    const bx = at(0.8), bw = F * 0.36 * k;
+    ctx.globalAlpha = 0.55; ctx.lineWidth = Math.max(1.2, F * 0.008);
+    ctx.beginPath(); ctx.moveTo(bx - bw, -F * 0.2 * k); ctx.lineTo(bx + bw, -F * 0.2 * k);
+    ctx.moveTo(bx - bw * 0.8, -F * 0.2 * k); ctx.lineTo(bx - bw * 0.8, 0); ctx.moveTo(bx + bw * 0.8, -F * 0.2 * k); ctx.lineTo(bx + bw * 0.8, 0);
+    ctx.moveTo(bx - bw, -F * 0.42 * k); ctx.lineTo(bx + bw, -F * 0.42 * k); ctx.stroke();
   }
-  const gy = b.y + b.h * 0.93;
-  ctx.globalAlpha = 0.35; ctx.strokeStyle = WHITE; ctx.lineWidth = Math.max(1, F * 0.006);
-  ctx.beginPath(); ctx.moveTo(b.x + b.w * 0.04, gy); ctx.lineTo(b.x + b.w * 0.96, gy); ctx.stroke();
-  const Fv = clamp(b.h * 0.95, F * 0.3, F * 0.6);
-  // amigos de la fiesta: siluetas apagadas que bailan (decorado, no personajes)
-  for (let i = 0; i < 2; i++) {
-    const sway = Math.sin(t * 5 + i * 2);
-    rawFigure(ctx, { x: b.x + b.w * (0.66 + i * 0.18), y: gy, pose: { ...POSES.armsUp, tr: 0.08 * sway, fa2: 2.8 + 0.25 * sway }, F: Fv * 0.92, facing: -1, kind: i ? 'mujer' : 'hombre', alpha: 0.22 });
-  }
-  // notas de música
-  ctx.globalAlpha = 0.5; ctx.fillStyle = WHITE; ctx.font = `${Math.round(F * 0.08)}px system-ui, sans-serif`;
-  for (let i = 0; i < 2; i++) { const q = (t * 0.5 + i * 0.5) % 1; ctx.globalAlpha = 0.5 * (1 - q); ctx.fillText('♪', b.x + b.w * (0.5 + i * 0.12), b.y + b.h * (0.62 - q * 0.35)); }
   ctx.restore();
-  // la persona ausente (con su pe: los sucesos de la historia, p. ej. «distraído», también le pasan aquí)
+  // dos amigos: siluetas grises que se ríen, mirándolo
+  for (let i = 0; i < 2; i++) {
+    const sh = Math.sin(t * 15 + i * 2);
+    rawFigure(ctx, { x: at(narrow ? 0.72 + i * 0.2 : 0.58 + i * 0.16), pose: { ...POSES.stand, tr: -0.06 + 0.03 * sh, hd: -0.25 + 0.05 * sh, fa1: 0.45, fa2: 2.0, ba1: 0.4, ba2: 1.9 }, F: Fv * 0.95, facing: -side, kind: i ? 'mujer' : 'hombre', alpha: 0.5, color: '#8C8C8C' });
+  }
+  // el ausente (con su pe: los sucesos de la historia, p. ej. «distraído», también le pasan aquí)
   list.forEach((pe, j) => {
-    const { pose, phone, dance } = absentPose(t, j);
-    const x = b.x + b.w * (0.3 + 0.16 * j) + (dance ? Math.sin(t * 3) * Fv * 0.05 : 0);
-    const fig = kit.drawFigure(ctx, { x, y: gy, pose: breathe(pose, t), F: Fv, facing: 1, kind: pe.kind, pe, alpha: 1, neutral: 'none', noArc: true });
+    const { pose, phone } = absentPose(t, j);
+    const fig = kit.drawFigure(ctx, { x: at(narrow ? 0.48 : 0.4) - side * j * Fv * 0.3, pose: breathe(pose, t), F: Fv, facing: side, kind: pe.kind, pe, alpha: 0.95, neutral: 'none', noArc: true });
     if (phone && fig) kit.phoneAt(ctx, fig.fh, Fv);
   });
-  ctx.restore();
 }

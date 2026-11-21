@@ -92,7 +92,15 @@ function drawFigure(ctx, o) {
   }
   const fig = rawFigure(ctx, o);
   if (CUR) CUR._figs = (CUR._figs || 0) + 1; // para comprobar que solo salen los personajes del guion
-  if (mIdx >= 0) recordFigure(CUR.moments, mIdx, bx, o, fig);
+  if (mIdx >= 0) {
+    // el ausente se dibuja fuera de la escena principal: su posición se guarda en las coordenadas de la escena
+    const inv = CUR.recInv;
+    if (!inv) recordFigure(CUR.moments, mIdx, bx, o, fig);
+    else {
+      const m = (p) => [(p[0] - inv.d) / inv.s, p[1] / inv.s];
+      recordFigure(CUR.moments, mIdx, (bx - inv.d) / inv.s, { ...o, x: (o.x - inv.d) / inv.s }, { ...fig, H: fig.H / inv.s, head: m(fig.head), shoulder: m(fig.shoulder), hip: m(fig.hip), fh: m(fig.fh), bh: m(fig.bh) });
+    }
+  }
   if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons, CUR.moments);
   if (offerHeart > 0) {
     const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
@@ -996,9 +1004,16 @@ SCENES.mesa = {
     const hasAbsent = absentIdx.length > 0;
     const n = all.length;
     const narrow = w < 2.5 * F; // pantalla dividida a los lados
-    const scale = (n > 2 ? 0.88 : 1) * (hasAbsent && narrow ? 0.82 : 1);
+    const scale = (n > 2 ? 0.88 : 1) * (hasAbsent && narrow ? 0.7 : 1);
     const FF = F * scale;
     const tw = FF * 1.0, th = FF * 0.36;
+    // con alguien ausente, la casa (mesa, sillas, lámpara) se corre hacia el lado de quien espera:
+    // al otro lado quedan la pared con la puerta cerrada y la calle donde está el ausente
+    const aSide = hasAbsent ? (absentIdx[0] % 2 === 0 ? -1 : 1) : 0;
+    const ox = hasAbsent ? -aSide * (narrow ? 0.38 : 0.55) * F : 0;
+    ctx.save();
+    ctx.translate(ox, 0);
+    if (hasAbsent) S.sceneTx = { d: ox, s: 1 };
     const apart = !S.good ? smooth(S.r / 0.8) * FF * 0.22 : 0;
     // lámpara
     const lampOn = (0.35 + 0.5 * smooth(S.p)) * (S.good ? 1 + 0.15 * S.r : 1 - smooth(S.r / 0.4));
@@ -1021,20 +1036,10 @@ SCENES.mesa = {
       const slot = Math.floor(i / 2);
       seats.push({ pe, side, x: side * (tw / 2 + FF * 0.24 + slot * FF * 0.48) + side * apart, absent: pe.act === 'ausente' });
     });
-    // ausente: platos puestos en la mesa (el suyo vacío), su silla vacía, y una puerta en su lado que quien espera mira
+    // ausente: platos puestos en la mesa (el suyo vacío) y su silla vacía; la pared con la puerta va justo detrás de esa silla
     if (hasAbsent) {
-      const aSide = seats[absentIdx[0]].side;
       for (const s of seats) drawObject(ctx, 'plato', s.side * (tw / 2 - FF * 0.2) + s.side * apart * 0.5, -th - FF * 0.015, FF * 0.2, { fade: s.absent ? 0.15 : 0 });
-      const dw = FF * (narrow ? 0.2 : 0.32), dh = FF * 1.12;
-      const dx = aSide * (w / 2 - FF * 0.06) - (aSide > 0 ? dw : 0);
-      setLine(ctx, F, 0.75, 0.85);
-      ctx.strokeRect(dx, -dh, dw, dh);
-      ctx.beginPath(); ctx.arc(dx + (aSide > 0 ? dw * 0.18 : dw * 0.82), -dh * 0.48, FF * 0.012, 0, 7); ctx.stroke();
-      S.door = [dx + dw / 2, -dh * 0.7];
-      // la esquina del «otro lugar»: entre la silla vacía y la puerta, o arriba si no cabe (pantalla a los lados)
-      const seatEdge = Math.abs(seats[absentIdx[0]].x) + FF * 0.16;
-      const room = Math.abs(dx + (aSide > 0 ? 0 : dw)) - seatEdge - FF * 0.06;
-      if (room > 0.55 * F) S.vignette = { x: aSide > 0 ? seatEdge : -seatEdge - room, y: -1.2 * F, w: room, h: 0.66 * F };
+      S.outside = { side: aSide, wallX: ox + aSide * (Math.abs(seats[absentIdx[0]].x) + FF * 0.3), FF };
       if (S.object === 'plato') S.objSpot = null;
     }
     for (const s of seats) {
@@ -1064,8 +1069,9 @@ SCENES.mesa = {
       const fig = drawFigure(ctx, { x: s.x, pose, F: FF, facing: -side, kind: pe.kind, pe: pe, alpha: personDim(S) });
       if ((act === 'celular' || act === 'phone') && S.r < 0.6) phoneAt(ctx, fig.fh, FF);
     }
-    if (S.good) S.focus = [0, -th - FF * 0.55];
-    if (!(hasAbsent && S.object === 'plato')) S.objSpot = [0, -th - F * 0.005];
+    ctx.restore();
+    if (S.good) S.focus = [ox, -th - FF * 0.55];
+    if (!(hasAbsent && S.object === 'plato')) S.objSpot = [ox, -th - F * 0.005];
   },
 };
 

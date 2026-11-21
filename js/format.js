@@ -81,7 +81,7 @@ PREGUNTA_EN: Where do you want to be a year from now?
 ---
 
 REGLA FIJA: LO QUE SE VE COINCIDE CON EL TEXTO
-Si el texto dice que alguien no viene, no está o se fue, NO puede aparecer en la escena con el otro: ponle la acción «ausente». Se dibuja pequeño en una esquina, en otro lugar (fiesta, amigos, móvil, riéndose), y quien espera se queda solo en su sitio, mirando la puerta, con el plato o la silla vacía a su lado.
+Si el texto dice que alguien no viene, no está o se fue, NO puede aparecer en la escena con el otro: ponle la acción «ausente». Se dibuja al fondo, más pequeño, al otro lado de la pared con la puerta cerrada, en la calle (junto a una farola, riéndose con el móvil o con dos amigos), y quien espera se queda sola en su sitio, mirando la puerta, con el plato o la silla vacía a su lado.
 Ejemplo: B: ÉL NO VIENE Y ELLA ESPERA SOLA | DOMINGO {1-52} | mesa | mujer+hombre | esperar+ausente | se alejan
 
 REGLAS DE LA HISTORIA
@@ -149,7 +149,7 @@ VOCABULARIO (usa solo estas palabras)
   Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
 - ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo):
   tocar-guitarra, leer-libro, beber-cafe, dar-flor, lanzar-pelota, escribir-lapiz, llevar-mochila, ponerse-sombrero, hacer-foto, dar-carta, comer-pan, contar-dinero, contar-monedas, usar-llave, dar-anillo, montar-bici, dar-regalo, llevar-maleta, encender-vela, atarse-zapatos, mirar-foto, alcanzar-estrella, sostener-globo, volar-cometa, ponerse-gafas, beber-agua, servir-plato, comer-manzana, llevar-pastel, abrazar-osito, llevar-planta, martillar, escribir-cuaderno, levantar-trofeo, escuchar-musica, cerrar-candado, sembrar-semilla, ponerse-corona
-  Más: caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está en la escena: sale pequeño en otro lugar, de fiesta o con el móvil; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
+  Más: caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
   Ejemplos: «sofa | hombre+mujer | tocar-guitarra+beber-cafe | se abrazan» · «camino | nina | montar-bici | llega» · «puente | hombre+mujer | construir+dar-flor | se unen».
 
 EJEMPLO

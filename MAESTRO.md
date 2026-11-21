@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 21 nov 2026 (REGLA FIJA: lo que se ve coincide con el texto; acción «ausente»; nunca sale un personaje que el guion no nombra).
+Última actualización: 21 nov 2026 («ausente» sin recuadro: al fondo, en la calle, al otro lado de la pared con la puerta cerrada).
 
 ---
 
@@ -83,8 +83,8 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 
 9. **REGLA FIJA DE RITMO: en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos. Nunca más de 3 segundos de la misma acción repetida.** Lo cumplen los **sucesos** (ver «Ritmo y sucesos» en §4 y la lista en §6): los del guion (`A-MOMENTOS` / `B-MOMENTOS`) o, si no hay, los que elige la app para la escena.
 
-11. **REGLA FIJA: lo que se ve coincide con lo que dice el texto.** Si el texto dice que alguien no viene, no está o se fue, **NO puede aparecer en la escena con el otro**: va con la acción **`ausente`** (pequeño, en otro lugar). La app avisa al pegar el guion si el texto de un lado dice «no viene / no está / se fue…» y nadie lleva `ausente`.
-12. **Solo salen los personajes que el guion nombra.** Ninguna escena ni ningún suceso añade personas: la app nunca pone por su cuenta a «alguien que llega»; el suceso `llega` solo trae a alguien si la frase de MOMENTOS lo nombra («llega su hijo», «llega un amigo»). Comprobado en las 25 escenas, con 1 y 2 personas, arriba-abajo y lados. (Los amigos de la fiesta de `ausente` son siluetas apagadas del decorado.)
+11. **REGLA FIJA: lo que se ve coincide con lo que dice el texto.** Si el texto dice que alguien no viene, no está o se fue, **NO puede aparecer en la escena con el otro**: va con la acción **`ausente`** (al fondo, en otro lugar, al otro lado de una pared con la puerta cerrada). La app avisa al pegar el guion si el texto de un lado dice «no viene / no está / se fue…» y nadie lleva `ausente`.
+12. **Solo salen los personajes que el guion nombra.** Ninguna escena ni ningún suceso añade personas: la app nunca pone por su cuenta a «alguien que llega»; el suceso `llega` solo trae a alguien si la frase de MOMENTOS lo nombra («llega su hijo», «llega un amigo»). Comprobado en las 25 escenas, con 1 y 2 personas, arriba-abajo y lados. (Los amigos de `ausente` son dos siluetas grises del decorado.)
 
 10. **REGLA FIJA DE EMOCIONES: los personajes ACTÚAN con gestos que cuentan la historia.** Cada gesto tiene un significado claro y es un gancho para quien mira. **Nada de moverse por moverse.** Ver «Gestos de emoción» en §6.
 
@@ -378,7 +378,7 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `aprovechar` / `perder` | Termina tareas una a una / mira el móvil mientras el reloj corre | `reloj \| hombre \| aprovechar` |
 | `llamar` / `ignorar` | Llama o contesta / deja sonar el teléfono | `telefono \| mujer+hombre \| llamar+llamar` |
 | `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
-| `ausente` | **No está en la escena principal.** Se dibuja pequeño en una esquina enmarcada, en otro lugar: luces de fiesta, siluetas apagadas de amigos, se ríe con el móvil, se ríe con ellos, baila. Quien espera se queda solo en su sitio. En `mesa`: su silla vacía, los dos platos (el suyo vacío) y una puerta en su lado; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
+| `ausente` | **No está con quien lo espera.** Sin recuadros: está a ras de suelo, en el mismo suelo de la escena, pero **al fondo y al otro lado**, más pequeño por la distancia, **en la calle** (farola con luz cálida y un banco si cabe), riéndose con el móvil o con **dos siluetas grises de amigos**. Entre los dos, **la pared de la casa con la puerta cerrada**. Quien espera se queda sola en su sitio. En `mesa`: la casa se corre hacia quien espera; su silla vacía, los dos platos (el suyo vacío) y la puerta justo detrás de la silla vacía; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. En las demás escenas, la escena se dibuja un poco más pequeña y corrida hacia quien se queda para dejar sitio a la pared y la calle. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |
 
 Ejemplo «ausente» (probado en 30 s, arriba-abajo y lados):

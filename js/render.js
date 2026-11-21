@@ -318,7 +318,23 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
     setNeutral(ps.neutral);
     setCurrent(S);
-    withAlpha(ctx, sceneAlpha, () => { scene.draw(ctx, S); if (S.absent.length) drawAbsent(ctx, S, S.absent); });
+    withAlpha(ctx, sceneAlpha, () => {
+      if (S.absent.length && side.scene !== 'mesa') {
+        // «ausente» en cualquier escena: la escena se dibuja un poco más pequeña y corrida hacia quien se queda;
+        // al otro lado queda sitio para la pared con la puerta y la calle donde está el ausente
+        const ai = side.people.findIndex((p) => p.act === 'ausente');
+        const st = ai % 2 === 0 ? -1 : 1, narrow = pn.stageW < 2.5 * pn.F;
+        const s = narrow ? 0.7 : 0.75, d = -st * pn.stageW * (narrow ? 0.15 : 0.125);
+        ctx.save(); ctx.translate(d, 0); ctx.scale(s, s);
+        scene.draw(ctx, S);
+        ctx.restore();
+        S.sceneTx = { d, s };
+        S.outside = { side: st, wallX: st * (pn.stageW / 2 * s - Math.abs(d) + 0.06 * pn.F) };
+        const g = (p) => (p ? [p[0] * s + d, p[1] * s] : p);
+        S.focus = g(S.focus); S.objSpot = g(S.objSpot);
+      } else scene.draw(ctx, S);
+      if (S.absent.length) { S.recInv = S.sceneTx || null; drawAbsent(ctx, S, S.absent); S.recInv = null; }
+    });
     if (job.countFigs) job.countFigs[i] = Math.max(job.countFigs[i] || 0, S._figs || 0);
     setNeutral(0);
     setCurrent(null);
