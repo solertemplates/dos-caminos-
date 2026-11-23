@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 23 nov 2026 (escena aeropuerto; nadie camina hacia atrás; hasta 5 escenas por lado).
+Última actualización: 23 nov 2026 (v36: pasos reales con objetos al caminar; portada-miniatura espectacular; escenas según la duración; planos general y primer plano).
 
 ---
 
@@ -94,7 +94,7 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 9. **REGLA FIJA DE RITMO: en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos. Nunca más de 3 segundos de la misma acción repetida.** Lo cumplen los **sucesos** (ver «Ritmo y sucesos» en §4 y la lista en §6): los del guion (`A-MOMENTOS` / `B-MOMENTOS`) o, si no hay, los que elige la app para la escena.
 
 11. **REGLA FIJA: lo que se ve coincide con lo que dice el texto.** Si el texto dice que alguien no viene, no está o se fue, **NO puede aparecer en la escena con el otro**: va con la acción **`ausente`** (al fondo, en otro lugar, al otro lado de una pared con la puerta cerrada). La app avisa al pegar el guion si el texto de un lado dice «no viene / no está / se fue…» y nadie lleva `ausente`.
-12. **Solo salen los personajes que el guion nombra.** Ninguna escena ni ningún suceso añade personas: la app nunca pone por su cuenta a «alguien que llega»; el suceso `llega` solo trae a alguien si la frase de MOMENTOS lo nombra («llega su hijo», «llega un amigo»). Comprobado en las 25 escenas, con 1 y 2 personas, arriba-abajo y lados. (Los amigos de `ausente` son dos siluetas grises del decorado.)
+12. **Solo salen los personajes que el guion nombra.** Ninguna escena ni ningún suceso añade personas: la app nunca pone por su cuenta a «alguien que llega»; el suceso `llega` solo trae a alguien si la frase de MOMENTOS lo nombra («llega su hijo», «llega un amigo»). Comprobado en las 26 escenas, con 1 y 2 personas, arriba-abajo y lados. (Los amigos de `ausente` son dos siluetas grises del decorado.)
 
 10. **REGLA FIJA DE EMOCIONES: los personajes ACTÚAN con gestos que cuentan la historia.** Cada gesto tiene un significado claro y es un gancho para quien mira. **Nada de moverse por moverse.** Ver «Gestos de emoción» en §6.
 
@@ -115,7 +115,8 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 | Tocar la guitarra | El mástil apunta a la mano que pisa las cuerdas; la otra rasguea sobre la caja | El mástil se orienta hacia esa mano |
 | Martillar | Agachado, golpea un clavo en una tabla; el mango sale de la mano siguiendo el antebrazo | Tabla y clavo bajo el golpe; martillo alineado con el antebrazo |
 | Escribir | La punta del lápiz sobre la libreta | Lápiz apoyado e inclinado hacia delante |
-| Llevar la maleta | Va detrás, tirada del asa extendida | Maleta con ruedas detrás y asa hasta la mano |
+| Llevar la maleta | Va detrás, tirada del asa extendida; **camina con pasos reales** (no se desliza) | Maleta con ruedas detrás y asa hasta la mano |
+| Caminar con un objeto | Si la escena lo hace caminar (camino, aeropuerto, parque…), las piernas dan pasos reales mientras lleva el objeto (maleta, mochila, plato, pastel, planta, globo, flor, libro…) | Las acciones con objeto conservan las piernas de caminar que da la escena (marca `walk` de `walkPose`); antes ponían las piernas «de pie» y el personaje se deslizaba. Comprobado midiendo los pies fotograma a fotograma: 0 fotogramas deslizándose (antes, 63 de 96 con la maleta) |
 | Conducir | Manos en el volante; las ruedas giran en el sentido de la marcha; la carretera pasa hacia atrás | Sí |
 | Regar | Inclina la regadera hacia la planta y el agua cae delante | Sí; al regar varias plantas camina de una a otra |
 | **Nunca hacia atrás** | Quien camina, corre, sube o va en bici mira siempre hacia donde avanza | A quien la escena hace caminar (camino, caminar, correr, subir, escalar, acercarse, alejarse, llevar-maleta, bici, subir-avion, llegar-avion) los gestos de MOMENTOS **no lo giran ni lo desplazan**: solo mueven los brazos y ponen su símbolo. Nadie va «detrás» de quien está caminando. La distancia de un gesto que acerca a alguien se fija al empezar (no se arrastra si el otro se mueve), los desplazamientos de una escena no pasan a la siguiente, y los gestos que necesitan al otro (abrazo, mano en el hombro, sujetar, dar el corazón) solo se hacen si el otro está en pantalla (si no, manos al pecho con un corazón). Comprobado fotograma a fotograma: quien se mueve mira hacia donde va |
@@ -173,13 +174,34 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 
 | Momento | Qué pasa |
 |---|---|
-| fotograma 0 | **Portada** (~0,03–0,2 s; en la grabación en tiempo real se repinta en cada fotograma mientras arranca, para que no salga negro): los dos lados de la escena a mitad de la historia (ya se ve la diferencia; en «se rinde», después de rendirse; en «tiempo», con EN UN AÑO iluminado), sin los títulos de cada lado, con el **TITULO grande** sobre un velo negro, un **corazón rojo** encima y «DOS CAMINOS» / «TWO PATHS STORIES» pequeño. Es la miniatura del video (Fotos, Facebook, TikTok…). No cuenta como inicio de la historia: las reglas «empiezan iguales» y del arco valen desde el fotograma 1. Título: arriba-abajo centrado en y≈905 (sobre la línea divisoria), lados en y≈1150 (bajo el suelo), tiempo en y≈765. Código: `renderCover` en `js/render.js`. |
+| fotograma 0 | **Portada / miniatura** (~0,03–0,2 s; en la grabación en tiempo real se repinta mientras arranca, para que no salga negro). Ver «Portada que engancha» abajo. No cuenta como inicio de la historia: las reglas «empiezan iguales» y del arco valen desde el fotograma 1. Código: `js/portada.js`. |
 | 0 – 1,8 s | **Gancho:** los dos lados iguales desde el primer fotograma, **ya dibujados (sin fundido desde negro)** + frase GANCHO + estrella fugaz + latido. |
 | 1,8 – momento difícil | Los dos hacen exactamente lo mismo; contador animado. |
 | momento difícil (38 % del desarrollo) | A los dos les pasa a la vez: caen o se cansan. |
 | después | El bueno se levanta y sigue; el malo lo intenta, se desanima y se queda sentado. |
 | resultado (2–3 s) | Uno florece (corazón grande y brillante), el otro se apaga. |
 | cierre (3,5–6,5 s) | **Frase final** (FRASE tal cual; si no hay, el TITULO), grande, centrada y en blanco, con las palabras entre *asteriscos* en rojo + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
+
+### ⭐ Portada que engancha (fotograma 0 y «Descargar portada»)
+
+- **El momento más emotivo del video**, no solo el título: la app busca en los sucesos el más fuerte (por orden: el llanto del lado malo, **el avión despegando**, el abrazo largo o el abrazo final, la tristeza, recibir el corazón, dar el corazón, «estoy contigo», ansiedad, pedir…) y dibuja la escena en ese instante. El lado de ese momento va en **primer plano** (salvo el avión, que se ve de lejos subiendo en el cielo); el otro lado se ve como en el video.
+- **Texto de 3 a 5 palabras, muy grande** (hasta ~230 px), **blanco con borde oscuro** y sombra, con **una palabra clave en rojo** (con brillo). Sale de la línea `PORTADA:` (`PORTADA_EN:` en inglés; la palabra entre *asteriscos* va en rojo); si no hay, del GANCHO (si tiene 3–5 palabras) o de las 5 primeras del TITULO, y la palabra roja la elige la app (una con carga: nunca, solo, espera, mamá, papá, tiempo, adiós… o la más larga).
+- **Corazón grande** encima del texto: **entero** (brilla) o **roto** (partido por una grieta). `PORTADA: … | roto` o `| entero`; si no se dice, roto cuando el momento es del lado malo (llanto, tristeza…) y entero cuando es un abrazo o un corazón del lado bueno.
+- **Fuentes fuertes y modernas que rotan entre videos** (cada video nuevo, la siguiente): Anton, Archivo Black, Bebas Neue, Montserrat Black y Oswald Bold (licencia SIL OFL, en `fonts/`, guardadas en el teléfono para que funcionen sin conexión). La fuente se guarda con el video (la portada rehecha sale igual).
+- **Mismo color de FONDO que el video.** Velo suave del color del fondo detrás del texto.
+- Dónde va el texto: arriba-abajo, sobre el **otro** panel (el momento emotivo se ve limpio); lados, arriba (sobre el cielo, las caras quedan debajo); tiempo, entre franjas. «DOS CAMINOS» / «TWO PATHS STORIES» pequeño debajo.
+- Se dibuja una vez por video y se guarda (en iPhone la portada se repinta muchas veces al empezar a grabar).
+
+### ⭐ Planos: general y primer plano (línea `PLANO`)
+
+- **Plano general:** cuerpo entero, con el escenario (como siempre).
+- **Primer plano:** la cámara se acerca a los personajes: grandes, **del pecho o la cintura para arriba**, para ver bien los gestos, las lágrimas y los corazones. Entre planos la cámara se acerca y se aleja despacio (~0,6 s), nunca un salto ni negro.
+- `PLANO: mixto` (**por defecto**): plano general al empezar el video y **al empezar cada escena** (se presenta el sitio; los fundidos entre escenas son siempre en general), y en lo que pasa en el escenario (lluvia, sol, alguien llega, algo cae, **el avión despegando o aterrizando**); **primer plano en los momentos emotivos** (llora, abrazo, corazón, tristeza, ansiedad, pide, espera con ilusión, distraído, se ríe, se cansa…). Para que alterne: después de dos primeros planos seguidos, uno general (salvo llanto, abrazo, tristeza o recibir el corazón), y si lleva más de 6 s en general, un primer plano. Final: primer plano del abrazo, de quien se queda o de quien llega agotado, y luego la cámara se aleja para ver el corazón grande (o lo que se cae, se seca o se aleja) y la frase.
+- `PLANO: cerca`: casi todo en primer plano (salvo al empezar cada escena, los sucesos del escenario y el avión).
+- `PLANO: general`: siempre cuerpo entero.
+- Encuadre: si los dos no caben grandes (casas lejanas, dos orillas), primer plano de quien hace el gesto. En primer plano, la lluvia, la noche y los demás sucesos llenan lo que se ve, y un velo suave del color del fondo pasa bajo los títulos para que se lean.
+- **Regla del arco:** los planos salen de los sucesos y de las posiciones (idénticos en los dos lados antes del momento difícil) y usan la misma zona de encuadre en los dos paneles → los dos lados siguen idénticos píxel a píxel (comprobado: ≤ 43 píxeles distintos, las estrellitas, en 15, 30 y 45 s con primeros planos antes del momento difícil). El tipo «tiempo» va siempre en plano general.
+- Código: `js/camara.js`.
 
 ### ⭐ Ritmo y sucesos (REGLA FIJA DE RITMO)
 
@@ -205,7 +227,9 @@ TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | co
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 FONDO: azul | marron | vino | verde | negro | aleatorio   (opcional)
 DIVISION: arriba-abajo | lados | tiempo
+PLANO: general | cerca | mixto   (opcional; por defecto mixto)
 GANCHO: frase de 3 a 6 palabras
+PORTADA: 3 a 5 palabras para la miniatura, *clave* en rojo | roto | entero   (opcional)
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos separados por >   (la app acepta de 3 a 8; la regla de oro pide 8)
@@ -218,6 +242,7 @@ A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
 B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
 FRASE_EN: closing line in natural US English
 PREGUNTA_EN: closing question in natural US English
+PORTADA_EN: 3 to 5 thumbnail words, *keyword* in red | roto | entero   (optional)
 ---
 ```
 
@@ -233,7 +258,7 @@ PREGUNTA_EN: closing question in natural US English
   FRASE_EN: Time never comes *back*
   ```
   → en el video: «El tiempo no **vuelve**» con «vuelve» en rojo. En los textos para publicar la frase va sin asteriscos.
-- **VARIAS ESCENAS POR LADO** (de 2 a 5, para que no aburra): en el campo de escena se encadenan con `>` y las acciones de cada escena también con `>` (en el mismo orden). Cada escena ocupa una parte igual del desarrollo y se pasa a la siguiente con un **fundido rápido (~0,3 s) entre las dos escenas, nunca a negro**. El final del lado se ve en la última escena. Los personajes son los mismos en todas.
+- **VARIAS ESCENAS POR LADO** (para que no aburra), **según la duración: 15 s hasta 3 escenas, 30 s hasta 5, 45 s hasta 7 y 60 s hasta 10** por lado. Si el guion trae más (máximo 10), la app usa la primera, la última y las de en medio repartidas; nunca añade escenas de relleno ni repite la misma escena (con las mismas acciones) dos veces seguidas (`fitScenes` en `js/render.js`). en el campo de escena se encadenan con `>` y las acciones de cada escena también con `>` (en el mismo orden). Cada escena ocupa una parte igual del desarrollo y se pasa a la siguiente con un **fundido rápido (~0,3 s) entre las dos escenas, nunca a negro**. El final del lado se ve en la última escena. Los personajes son los mismos en todas.
   ```
   A: SE DESPIDEN Y SE LLAMAN CADA SEMANA | SEMANA {1-52} | casa>camino>telefono>sofa | mujer+nino | abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar | se abrazan
   ```
@@ -595,7 +620,7 @@ Ejemplos de cada final nuevo:
 - **Música** (pantalla principal): lista con **«Aleatoria»** y todas las canciones del banco (con su etiqueta). Botón **▶** para escuchar ~10 s de la canción desde donde empezaría en el video (■ para parar). Con una canción concreta, todos los videos de la tanda la llevan (aunque sea «fuerte»); en **Aleatoria** se elige según la emoción de cada guion y **nunca se usan las «fuertes»** (si todas son fuertes, la app pone su música suave).
 - **Pegar guiones:** cada guion aparece con su casilla; botones **Crear seleccionados** y **Crear todos**.
 - **Creación en tanda:** cada video se guarda en el teléfono (IndexedDB) **en cuanto termina**. La tanda se guarda; si la app se cierra o el teléfono se bloquea, al volver aparece «Continuar» y sigue donde se quedó. Se pide mantener la pantalla encendida (y se usa Wake Lock cuando el iPhone lo permite).
-- **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene dos botones que abren el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (cada uno queda marcado con ✓): **Descargar con música** (el MP4 con la canción dentro, H.264 + AAC) y **Descargar sin música** (el mismo MP4 sin pista de audio, para ponerle música dentro de Instagram, TikTok o YouTube; se obtiene al instante quitando la pista de audio sin volver a codificar, `js/mp4strip.js`, y se guarda con «-sin-musica» en el nombre); **Guardar todos** y **ZIP** (con los textos). Cada tarjeta muestra la **portada** (la misma imagen del fotograma 0) en vez de un recuadro negro, con «▶ Ver video» encima. Botón **Descargar portada**: abre el menú compartir con la portada en JPG 1080 × 1920 para elegir «Guardar imagen» y subirla como miniatura en YouTube o Facebook (se marca con ✓). La portada se guarda con cada video; los videos anteriores que guardaron su receta la generan al abrir Mis videos. **Cambiar música**: elige otra canción (o Aleatoria), escúchala con ▶ y la app cambia **solo el audio** del MP4 sin volver a dibujar el video (`js/remux.js`: copia las muestras de video tal cual y empaqueta la música nueva; los efectos de sonido se rehacen igual gracias a la receta guardada con cada video; en los videos anteriores a esta función, la música va sin efectos). En iPhone la música nueva se graba en tiempo real (tarda lo que dura el video). Comprueba que la música nueva suena antes de guardar; si falla, el video se queda como estaba. Después hay que volver a descargarlo. Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden). Aviso en pantalla: «Texto copiado. En Facebook, mantén el dedo en el cuadro y toca Pegar» (con el nombre de cada red).
+- **Mis videos:** todos los videos guardados; ver, borrar; cada uno tiene dos botones que abren el menú compartir del iPhone solo con el MP4 para elegir **«Guardar video»** y guardarlo en Fotos (cada uno queda marcado con ✓): **Descargar con música** (el MP4 con la canción dentro, H.264 + AAC) y **Descargar sin música** (el mismo MP4 sin pista de audio, para ponerle música dentro de Instagram, TikTok o YouTube; se obtiene al instante quitando la pista de audio sin volver a codificar, `js/mp4strip.js`, y se guarda con «-sin-musica» en el nombre); **Guardar todos** y **ZIP** (con los textos). Cada tarjeta muestra la **portada** (la misma imagen del fotograma 0) en vez de un recuadro negro, con «▶ Ver video» encima. Botón **Descargar portada**: abre el menú compartir con la portada-miniatura (momento más emotivo, texto grande con palabra roja, corazón roto o entero, fuente que rota; ver §4 «Portada que engancha») en JPG 1080 × 1920 para elegir «Guardar imagen» y subirla como miniatura en YouTube o Facebook (se marca con ✓). La portada se guarda con cada video; los videos anteriores que guardaron su receta la generan al abrir Mis videos. **Cambiar música**: elige otra canción (o Aleatoria), escúchala con ▶ y la app cambia **solo el audio** del MP4 sin volver a dibujar el video (`js/remux.js`: copia las muestras de video tal cual y empaqueta la música nueva; los efectos de sonido se rehacen igual gracias a la receta guardada con cada video; en los videos anteriores a esta función, la música va sin efectos). En iPhone la música nueva se graba en tiempo real (tarda lo que dura el video). Comprueba que la música nueva suena antes de guardar; si falla, el video se queda como estaba. Después hay que volver a descargarlo. Cada video tiene una **casilla**; abajo del todo, **Borrar seleccionados** y **Borrar todo** (los dos piden confirmación). Cada video tiene **Facebook, Instagram, YouTube, TikTok**: copian el texto de esa red y abren el menú de compartir con el video. Se marca con **✓** cada red donde ya se publicó (en cualquier orden). Aviso en pantalla: «Texto copiado. En Facebook, mantén el dedo en el cuadro y toca Pegar» (con el nombre de cada red).
 - **Primer comentario:** cuatro botones grandes con estos nombres exactos: **«Comentario Facebook», «Comentario Instagram», «Comentario YouTube», «Comentario TikTok»**. Cada toque copia un comentario **NUEVO**: 10 distintos por red y por video (frases preparadas mezcladas con el TITULO, la FRASE y la PREGUNTA del guion; si no hay FRASE se usa el TITULO); después del 10 vuelve a empezar. La cuenta se guarda con cada video. El comentario se muestra en la tarjeta con el aviso «Comentario copiado (3 de 10). Pégalo como primer comentario». En inglés para Two Paths Stories. Estilo de cada red (`commentsFor` en `js/publish.js`):
   - Facebook: preguntas personales («¿Te ha pasado? Cuéntamelo abajo 👇», «¿A quién te recordó este video?»…).
   - Instagram: invitar a etiquetar («Etiqueta a alguien que necesita ver esto ❤️»…).
@@ -628,6 +653,9 @@ Ejemplos de cada final nuevo:
 | `js/remux.js` | Cambiar la música de un MP4 ya creado sin recodificar el video (lee las muestras, normales o fragmentadas, y vuelve a empaquetar) |
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
+| `js/camara.js` | Planos: general y primer plano (línea PLANO), cámara que se acerca y se aleja |
+| `js/portada.js` | Portada / miniatura: momento más emotivo, texto grande con palabra roja, corazón roto o entero, fuentes que rotan |
+| `fonts/` | 5 fuentes de la portada (Anton, Archivo Black, Bebas Neue, Montserrat Black, Oswald Bold; SIL OFL, `fonts/OFL.txt`) |
 | `js/moments.js` | Sucesos (regla de ritmo): lista, lectura de MOMENTOS, reparto en el tiempo y dibujo |
 | `js/audio.js` | Efectos CC0 y mezcla de música |
 | `js/encoder.js` | MP4 (WebCodecs + mp4-muxer; respaldo MediaRecorder) |

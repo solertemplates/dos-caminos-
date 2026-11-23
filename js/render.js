@@ -35,6 +35,7 @@ import './scenes2.js';
 import './aeropuerto.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
+import { cameraAt, camBox } from './camara.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
@@ -48,6 +49,24 @@ export function makeTimeline(D) {
   const mainDur = resStart - mainStart;
   const C = Math.max(4, Math.min(22, Math.round(mainDur / 1.6)));
   return { D, hookHold: 1.2, mainStart, resStart, endStart, mainDur, res, end, C };
+}
+
+// ESCENAS SEGÚN DURACIÓN: 15 s → hasta 3 escenas por lado, 30 s → 5, 45 s → 7, 60 s → 10.
+// Si el guion trae más, se usan la primera, la última y las de en medio repartidas; nunca se añaden escenas
+// de relleno ni se repite la misma escena dos veces seguidas.
+export function maxScenes(D) { return D <= 15 ? 3 : D <= 30 ? 5 : D <= 45 ? 7 : 10; }
+export function fitScenes(sides, D) {
+  const n = maxScenes(D);
+  return sides.map((sd) => {
+    const g = sd.segments;
+    if (!g || g.length <= 1) return sd;
+    let pick = g;
+    if (g.length > n) pick = Array.from({ length: n }, (_, k) => g[Math.round((k * (g.length - 1)) / (n - 1))]);
+    const same = (a, b) => a.scene === b.scene && a.people.map((p) => p.act).join() === b.people.map((p) => p.act).join();
+    pick = pick.filter((x, k) => k === 0 || !same(x, pick[k - 1])); // sin repetir la misma escena seguida
+    if (pick.length === g.length) return sd;
+    return { ...sd, segments: pick.length > 1 ? pick : null, scene: pick[0].scene, people: pick[0].people };
+  });
 }
 
 // Regla de guion: los dos empiezan iguales (neutral = 1). En CHOICE segundos cada uno elige
@@ -318,6 +337,10 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.rect(...pn.clip);
     ctx.clip();
     ctx.translate(pn.cx, pn.groundY);
+    // PLANO: general (cuerpo entero) o primer plano (cintura para arriba, cerca de la cámara)
+    const cam = cameraAt(job, i, pn, t);
+    const zoomed = cam.z > 1.001;
+    if (zoomed) { ctx.translate(cam.ox, cam.oy); ctx.scale(cam.z, cam.z); }
     const ps = panelState(layout, i, st, tl.C);
     // el lado malo dibuja la MISMA escena y las mismas acciones que el bueno (empiezan iguales);
     // sus propias acciones solo deciden cómo se queda al rendirse
@@ -358,6 +381,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
       box: { l: -Math.min(...layout.panels.map((q) => q.stageW)) / 2, r: Math.min(...layout.panels.map((q) => q.stageW)) / 2, top: Math.max(...layout.panels.map((q) => q.clip[1] - q.groundY)), bot: Math.min(...layout.panels.map((q) => q.clip[1] + q.clip[3] - q.groundY)) },
       moments: st.phase === 'hook' ? null : momentsNow(plans[i], t),
     };
+    // en primer plano, la lluvia, la noche y los demás sucesos llenan lo que se ve
+    if (zoomed) S.box = { l: (S.box.l - cam.ox) / cam.z, r: (S.box.r - cam.ox) / cam.z, top: (S.box.top - cam.oy) / cam.z, bot: (S.box.bot - cam.oy) / cam.z };
     let a = endDim * hookIn * ps.show * dr.a;
     if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.2 * smooth(st.endK * 2.5);
     if (!side0.good && st.phase !== 'main') a *= 1 - 0.15 * ps.r;
@@ -398,6 +423,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     if (!mainS || dr.a > mainS._a) { mainS = S; mainS._a = dr.a; }
     }
     S = mainS;
+    // para la cámara: dónde está la escena si va corrida («ausente») y quién es quién
+    if (plans[i]) { plans[i].camTx = S.sceneTx || null; plans[i].camPeople = S.allPeople; }
     const sceneAlpha = S.sceneAlpha;
     const side = { ...side0, scene: S.sceneName };
     // sucesos del escenario: lluvia, sol, alguien llega, algo cae, se enciende…
@@ -415,6 +442,14 @@ export function renderFrame(ctx, job, t, scale = 1) {
       heart(ctx, fx, fy, pn.F * 0.3 * k * beat, RED, Math.max(0.85, endDim) * k);
     }
     ctx.restore();
+    // en primer plano, un velo suave del color del fondo bajo los títulos para que se lean limpios
+    if (zoomed) {
+      const vk = smooth((cam.z - 1) / 0.6), [cx0, cy0, cw] = pn.clip;
+      const yb = pn.groundY + camBox(layout).top + 30;
+      const g = ctx.createLinearGradient(0, cy0, 0, yb);
+      g.addColorStop(0, veil(job, 0.8 * vk)); g.addColorStop(0.7, veil(job, 0.6 * vk)); g.addColorStop(1, veil(job, 0));
+      ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(cx0, cy0, cw, yb - cy0); ctx.restore();
+    }
   });
 
   // textos de cada lado
@@ -581,48 +616,5 @@ function withAlpha(ctx, a, fn) {
   try { fn(); } finally { delete ctx.globalAlpha; }
 }
 
-// ---------------------------------------------------------------------------
-// PORTADA (fotograma 0 del MP4 y imagen «Descargar portada»): los dos lados de la escena ya dibujados
-// a mitad de la historia (se ve la diferencia), el TITULO grande y el corazón rojo.
-// No cuenta como inicio de la historia: desde el fotograma 1 el video empieza como siempre.
-export function coverTime(job) {
-  const tl = job.tl;
-  if (job.layout.kind === 'time') return tl.resStart + tl.res * 0.7;
-  const roles = rolesOf(job);
-  if (roles) return Math.min(tl.resStart - 0.2, arcTime(tl) + ARC.quit[1] + 1.2);
-  return tOfP(tl, 0.62);
-}
-export function renderCover(ctx, job, scale = 1) {
-  // la escena sin los títulos de cada lado ni el gancho (la portada lleva solo el TITULO)
-  if (!job.coverJob) job.coverJob = { ...job, moments: undefined, roles: undefined, coverJob: undefined, texts: { ...job.texts, hook: '', sides: [] } };
-  renderFrame(ctx, job.coverJob, coverTime(job), scale);
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.globalAlpha = 1;
-  const yC = job.layout.kind === 'lr' ? 1150 : job.layout.kind === 'time' ? 765 : 905;
-  const title = String(job.title || job.texts.phrase || '').replace(/\*/g, '').trim();
-  ctx.font = `500 88px ${FONT}`;
-  let fs = 88, lines = wrap(ctx, title, 940, 2);
-  while (lines.length > 3 && fs > 56) { fs -= 8; ctx.font = `500 ${fs}px ${FONT}`; lines = wrap(ctx, title, 940, 2); }
-  lines = lines.slice(0, 3);
-  const lh = fs * 1.12, blockH = lines.length * lh;
-  const top = yC - blockH / 2;
-  // velo negro suave detrás del título para que se lea limpio
-  const g = ctx.createLinearGradient(0, top - 190, 0, top + blockH + 120);
-  g.addColorStop(0, veil(job, 0)); g.addColorStop(0.28, veil(job, 0.82)); g.addColorStop(0.8, veil(job, 0.82)); g.addColorStop(1, veil(job, 0));
-  ctx.fillStyle = g;
-  ctx.fillRect(0, top - 190, W, blockH + 310);
-  // corazón rojo encima del título
-  const hy = top - 78;
-  glow(ctx, W / 2, hy, 150, RED, 0.85);
-  heart(ctx, W / 2, hy, 46, RED, 1);
-  ctx.fillStyle = WHITE;
-  ctx.globalAlpha = 1;
-  ctx.textBaseline = 'alphabetic';
-  ctx.font = `500 ${fs}px ${FONT}`;
-  lines.forEach((ln, i) => spaced(ctx, ln, W / 2, top + fs * 0.92 + i * lh, 2));
-  // nombre del canal, pequeño
-  ctx.globalAlpha = 0.6;
-  ctx.font = `400 24px ${FONT}`;
-  spaced(ctx, job.lang === 'en' ? 'TWO PATHS STORIES' : 'DOS CAMINOS', W / 2, top + blockH + 52, 6);
-  ctx.globalAlpha = 1;
-}
+// PORTADA (fotograma 0 del MP4 y «Descargar portada»): ver js/portada.js
+export { renderCover, coverTime, loadCoverFonts } from './portada.js';

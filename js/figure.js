@@ -78,6 +78,7 @@ export function walkPose(phase, run = false) {
     fl2: amp * s - bend(phase),
     bl1: amp * s2,
     bl2: amp * s2 - bend(phase + Math.PI),
+    walk: 1, // marca: piernas de caminar (las acciones con objeto conservan estos pasos)
   };
 }
 

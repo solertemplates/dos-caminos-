@@ -46,9 +46,11 @@ TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | co
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 FONDO: azul | marron | vino | verde | negro | aleatorio (opcional: color oscuro del fondo; si no lo pones, la app elige uno sin repetir el del video anterior)
 DIVISION: arriba-abajo | lados | tiempo
+PLANO: general | cerca | mixto (opcional; por defecto mixto: plano general al empezar cada escena y primer plano —personajes grandes, de la cintura para arriba— en los momentos emotivos; cerca = casi todo en primer plano; general = siempre cuerpo entero)
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
+PORTADA: 3 a 5 palabras para la miniatura, con *una palabra clave* en rojo | roto o entero (el corazón de la portada). Ej.: PORTADA: TE ESPERÓ *TODA* LA NOCHE | roto
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-(Mejor con 3 a 5 escenas seguidas por lado, para que no aburra: «casa>camino>aeropuerto>telefono>casa» o «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
+(Mejor con varias escenas seguidas por lado, para que no aburra. Según la duración: 15 s hasta 3 escenas, 30 s hasta 5, 45 s hasta 7, 60 s hasta 10; si pones más, la app usa la primera, la última y las de en medio repartidas. Nada de relleno: cada escena debe contar algo nuevo y no repetir la misma escena seguida. Ej.: «casa>camino>aeropuerto>telefono>casa» o «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos del camino A separados por >
 B-MOMENTOS: 8 sucesos del camino B separados por >
@@ -56,6 +58,7 @@ PREGUNTA: pregunta final corta
 INSPIRACION: en una frase, de qué video viral sale la idea
 TITULO_EN: short title
 GANCHO_EN: hook, natural US English
+PORTADA_EN: 3 to 5 words for the thumbnail, *keyword* in red | roto or entero
 A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
 B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
 FRASE_EN: closing line shown big at the end, natural US English (not a literal translation; *keyword* in red)
@@ -153,7 +156,7 @@ VOCABULARIO (usa solo estas palabras)
 - OBJETOS: si el TITULO o el título/subtítulo de un lado nombra uno de estos objetos, la escena lo dibuja en lugar del objeto genérico. Úsalos cuando le den sentido a la historia:
   flor, carta, pan, pelota, libro, dinero, moneda, llave, anillo, taza (café), bicicleta, regalo, maleta, guitarra, vela, mochila, zapatos (tenis), foto, estrella, globo, cometa, sombrero, gafas (lentes), botella (agua), plato (comida, cena), manzana, pastel (cumpleaños), osito (peluche, juguete), maceta (planta), martillo, lápiz, cuaderno, trofeo (medalla), cámara, auriculares, candado, semilla, corona.
   Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
-- ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo):
+- ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo; si la escena lo hace caminar —camino, aeropuerto…— camina con pasos reales llevando el objeto):
   tocar-guitarra, leer-libro, beber-cafe, dar-flor, lanzar-pelota, escribir-lapiz, llevar-mochila, ponerse-sombrero, hacer-foto, dar-carta, comer-pan, contar-dinero, contar-monedas, usar-llave, dar-anillo, montar-bici, dar-regalo, llevar-maleta, encender-vela, atarse-zapatos, mirar-foto, alcanzar-estrella, sostener-globo, volar-cometa, ponerse-gafas, beber-agua, servir-plato, comer-manzana, llevar-pastel, abrazar-osito, llevar-planta, martillar, escribir-cuaderno, levantar-trofeo, escuchar-musica, cerrar-candado, sembrar-semilla, ponerse-corona
   Más: bailar (dos personas bailan juntas: mano con mano, se mecen y ella gira bajo su brazo; vale en cualquier escena), caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
   Ejemplos: «sofa | hombre+mujer | tocar-guitarra+beber-cafe | se abrazan» · «camino | nina | montar-bici | llega» · «puente | hombre+mujer | construir+dar-flor | se unen».

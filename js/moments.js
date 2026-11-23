@@ -275,7 +275,7 @@ export function planMoments(job, info) {
   if (roles) {
     const bi = roles.indexOf('bad');
     const own = plans[bi].filter((e) => e.t0 >= info.tD);
-    plans[bi] = plans[gi].filter((e) => e.t0 < info.tD).map((e) => ({ ...e, t1: Math.min(e.t1, info.tD) })).concat(own);
+    plans[bi] = plans[gi].filter((e) => e.t0 < info.tD).map((e) => ({ ...e, t1: Math.min(e.t1, info.tD + 0.35) })).concat(own); // se apaga después de tD (antes, idéntico)
     // y el bueno no cambia lo suyo antes de tD (su plan es la referencia)
   }
   return plans;
@@ -698,7 +698,7 @@ const legsOf = (p) => ({ fl1: p.fl1, fl2: p.fl2, bl1: p.bl1, bl2: p.bl2 });
 // guarda dónde quedó cada personaje (para el siguiente fotograma)
 export function recordFigure(now, idx, bx, o, fig) {
   if (!now || !now.pos) return;
-  now.pos[idx] = { t: now.t, lastMove: o._lastMove, bx, x: o.x, facing: o.facing, H: fig.H, head: fig.head, chest: [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3], hands: [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2] };
+  now.pos[idx] = { t: now.t, lastMove: o._lastMove, bx, x: o.x, facing: o.facing, H: fig.H, head: fig.head, chest: [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3], hands: [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2], feet: [fig.ff, fig.bf] };
 }
 
 // corazoncito rojo (el que se entregan)

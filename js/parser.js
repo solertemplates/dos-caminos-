@@ -17,6 +17,8 @@ const KEY = {
   pregunta: 'question', question: 'question',
   etapas: 'stages', stages: 'stages', momentos: 'stages',
   fondo: 'bg', background: 'bg', color: 'bg',
+  plano: 'plano', planos: 'plano', camara: 'plano', shot: 'plano', shots: 'plano', camera: 'plano',
+  portada: 'cover', miniatura: 'cover', cover: 'cover', thumbnail: 'cover',
   inspiracion: 'inspiration', inspiration: 'inspiration', // de qué video viral sale la idea (no se dibuja)
 };
 
@@ -192,7 +194,7 @@ function parseSide(val, theme, errs, label) {
     // sin acciones entre paréntesis: las del campo de acciones; si no hay, las de la escena anterior
     segs.push({ scene, actsRaw: inner || (actsRaw.trim() ? fromList : parenMode && segs.length ? segs[segs.length - 1].actsRaw : fromList) });
   });
-  if (segs.length > 5) { errs.push(`${label}: como mucho 5 escenas por lado; uso las 5 primeras.`); segs.length = 5; }
+  if (segs.length > 10) { errs.push(`${label}: como mucho 10 escenas por lado; uso las 10 primeras.`); segs.length = 10; }
   // sin escena válida: se deduce de las acciones; si no, la del tema (nunca el puente con una sola persona)
   if (!segs.length) {
     const firstActs = norm(actGroups[0] || '').split(/\s*[+,]\s*/).filter(Boolean);
@@ -237,6 +239,21 @@ function splitBlocks(text) {
 // FONDO: azul / marron / vino / verde / negro / aleatorio (sin línea = aleatorio)
 const BG_ALIAS = { negro: 'negro', black: 'negro', azul: 'azul', 'azul marino': 'azul', marino: 'azul', 'azul noche': 'azul', navy: 'azul', blue: 'azul', marron: 'marron', cafe: 'marron', brown: 'marron', vino: 'vino', granate: 'vino', burdeos: 'vino', wine: 'vino', verde: 'verde', green: 'verde', aleatorio: 'aleatorio', random: 'aleatorio' };
 function bgName(v) { const n = norm(v || '').replace(/[^a-z ]/g, '').trim(); return BG_ALIAS[n] || BG_ALIAS[n.split(' ')[0]] || 'aleatorio'; }
+
+// PLANO: general | cerca | mixto (por defecto mixto)
+function planoName(v) {
+  const n = norm(v || '');
+  if (/general|lejos|amplio|entero|wide/.test(n)) return 'general';
+  if (/cerca|primer|close|grande/.test(n)) return 'cerca';
+  return 'mixto';
+}
+// PORTADA: texto de 3 a 5 palabras (*palabra* en rojo) | roto o entero
+export function coverSpec(v) {
+  if (!v) return null;
+  const [txt, h = ''] = String(v).split('|').map((x) => x.trim());
+  const hn = norm(h);
+  return { text: txt || '', heart: /rot|broken/.test(hn) ? 'roto' : /enter|whole|full|sano/.test(hn) ? 'entero' : null };
+}
 
 export function parseScripts(text) {
   const scripts = [];
@@ -298,11 +315,13 @@ export function parseScripts(text) {
       hook: f.hook || '',
       phrase: f.phrase || '',
       bg: bgName(f.bg),
+      plano: planoName(f.plano),
+      cover: coverSpec(f.cover),
       question: f.question || '',
       sides: isTime ? [A, A, A] : [A, B],
       stages: isTime ? stagesOf(f.stages, ['HOY', 'EN UN MES', 'EN UN AÑO']) : null,
       en: {
-        title: f.en.title, hook: f.en.hook, phrase: f.en.phrase, question: f.en.question,
+        title: f.en.title, cover: coverSpec(f.en.cover), hook: f.en.hook, phrase: f.en.phrase, question: f.en.question,
         sides: [enSide(f.en.A, A), enSide(f.en.B, B)],
         stages: isTime ? stagesOf(f.en.stages, ['TODAY', 'IN A MONTH', 'IN A YEAR']) : null,
       },

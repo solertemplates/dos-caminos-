@@ -2,7 +2,7 @@
 import { parseScripts } from './parser.js';
 import { APP_VERSION } from './version.js';
 import { EXAMPLES } from './examples.js';
-import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES } from './render.js';
+import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES, fitScenes, loadCoverFonts } from './render.js';
 import { renderAudio } from './audio.js';
 import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
 import { remuxWithAudio } from './remux.js';
@@ -232,6 +232,13 @@ function pickBg(script, opts) {
   try { localStorage.setItem('dc.lastBg', bg); } catch (e) {}
   return bg;
 }
+// FUENTE DE LA PORTADA: rota entre videos (cada video nuevo, la siguiente de las 5)
+function pickFont(opts) {
+  if (opts.fontIdx != null) return opts.fontIdx; // al rehacer: la misma que tenía el video
+  let n = 0;
+  try { n = (parseInt(localStorage.getItem('dc.coverFont') || '-1', 10) + 1) % 5; localStorage.setItem('dc.coverFont', String(n)); } catch (e) {}
+  return n;
+}
 function buildJob(script, idx, opts) {
   const lang = opts.lang;
   const en = lang === 'en';
@@ -257,10 +264,11 @@ function buildJob(script, idx, opts) {
   // la misma semilla para el mismo guion: crear el mismo guion varias veces da el mismo video
   const seed = opts.seed ?? scriptSeed(script, opts);
   return {
-    tl, seed, layoutKind, lang, bg: pickBg(script, opts),
+    tl, seed, layoutKind, lang, bg: pickBg(script, opts), plano: script.plano || 'mixto', fontIdx: pickFont(opts),
+    coverSpec: (en ? E.cover : script.cover) || null,
     layout: layoutFor(layoutKind),
     stars: makeStars(seed),
-    sides: script.sides,
+    sides: fitScenes(script.sides, opts.duration), // hasta 3/5/7/10 escenas por lado según la duración
     emotion: script.emotion,
     texts: {
       hook: (en ? E.hook : script.hook) || '',
@@ -289,6 +297,7 @@ document.addEventListener('visibilitychange', () => {
 async function makeOne(sc, idx, opts) {
   const job = buildJob(sc, idx, opts);
   const D = opts.duration;
+  await loadCoverFonts(); // fuentes de la portada (fotograma 0)
   const song = await pickSong(sc.emotion, opts.music || 'random');
   const audio = await renderAudio({ job, D, musicData: song?.data, sfxOn: S.sfx, sfxVol: S.sfxVol, musicVol: S.musicVol });
   const enc = (force) => encodeVideo({
@@ -334,7 +343,7 @@ async function makeOne(sc, idx, opts) {
     coverBuf: cover ? await cover.arrayBuffer() : null, coverType: 'image/jpeg',
     phrase: v.phrase || '', question: v.question || '', // para los comentarios
     // receta para rehacer el audio (música + efectos) sin volver a dibujar el video
-    recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {}, bg: job.bg }, seed: job.seed, layoutKind: job.layoutKind },
+    recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {}, bg: job.bg, fontIdx: job.fontIdx }, seed: job.seed, layoutKind: job.layoutKind },
   };
 }
 
@@ -350,6 +359,7 @@ function commentVars(rec) {
 // ---------- Portada ----------
 // Se guarda como ArrayBuffer (algunos Safari no guardan Blob en IndexedDB).
 async function coverImage(job) {
+  await loadCoverFonts();
   const c = document.createElement('canvas');
   c.width = 1080; c.height = 1920;
   renderCover(c.getContext('2d', { alpha: false }), job, 1);

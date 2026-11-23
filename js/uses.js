@@ -99,7 +99,8 @@ export function usePose(use, base, k) {
   } else {
     const seated = base.fl1 > 0.8 && base.fl2 > -0.1 && base.fl2 < 0.6;
     const onFloor = base.fl2 > 1;
-    legs = seated || onFloor ? { fl1: base.fl1, fl2: base.fl2, bl1: base.bl1, bl2: base.bl2 } : STAND;
+    // si la escena lo hace caminar (camino, aeropuerto, parque…), conserva sus pasos: nunca se desliza con el objeto
+    legs = seated || onFloor || base.walk ? { fl1: base.fl1, fl2: base.fl2, bl1: base.bl1, bl2: base.bl2 } : STAND;
   }
   let upper = use.pose(k);
   if (k.r > 0 && !k.good) {
