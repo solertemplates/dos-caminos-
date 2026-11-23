@@ -14,7 +14,7 @@ y, si toca el formato, también `js/format.js`, en el mismo commit.
 
 **REGLA FIJA DE EMOCIONES:** los personajes ACTÚAN con gestos que cuentan la historia; cada gesto tiene un significado claro y es un gancho; nada de moverse por moverse. Gestos: ansiedad, esperar-con-ilusion, tristeza, distraido, dar-corazon, recibir-corazon, estoy-contigo, pedir, alegria, abrazo-largo. Lado bueno: se pasan corazoncitos cuando no hay otro suceso; lado malo: uno pide o espera y el otro está distraído. Ver MAESTRO.md «Gestos de emoción».
 
-**REGLA FIJA DE RITMO:** en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida. Lo hacen los sucesos (`A-MOMENTOS` / `B-MOMENTOS`, o los que elige la app). Ver MAESTRO.md «Ritmo y sucesos» y la lista de sucesos en §6.
+**REGLA FIJA DE RITMO:** en todos los videos (15, 30, 45 o 60 s) pasa algo nuevo y visible cada 2 o 3 segundos; nunca más de 3 segundos de la misma acción repetida; nadie se queda quieto (gestos de «vida»); mejor 3–4 escenas seguidas por lado (`casa>camino>telefono>sofa`). **Sin fotogramas negros** ni fundidos a negro. Lo hacen los sucesos (`A-MOMENTOS` / `B-MOMENTOS`, o los que elige la app). Ver MAESTRO.md «Ritmo y sucesos» y la lista de sucesos en §6.
 
 **DOS TIPOS DE LADO MALO:** «se rinde» (solo con caer, levantarse, caer-bici, levantarse-bici o el final «se queda») y «luchar solo» (el resto, como el puente: en el malo uno trabaja solo desde el principio; con `llega-agotado` llega sin fuerzas y no puede recibir el corazón o el abrazo). Ver MAESTRO.md «Dos tipos de lado malo».
 

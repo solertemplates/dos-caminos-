@@ -182,7 +182,10 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
   rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
   const done = new Promise((r) => (rec.onstop = r));
   rec.start(500);
-  await sleep(150); // la portada queda grabada como primer fotograma
+  // SIN NEGRO: el vídeo del lienzo solo da un fotograma cuando se vuelve a pintar; sin esto Safari graba
+  // fotogramas negros al principio. Se repinta la portada en cada fotograma mientras arranca la grabación.
+  const hold = async (ms, paint) => { const end = performance.now() + ms; while (performance.now() < end) { paint(); await new Promise((r) => requestAnimationFrame(r)); } };
+  await hold(180, () => renderCover(ctx, job, scale));
   const t0 = ac.currentTime + 0.05;
   src.start(t0);
   await new Promise((resolve) => {
@@ -195,8 +198,8 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
     };
     requestAnimationFrame(tick);
   });
-  renderFrame(ctx, job, D - 0.01, scale);
-  await sleep(150);
+  // y al final, la última imagen repintada hasta parar (nada de fotogramas negros al terminar)
+  await hold(220, () => renderFrame(ctx, job, D - 0.01, scale));
   rec.stop();
   await done;
   try { src.stop(); } catch (e) {}

@@ -68,7 +68,10 @@ export function arcModeOf(sides) {
   if (!sides || sides.length !== 2) return null;
   const bad = sides.find((s) => !s.good);
   if (!bad || sides.filter((s) => s.good).length !== 1) return null;
-  if (sides.some((s) => s.people.some((p) => FALL_ACTS.has(p.act)))) return 'rinde';
+  const all = (s) => (s.segments || [s]).flatMap((g) => g.people);
+  // con alguien «ausente» no hay arco común: el lado malo no puede copiar al bueno (el ausente saldría en la escena)
+  if (sides.some((s) => all(s).some((p) => p.act === 'ausente'))) return 'solo';
+  if (sides.some((s) => all(s).some((p) => FALL_ACTS.has(p.act)))) return 'rinde';
   if (/se queda/.test(nrm(bad.result))) return 'rinde';
   return 'solo';
 }
@@ -276,8 +279,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.restore();
   }
 
-  const endDim = st.phase === 'end' ? 1 - 0.55 * smooth(st.endK * 2.5) : 1;
-  const hookIn = smooth(t / 0.35);
+  // sin fotogramas negros: la escena está desde el primer fotograma y al final solo se atenúa un poco (el velo va detrás de la frase)
+  const endDim = st.phase === 'end' ? 1 - 0.2 * smooth(st.endK * 2.5) : 1;
+  const hookIn = 1;
 
   job.sides.forEach((side0, i) => {
     const pn = layout.panels[i];
@@ -291,12 +295,32 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // sus propias acciones solo deciden cómo se queda al rendirse
     const role = job.roles ? job.roles[i] : null;
     const gSide = job.roles ? job.sides[job.roles.indexOf('good')] : null;
-    const side = role === 'bad' ? { ...side0, scene: gSide.scene, people: gSide.people.map((p, j) => ({ ...p, badAct: (side0.people[j] || side0.people[0] || p).act })) } : side0;
     const sp = role ? pathP(tl, ps.p, role) : ps.p;
-    const S = {
+    // VARIAS ESCENAS POR LADO: cada escena ocupa una parte igual del desarrollo; se pasa de una a otra
+    // con un fundido rápido entre las dos (las dos dibujadas a la vez, nunca negro)
+    const segOf = (sd) => (!isTime && sd.segments && sd.segments.length > 1 ? sd.segments : [{ scene: sd.scene, people: sd.people }]);
+    const mySegs = segOf(side0);
+    const segs = role === 'bad'
+      ? segOf(gSide).map((g, k) => ({ scene: g.scene, people: g.people.map((p, j) => { const own = (mySegs[Math.min(k, mySegs.length - 1)].people); return { ...p, badAct: (own[j] || own[0] || p).act }; }) }))
+      : mySegs;
+    const nSeg = segs.length;
+    const xs = clamp(sp) * nSeg;
+    const kSeg = Math.min(nSeg - 1, Math.floor(xs));
+    const local = nSeg === 1 ? sp : clamp(xs - kSeg);
+    const wl = Math.min(0.45, (0.3 / Math.max(1, tl.mainDur - CHOICE)) * nSeg); // ~0,3 s de fundido
+    const draws = [{ seg: segs[kSeg], p: local, a: 1 }];
+    if (kSeg < nSeg - 1 && local > 1 - wl && st.phase === 'main') {
+      const f = (local - (1 - wl)) / wl;
+      draws[0].a = Math.min(1, 2 * (1 - f));
+      draws.push({ seg: segs[kSeg + 1], p: 0, a: Math.min(1, 2 * f) });
+    }
+    let S = null, mainS = null;
+    for (const dr of draws) {
+    const side = { ...side0, scene: dr.seg.scene, people: dr.seg.people };
+    S = {
       // «ausente»: no está en la escena principal (solo salen los presentes); se dibuja aparte, pequeño, en otro lugar
       w: pn.stageW, F: pn.F, people: side.people.filter((p) => p.act !== 'ausente'), allPeople: side.people, absent: side.people.filter((p) => p.act === 'ausente'), good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
-      p: sp, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
+      p: dr.p, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
@@ -304,9 +328,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
       box: { l: -Math.min(...layout.panels.map((q) => q.stageW)) / 2, r: Math.min(...layout.panels.map((q) => q.stageW)) / 2, top: Math.max(...layout.panels.map((q) => q.clip[1] - q.groundY)), bot: Math.min(...layout.panels.map((q) => q.clip[1] + q.clip[3] - q.groundY)) },
       moments: st.phase === 'hook' ? null : momentsNow(plans[i], t),
     };
-    let a = endDim * hookIn * ps.show;
-    if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.5 * smooth(st.endK * 2.5);
-    if (!side0.good && st.phase !== 'main') a *= 1 - 0.25 * ps.r;
+    let a = endDim * hookIn * ps.show * dr.a;
+    if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.2 * smooth(st.endK * 2.5);
+    if (!side0.good && st.phase !== 'main') a *= 1 - 0.15 * ps.r;
     // EN UN AÑO: la franja se ilumina con luz cálida al final feliz
     if (isTime && i === 2 && side.good && ps.r > 0.3) {
       const k = smooth((ps.r - 0.3) / 0.5);
@@ -338,6 +362,13 @@ export function renderFrame(ctx, job, t, scale = 1) {
     if (job.countFigs) job.countFigs[i] = Math.max(job.countFigs[i] || 0, S._figs || 0);
     setNeutral(0);
     setCurrent(null);
+    S.sceneAlpha = sceneAlpha;
+    // lo que va encima (sucesos, objeto, corazón) sigue a la escena que más se ve
+    if (!mainS || dr.a > mainS._a) { mainS = S; mainS._a = dr.a; }
+    }
+    S = mainS;
+    const sceneAlpha = S.sceneAlpha;
+    const side = { ...side0, scene: S.sceneName };
     // sucesos del escenario: lluvia, sol, alguien llega, algo cae, se enciende…
     if (S.moments) withAlpha(ctx, sceneAlpha, () => drawWorldMoments(ctx, S, S.moments));
     // objeto concreto del guion en su sitio fijo (si la escena no lo usó en una ranura propia)

@@ -103,6 +103,8 @@ function resolveAct(raw, scene) {
   if (a === 'caer-bici' || a === 'levantarse-bici') return a;
   // «ausente»: no está en la escena; se dibuja pequeño en otro lugar (vale en cualquier escena)
   if (['ausente', 'no-viene', 'no-esta', 'no-llega', 'se-fue', 'absent', 'away', 'not-there'].includes(a)) return 'ausente';
+  // «bailar»: bailan juntos (vale en cualquier escena)
+  if (['bailar', 'baila', 'bailan', 'dance', 'dancing'].includes(a)) return 'bailar';
   if (SCENE_ACTS[scene]?.includes(a)) return a;
   return ACT_ALIAS[a] || ACT_ALIAS[raw] || a;
 }
@@ -149,25 +151,62 @@ function splitPeople(s) {
   return norm(s).split(/\s*(?:\+|,|\by\b|\band\b|&)\s*/).filter(Boolean);
 }
 
+const RESULT_HINT = /(crece|florece|se une|se unen|se llena|llega|ganan|se abrazan|se despiertan|se secan|se seca|se apaga|se vacia|se mojan|pierden|se queda|nunca se completa|se cae|se alejan|agotad)/;
+const isScene = (x) => !!SCENE_ALIAS[norm(x).replace(/\s*\(.*$/, '')];
+const isPeople = (x) => splitPeople(x).length > 0 && splitPeople(x).every((p) => PERSON_ALIAS[p] || /^(muj|ni|hom)/.test(p));
+
+// Un lado: TEXTO | CONTADOR | escena(s) | personajes | acciones | final
+// Varias escenas seguidas (de 2 a 4): «casa>camino>telefono>casa» y acciones por escena con «>»
+// («abrazar+abrazar>llevar-maleta>llamar>abrazar»), o «casa(abrazar) > camino(llevar-maleta) > …».
 function parseSide(val, theme, errs, label) {
-  const parts = val.split('|').map((x) => x.trim());
-  const [title = '', sub = '', sceneRaw = '', peopleRaw = '', actsRaw = '', resRaw = ''] = parts;
-  let scene = SCENE_ALIAS[norm(sceneRaw)] || null;
-  if (!scene) {
-    if (sceneRaw) errs.push(`${label}: escena «${sceneRaw}» no existe; uso «${THEME_SCENE[theme] || 'arbol'}».`);
-    scene = THEME_SCENE[theme] || 'arbol';
-  }
+  let parts = val.split('|').map((x) => x.trim());
+  // si falta la escena (p. ej. «TEXTO | CONTADOR | mujer | gastar | se vacía»), los campos se corren: se detecta
+  if (parts.length >= 3 && !isScene(parts[2]) && !/[>(]/.test(parts[2]) && isPeople(parts[2])) parts = [parts[0], parts[1], '', ...parts.slice(2)];
+  const [title = '', sub = '', sceneRaw = '', peopleRaw = '', actsRaw = '', resRaw0 = ''] = parts;
+  let resRaw = resRaw0;
   let kinds = splitPeople(peopleRaw).map((p) => PERSON_ALIAS[p] || (p.startsWith('muj') ? 'mujer' : p.startsWith('ni') ? 'nino' : 'hombre'));
-  if (!kinds.length) kinds = scene === 'puente' || scene === 'abrazo' ? ['hombre', 'mujer'] : ['hombre'];
-  let acts = norm(actsRaw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => resolveAct(a, scene));
-  if (!acts.length) acts = ['construir'];
-  const people = kinds.slice(0, 4).map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)] }));
+  // nunca se inventan personajes: si el lado no nombra a nadie, una sola persona
+  if (!kinds.length) kinds = ['hombre'];
+  kinds = kinds.slice(0, 4);
+  // escenas y acciones por escena
+  const scItems = sceneRaw ? sceneRaw.split(/\s*>\s*/).filter(Boolean) : [];
+  const actGroups = actsRaw ? actsRaw.split(/\s*>\s*/) : [];
+  const segs = [];
+  const parenMode = scItems.some((x) => /\(/.test(x));
+  scItems.forEach((item, k) => {
+    const m = item.match(/^([^()]+?)\s*(?:\((.*)\))?$/);
+    const name = norm(m ? m[1] : item);
+    let inner = m && m[2] ? m[2].trim() : '';
+    let scene = SCENE_ALIAS[name] || null;
+    if (!scene) { errs.push(`${label}: escena «${m ? m[1] : item}» no existe.`); return; }
+    // «casa(se abrazan)» en la última escena = el final
+    if (inner && k === scItems.length - 1 && RESULT_HINT.test(norm(inner))) { if (!resRaw) resRaw = inner; inner = ''; }
+    const fromList = actGroups[Math.min(k, actGroups.length - 1)] || actGroups[0] || '';
+    // sin acciones entre paréntesis: las del campo de acciones; si no hay, las de la escena anterior
+    segs.push({ scene, actsRaw: inner || (actsRaw.trim() ? fromList : parenMode && segs.length ? segs[segs.length - 1].actsRaw : fromList) });
+  });
+  if (segs.length > 4) { errs.push(`${label}: como mucho 4 escenas por lado; uso las 4 primeras.`); segs.length = 4; }
+  // sin escena válida: se deduce de las acciones; si no, la del tema (nunca el puente con una sola persona)
+  if (!segs.length) {
+    const firstActs = norm(actGroups[0] || '').split(/\s*[+,]\s*/).filter(Boolean);
+    let scene = Object.keys(SCENE_ACTS).find((sc) => firstActs.some((a) => SCENE_ACTS[sc].includes(a.replace(/\s+/g, '-'))));
+    if (!scene) scene = THEME_SCENE[theme] || 'camino';
+    if (kinds.length < 2 && (scene === 'puente' || scene === 'abrazo')) scene = 'camino';
+    segs.push({ scene, actsRaw: actGroups[0] || '', guessed: sceneRaw ? `escena «${sceneRaw}» no existe` : 'falta la escena' });
+  }
+  const mkPeople = (scene, raw) => {
+    let acts = norm(raw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => resolveAct(a, scene));
+    if (!acts.length) acts = ['construir'];
+    return kinds.map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)] }));
+  };
+  const segments = segs.map((g) => ({ scene: g.scene, people: mkPeople(g.scene, g.actsRaw) }));
+  const scene = segments[0].scene, people = segments[0].people;
   // REGLA: lo que se ve coincide con lo que dice el texto. Si dice que alguien no viene / no está / se fue, va con «ausente».
   const said = norm(`${title} ${sub}`);
-  if (/\b(no viene|no vino|no llega|nunca llega|nunca viene|no esta|no estan|se fue|se va de casa|no aparece|doesn'?t come|never comes|isn'?t there|not there|never shows)\b/.test(said) && !people.some((p) => p.act === 'ausente') && people.length > 1)
+  if (/\b(no viene|no vino|no llega|nunca llega|nunca viene|no esta|no estan|se fue|se va de casa|no aparece|doesn'?t come|never comes|isn'?t there|not there|never shows)\b/.test(said) && !segments.some((g) => g.people.some((p) => p.act === 'ausente')) && people.length > 1)
     errs.push(`${label}: el texto dice que alguien no viene o no está, pero sale en la escena. Pon «ausente» en la acción de esa persona (ej.: esperar+ausente).`);
-  const cls = classifyResult(resRaw, scene);
-  return { title, sub, scene, people, result: resRaw, ...cls };
+  const cls = classifyResult(resRaw, segments[segments.length - 1].scene);
+  return { title, sub, scene, people, segments: segments.length > 1 ? segments : null, result: resRaw, guessed: segs[0].guessed || null, ...cls };
 }
 
 function splitBlocks(text) {
@@ -215,6 +254,12 @@ export function parseScripts(text) {
     const label = `Guion ${scripts.length + 1}`;
     const A = parseSide(f.A, theme, errs, label + ' A');
     const B = isTime ? A : parseSide(f.B, theme, errs, label + ' B');
+    // si un lado no trae escena, usa la del otro lado (los dos caminos comparten escena)
+    for (const [X, Y, n] of [[A, B, 'A'], [B, A, 'B']]) {
+      if (!X.guessed) continue;
+      if (Y && Y !== X && !Y.guessed) { X.scene = Y.scene; X.people = X.people.map((p) => ({ ...p, act: resolveAct(p.act, Y.scene) })); }
+      errs.push(`${label} ${n}: ${X.guessed}; uso «${X.scene}».`);
+    }
     const lay = norm(f.layout);
     const layout = isTime ? 'time' : /lado|side|izq|vert/.test(lay) ? 'lr' : /arriba|abajo|top|bottom|horiz/.test(lay) ? 'ab' : null;
     // objeto concreto: el que nombre el título o subtítulo de cada lado; si no, el del TITULO del guion

@@ -186,21 +186,27 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
     job.sides.forEach((side0, i) => {
       // el lado malo hace lo mismo que el bueno hasta que se rinde: suenan las mismas acciones
       const role = roles ? roles[i] : null;
-      const side = role === 'bad' ? { ...side0, scene: job.sides[roles.indexOf('good')].scene, people: job.sides[roles.indexOf('good')].people } : side0;
-      const scene = SCENES[side.scene];
-      if (!scene || !scene.events) return;
+      const side = role === 'bad' ? { ...side0, scene: job.sides[roles.indexOf('good')].scene, people: job.sides[roles.indexOf('good')].people, segments: job.sides[roles.indexOf('good')].segments } : side0;
       if (isTime && i > 0) return; // mismo camino: los sonidos se calculan una vez
-      const S = { people: side.people, good: side0.good, bad: side0.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
       const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
-      for (const e of scene.events(S)) {
-        let t;
-        if (e.p != null) {
-          const pg = isTime ? timeEventP(tl.C, e.p) : role ? pathInv(tl, e.p, role) : e.p;
-          if (pg == null) continue;
-          t = tOfP(tl, pg);
-        } else t = tl.resStart + e.r * tl.res;
-        play(e.type, t, e, pan);
-      }
+      // varias escenas por lado: los sonidos de cada escena suenan en su tramo
+      const segs = !isTime && side.segments && side.segments.length > 1 ? side.segments : [{ scene: side.scene, people: side.people }];
+      segs.forEach((g, k) => {
+        const scene = SCENES[g.scene];
+        if (!scene || !scene.events) return;
+        const S = { people: g.people.filter((p) => p.act !== 'ausente'), good: side0.good, bad: side0.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
+        for (const e of scene.events(S)) {
+          let t;
+          if (e.p != null) {
+            const pl = (k + e.p) / segs.length;
+            const pg = isTime ? timeEventP(tl.C, pl) : role ? pathInv(tl, pl, role) : pl;
+            if (pg == null) continue;
+            t = tOfP(tl, pg);
+          } else if (k === segs.length - 1) t = tl.resStart + e.r * tl.res;
+          else continue;
+          play(e.type, t, e, pan);
+        }
+      });
     });
     if (roles) {
       // el momento difícil llega a los dos a la vez; el bueno se levanta (nota suave); el malo suspira y se queda

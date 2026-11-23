@@ -47,6 +47,7 @@ EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
+(Mejor con 3 o 4 escenas seguidas por lado, para que no aburra: «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos del camino A separados por >
 B-MOMENTOS: 8 sucesos del camino B separados por >
@@ -151,7 +152,7 @@ VOCABULARIO (usa solo estas palabras)
   Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
 - ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo):
   tocar-guitarra, leer-libro, beber-cafe, dar-flor, lanzar-pelota, escribir-lapiz, llevar-mochila, ponerse-sombrero, hacer-foto, dar-carta, comer-pan, contar-dinero, contar-monedas, usar-llave, dar-anillo, montar-bici, dar-regalo, llevar-maleta, encender-vela, atarse-zapatos, mirar-foto, alcanzar-estrella, sostener-globo, volar-cometa, ponerse-gafas, beber-agua, servir-plato, comer-manzana, llevar-pastel, abrazar-osito, llevar-planta, martillar, escribir-cuaderno, levantar-trofeo, escuchar-musica, cerrar-candado, sembrar-semilla, ponerse-corona
-  Más: caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
+  Más: bailar (dos personas bailan juntas: mano con mano, se mecen y ella gira bajo su brazo; vale en cualquier escena), caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
   Ejemplos: «sofa | hombre+mujer | tocar-guitarra+beber-cafe | se abrazan» · «camino | nina | montar-bici | llega» · «puente | hombre+mujer | construir+dar-flor | se unen».
 
 EJEMPLO

@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 21 nov 2026 (REGLA DE ORO DE GUIONES, punto 0: buscar primero los videos virales; línea INSPIRACION).
+Última actualización: 23 nov 2026 (varias escenas por lado, sin fotogramas negros, bailar, vida de los personajes, ausente con «se queda»).
 
 ---
 
@@ -162,8 +162,8 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 
 | Momento | Qué pasa |
 |---|---|
-| fotograma 0 | **Portada** (1 fotograma, ~0,03–0,2 s): los dos lados de la escena a mitad de la historia (ya se ve la diferencia; en «se rinde», después de rendirse; en «tiempo», con EN UN AÑO iluminado), sin los títulos de cada lado, con el **TITULO grande** sobre un velo negro, un **corazón rojo** encima y «DOS CAMINOS» / «TWO PATHS STORIES» pequeño. Es la miniatura del video (Fotos, Facebook, TikTok…). No cuenta como inicio de la historia: las reglas «empiezan iguales» y del arco valen desde el fotograma 1. Título: arriba-abajo centrado en y≈905 (sobre la línea divisoria), lados en y≈1150 (bajo el suelo), tiempo en y≈765. Código: `renderCover` en `js/render.js`. |
-| 0 – 1,8 s | **Gancho:** los dos lados iguales desde el primer fotograma + frase GANCHO + estrella fugaz + latido. |
+| fotograma 0 | **Portada** (~0,03–0,2 s; en la grabación en tiempo real se repinta en cada fotograma mientras arranca, para que no salga negro): los dos lados de la escena a mitad de la historia (ya se ve la diferencia; en «se rinde», después de rendirse; en «tiempo», con EN UN AÑO iluminado), sin los títulos de cada lado, con el **TITULO grande** sobre un velo negro, un **corazón rojo** encima y «DOS CAMINOS» / «TWO PATHS STORIES» pequeño. Es la miniatura del video (Fotos, Facebook, TikTok…). No cuenta como inicio de la historia: las reglas «empiezan iguales» y del arco valen desde el fotograma 1. Título: arriba-abajo centrado en y≈905 (sobre la línea divisoria), lados en y≈1150 (bajo el suelo), tiempo en y≈765. Código: `renderCover` en `js/render.js`. |
+| 0 – 1,8 s | **Gancho:** los dos lados iguales desde el primer fotograma, **ya dibujados (sin fundido desde negro)** + frase GANCHO + estrella fugaz + latido. |
 | 1,8 – momento difícil | Los dos hacen exactamente lo mismo; contador animado. |
 | momento difícil (38 % del desarrollo) | A los dos les pasa a la vez: caen o se cansan. |
 | después | El bueno se levanta y sigue; el malo lo intenta, se desanima y se queda sentado. |
@@ -171,6 +171,9 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 | cierre (3,5–6,5 s) | **Frase final** (FRASE tal cual; si no hay, el TITULO), grande, centrada y en blanco, con las palabras entre *asteriscos* en rojo + pregunta («¿Cuál de los dos eres tú?») + pequeño corazón rojo. El final se parece al inicio para que den ganas de verlo otra vez. |
 
 ### ⭐ Ritmo y sucesos (REGLA FIJA DE RITMO)
+
+- **SIN NEGRO:** ningún fotograma negro ni fundido a negro (TikTok los elegía como miniatura): fotograma 0 = portada; desde el fotograma 1 la escena ya está dibujada; al pasar de una escena a otra, fundido entre las dos; en el cierre la escena solo se atenúa un poco (el velo oscuro va solo detrás de la frase); en la grabación en tiempo real se repinta la portada al empezar y la última imagen al terminar. Comprobado leyendo fotograma a fotograma el principio, los segundos 1,5–2,6 y el final de un video creado.
+- **NADIE QUIETO («vida»):** cuando un personaje no está haciendo ningún suceso, hace pequeños gestos reales cada ~2,6 s: mira (levanta y gira la cabeza), cambia el peso de una pierna a otra (o se acomoda si está sentado) y mueve una mano. Quien usa una herramienta o un objeto solo mueve la cabeza; los acostados, nada. Son los mismos en los dos lados para el mismo momento y personaje (no rompe la regla del arco).
 
 - **Algo nuevo y visible cada 2–3 s; nunca más de 3 s de la misma acción repetida.**
 - 0–1,8 s: gancho (frase, estrella fugaz, latido). ~2,5 s: cada uno elige distinto. Desde ahí hasta el cierre, **un suceso detrás de otro**. Resultado: corazón grande. Cierre: frase (0,35 s), pregunta (1,5 s), corazoncito (2,1 s) y, en los cierres largos (30–60 s), una estrella fugaz como la del principio.
@@ -218,6 +221,16 @@ PREGUNTA_EN: closing question in natural US English
   FRASE_EN: Time never comes *back*
   ```
   → en el video: «El tiempo no **vuelve**» con «vuelve» en rojo. En los textos para publicar la frase va sin asteriscos.
+- **VARIAS ESCENAS POR LADO** (de 2 a 4, para que no aburra): en el campo de escena se encadenan con `>` y las acciones de cada escena también con `>` (en el mismo orden). Cada escena ocupa una parte igual del desarrollo y se pasa a la siguiente con un **fundido rápido (~0,3 s) entre las dos escenas, nunca a negro**. El final del lado se ve en la última escena. Los personajes son los mismos en todas.
+  ```
+  A: SE DESPIDEN Y SE LLAMAN CADA SEMANA | SEMANA {1-52} | casa>camino>telefono>sofa | mujer+nino | abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar | se abrazan
+  ```
+  También vale escribir la acción entre paréntesis junto a cada escena; en la última, el paréntesis puede ser el final:
+  ```
+  B: SE DESPIDEN Y ÉL NUNCA LLAMA | SEMANA {1-52} | casa(abrazar) > camino(llevar-maleta) > telefono(llamar+ignorar) > sofa(se alejan) | mujer+nino | abrazar+abrazar | se alejan
+  ```
+  (Una escena sin acción entre paréntesis usa las del campo de acciones.) En «se rinde», el lado malo sigue las escenas del bueno y se queda en la escena donde se rindió. No vale en el tipo «tiempo».
+- **Si un lado no trae escena** (p. ej. `ELLA GASTA | DÍA {1-30} | mujer | gastar | se vacía`), la app usa la escena del otro lado (los dos caminos comparten escena) y lo avisa; si ninguno la trae, la deduce de las acciones. Nunca pone el puente con una sola persona ni inventa a una segunda persona.
 - **MOMENTOS** (opcional, una línea por lado, también vale `MOMENTOS_A`): de 3 a 8 sucesos separados por `>`, escritos con palabras sencillas de la lista de §6 «Sucesos». No salen escritos en pantalla: se dibujan. Ejemplo:
   ```
   A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen
@@ -380,7 +393,8 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `aprovechar` / `perder` | Termina tareas una a una / mira el móvil mientras el reloj corre | `reloj \| hombre \| aprovechar` |
 | `llamar` / `ignorar` | Llama o contesta / deja sonar el teléfono | `telefono \| mujer+hombre \| llamar+llamar` |
 | `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
-| `ausente` | **No está con quien lo espera.** Sin recuadros: está a ras de suelo, en el mismo suelo de la escena, pero **al fondo y al otro lado**, más pequeño por la distancia, **en la calle** (farola con luz cálida y un banco si cabe), riéndose con el móvil o con **dos siluetas grises de amigos**. Entre los dos, **la pared de la casa con la puerta cerrada**. Quien espera se queda sola en su sitio. En `mesa`: la casa se corre hacia quien espera; su silla vacía, los dos platos (el suyo vacío) y la puerta justo detrás de la silla vacía; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. En las demás escenas, la escena se dibuja un poco más pequeña y corrida hacia quien se queda para dejar sitio a la pared y la calle. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
+| `bailar` | **Dos personas bailan juntas** (vale en cualquier escena): se colocan frente a frente delante de la escena, se dan una mano por delante (a la altura del hombro) y ponen la otra en la cintura u hombro del otro; se mecen juntas de lado a lado con **pasos que avanzan lo que se mueven**, rebotan un poco a cada tiempo (~97 por minuto) y cada 5 s ella/él (el segundo personaje) **gira bajo el brazo levantado** del primero. Una sola persona con `bailar` baila sola (se mece con los brazos al compás). En el final feliz se abrazan despacio. Al empezar están de pie en su sitio, iguales en los dos lados | `sofa \| hombre+mujer \| bailar+bailar \| se abrazan` |
+| `ausente` | **No está con quien lo espera.** Sin recuadros: está a ras de suelo, en el mismo suelo de la escena, pero **al fondo y al otro lado**, más pequeño por la distancia, **en la calle** (farola con luz cálida y un banco si cabe), riéndose con el móvil o con **dos siluetas grises de amigos**. Entre los dos, **la pared de la casa con la puerta cerrada**. Quien espera se queda sola en su sitio. En `mesa`: la casa se corre hacia quien espera; su silla vacía, los dos platos (el suyo vacío) y la puerta justo detrás de la silla vacía; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. En las demás escenas, la escena se dibuja un poco más pequeña y corrida hacia quien se queda para dejar sitio a la pared y la calle. Con `ausente` el lado malo es siempre de tipo «luchar solo» (aunque el final sea «se queda»), para que el ausente nunca aparezca en la escena con el otro. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |
 
 Ejemplo «ausente» (probado en 30 s, arriba-abajo y lados):
@@ -596,6 +610,7 @@ Ejemplos de cada final nuevo:
 | `js/scenes2.js` | Las 15 escenas nuevas |
 | `js/objects.js` | Los 38 objetos concretos y las palabras que los activan |
 | `js/uses.js` | Las acciones con objetos (pose y dónde va el objeto) |
+| `js/bailar.js` | Acción «bailar» (pareja que baila) y «vida» (gestos de los personajes quietos) |
 | `js/remux.js` | Cambiar la música de un MP4 ya creado sin recodificar el video (lee las muestras, normales o fragmentadas, y vuelve a empaquetar) |
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |

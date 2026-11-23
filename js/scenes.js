@@ -3,6 +3,7 @@
 import { drawObject } from './objects.js';
 import { figureMoments, drawFigureIcons, recordFigure, BUSY_ACTS, APART_SCENES } from './moments.js';
 import { USES, usePose, useLift, drawUseProp } from './uses.js';
+import { dancePose, lifePose } from './bailar.js';
 import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
 export const RED = '#E5484D';
@@ -56,6 +57,8 @@ function applyArc(pose, A, badAct) {
 }
 
 function drawFigure(ctx, o) {
+  // «bailar»: la pareja baila junta (se coloca, se mece, pasos y giros); al empezar, en su sitio y de pie
+  if (CUR && o.pe && o.pe.act === 'bailar') o = dancePose(o, CUR, NEUTRAL);
   // acción de uso real de un objeto (tocar-guitarra, beber-cafe…): pose propia y el objeto en la mano o el cuerpo
   const use = o.pe && USES[o.pe.act];
   const k = { ...(CUR ? { t: CUR.t, p: CUR.p, r: CUR.r, good: CUR.good } : { t: 0, p: 0, r: 0, good: true }), F: o.F, H: figureSize(o.kind, o.F), travel: o.travel };
@@ -89,6 +92,11 @@ function drawFigure(ctx, o) {
     mIdx = everyone.indexOf(o.pe);
     if (mIdx < 0) mIdx = everyone.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
     if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName) }); o = r.o; icons = r.icons; }
+  }
+  // VIDA: si no hace ningún suceso, pequeños gestos reales (mirar, cambiar el peso, mover una mano); nadie se queda quieto
+  if (CUR && o.pe && o.pe.act !== 'bailar' && !(icons && icons.length) && o.neutral !== 'none') {
+    const sitting = o.pose.fl1 > 0.8 || o.pose.bl1 > 0.8;
+    o = lifePose(o, mIdx >= 0 ? mIdx : 0, CUR.t, { busy: BUSY_ACTS.has(o.pe.act) || !!use || riding, standing: !sitting, sitting });
   }
   const fig = rawFigure(ctx, o);
   if (CUR) CUR._figs = (CUR._figs || 0) + 1; // para comprobar que solo salen los personajes del guion
