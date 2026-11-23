@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 23 nov 2026 (colores de fondo: negro, azul, marrón, vino y verde; línea FONDO).
+Última actualización: 23 nov 2026 (escena aeropuerto; nadie camina hacia atrás; hasta 5 escenas por lado).
 
 ---
 
@@ -118,6 +118,8 @@ Código: `js/figure.js` (muñequitos), `js/scenes.js` (escenas), `js/render.js` 
 | Llevar la maleta | Va detrás, tirada del asa extendida | Maleta con ruedas detrás y asa hasta la mano |
 | Conducir | Manos en el volante; las ruedas giran en el sentido de la marcha; la carretera pasa hacia atrás | Sí |
 | Regar | Inclina la regadera hacia la planta y el agua cae delante | Sí; al regar varias plantas camina de una a otra |
+| **Nunca hacia atrás** | Quien camina, corre, sube o va en bici mira siempre hacia donde avanza | A quien la escena hace caminar (camino, caminar, correr, subir, escalar, acercarse, alejarse, llevar-maleta, bici, subir-avion, llegar-avion) los gestos de MOMENTOS **no lo giran ni lo desplazan**: solo mueven los brazos y ponen su símbolo. Nadie va «detrás» de quien está caminando. La distancia de un gesto que acerca a alguien se fija al empezar (no se arrastra si el otro se mueve), los desplazamientos de una escena no pasan a la siguiente, y los gestos que necesitan al otro (abrazo, mano en el hombro, sujetar, dar el corazón) solo se hacen si el otro está en pantalla (si no, manos al pecho con un corazón). Comprobado fotograma a fotograma: quien se mueve mira hacia donde va |
+| Avión | Siempre con el morro por delante | Despega hacia la izquierda subiendo el morro y se aleja haciéndose pequeño; aterriza bajando desde la derecha (sobre la terminal) hacia la izquierda y frena. Comprobado: 0 fotogramas «de cola» |
 
 **Antes de subir una acción nueva:** comprobarla en imágenes en el lado de arriba y el de abajo (arriba-abajo) y en el izquierdo y el derecho (lados), con un adulto y con un niño, al principio, a la mitad y al final del video.
 
@@ -231,7 +233,7 @@ PREGUNTA_EN: closing question in natural US English
   FRASE_EN: Time never comes *back*
   ```
   → en el video: «El tiempo no **vuelve**» con «vuelve» en rojo. En los textos para publicar la frase va sin asteriscos.
-- **VARIAS ESCENAS POR LADO** (de 2 a 4, para que no aburra): en el campo de escena se encadenan con `>` y las acciones de cada escena también con `>` (en el mismo orden). Cada escena ocupa una parte igual del desarrollo y se pasa a la siguiente con un **fundido rápido (~0,3 s) entre las dos escenas, nunca a negro**. El final del lado se ve en la última escena. Los personajes son los mismos en todas.
+- **VARIAS ESCENAS POR LADO** (de 2 a 5, para que no aburra): en el campo de escena se encadenan con `>` y las acciones de cada escena también con `>` (en el mismo orden). Cada escena ocupa una parte igual del desarrollo y se pasa a la siguiente con un **fundido rápido (~0,3 s) entre las dos escenas, nunca a negro**. El final del lado se ve en la última escena. Los personajes son los mismos en todas.
   ```
   A: SE DESPIDEN Y SE LLAMAN CADA SEMANA | SEMANA {1-52} | casa>camino>telefono>sofa | mujer+nino | abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar | se abrazan
   ```
@@ -279,7 +281,7 @@ PREGUNTA_EN: Where do you want to be a year from now?
 
 Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2; 3 en `mesa`), bien colocados y con el mismo sello. Cada escena tiene un decorado propio que se reconoce desde el primer segundo, para que los videos no parezcan repetidos.
 
-### Escenas (25)
+### Escenas (26)
 
 | Escena | Qué se ve | Acciones | Ejemplo de línea |
 |---|---|---|---|
@@ -308,6 +310,7 @@ Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2
 | `reloj` | Reloj grande en la pared; tareas que pasan de una pila a otra | aprovechar, perder | `B: DEJA PASAR LAS HORAS \| HORA {1-24} \| reloj \| hombre \| perder \| pierden` |
 | `telefono` | Dos casas; ondas de una llamada; al final una línea naranja las une | llamar, ignorar | `B: NO CONTESTA \| LLAMADA {1-15} \| telefono \| mujer+hombre \| llamar+ignorar \| pierden` |
 | `regalo` | Caja con lazo (rojo solo al abrirla) y estante de regalos guardados | dar, guardar (2.º: esperar) | `A: LO DA A TIEMPO \| DÍA {1-30} \| regalo \| hombre+nina \| dar+esperar \| se unen` |
+| `aeropuerto` | Terminal con ventanal encendido y torre, pista con rayas y un avión de perfil con ventanillas cálidas y escalerilla. **subir-avion**: camina tirando de la maleta hasta la escalerilla, sube un escalón por paso con la maleta en la mano y entra; se va la escalerilla, el avión rueda, levanta el morro, despega y **se va haciendo pequeño en el cielo** con su estela hasta ser una lucecita roja. **llegar-avion**: el avión aparece pequeño en el cielo sobre la terminal, baja creciendo, aterriza y frena; llega la escalerilla, baja con la maleta y camina hacia quien lo espera (con final bueno, se abrazan). **despedirse**: dice adiós con la mano y luego mira cómo se va el avión. **esperar**: espera mirando al cielo. Vale en guiones de varias escenas | despedirse, subir-avion, llegar-avion, esperar | `A: SE VA LEJOS \| AÑO {1-3} \| aeropuerto \| mujer+hombre \| despedirse+subir-avion \| llega` |
 
 ### Objetos concretos (38)
 

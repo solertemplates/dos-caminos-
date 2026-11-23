@@ -48,7 +48,7 @@ FONDO: azul | marron | vino | verde | negro | aleatorio (opcional: color oscuro 
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
-(Mejor con 3 o 4 escenas seguidas por lado, para que no aburra: «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
+(Mejor con 3 a 5 escenas seguidas por lado, para que no aburra: «casa>camino>aeropuerto>telefono>casa» o «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
 B: TÍTULO DEL CAMINO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos del camino A separados por >
 B-MOMENTOS: 8 sucesos del camino B separados por >
@@ -145,6 +145,8 @@ VOCABULARIO (usa solo estas palabras)
   reloj: aprovechar, perder
   telefono: llamar, ignorar
   regalo: dar, guardar (el 2.º personaje recibe: esperar)
+  aeropuerto: despedirse, subir-avion (sube con la maleta y el avión despega y se hace pequeño en el cielo), llegar-avion (el avión aterriza y baja con la maleta), esperar
+  Ejemplo de varias escenas con avión: A: SE VA LEJOS, PERO LA LLAMA Y VUELVE | AÑO {1-3} | casa>camino>aeropuerto>telefono>casa | mujer+hombre | abrazar+abrazar>esperar+llevar-maleta>despedirse+subir-avion>llamar+llamar>abrazar+abrazar | se abrazan
 - final bueno: crece, florece, se unen, se llena, llega, ganan, se abrazan, se despiertan, se secan (solo en lluvia)
 - final malo: se seca, se apaga, se vacía, se mojan, pierden, se queda, se queda atrás, nunca se completa, se cae, se alejan, llega-agotado
 - Varía las escenas: que cada guion use una escena distinta para que los videos no se repitan.

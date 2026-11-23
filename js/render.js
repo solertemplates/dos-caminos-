@@ -32,6 +32,7 @@ function paintBackground(ctx, job) {
   setBG(mid(P.edge, P.center));
 }
 import './scenes2.js';
+import './aeropuerto.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
 
@@ -347,7 +348,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
     S = {
       // «ausente»: no está en la escena principal (solo salen los presentes); se dibuja aparte, pequeño, en otro lugar
       w: pn.stageW, F: pn.F, people: side.people.filter((p) => p.act !== 'ausente'), allPeople: side.people, absent: side.people.filter((p) => p.act === 'ausente'), good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
-      p: dr.p, r: ps.r, t, C: tl.C, seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
+      p: dr.p, r: ps.r, t, C: tl.C,
+      // cuándo empezó esta escena (los desplazamientos de escenas anteriores no pasan a la nueva)
+      segT0: dr.seg === segs[0] ? -Infinity : tOfP(tl, role ? pathInv(tl, segs.indexOf(dr.seg) / nSeg, role) ?? 1 : segs.indexOf(dr.seg) / nSeg), seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
@@ -387,6 +390,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
       if (S.absent.length) { S.recInv = S.sceneTx || null; drawAbsent(ctx, S, S.absent); S.recInv = null; }
     });
     if (job.countFigs) job.countFigs[i] = Math.max(job.countFigs[i] || 0, S._figs || 0);
+    if (job.planeLog && S._plane) job.planeLog[i] = S._plane; // (pruebas: dónde está el avión)
     setNeutral(0);
     setCurrent(null);
     S.sceneAlpha = sceneAlpha;

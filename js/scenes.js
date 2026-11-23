@@ -4,6 +4,9 @@ import { drawObject } from './objects.js';
 import { figureMoments, drawFigureIcons, recordFigure, BUSY_ACTS, APART_SCENES } from './moments.js';
 import { USES, usePose, useLift, drawUseProp } from './uses.js';
 import { dancePose, lifePose } from './bailar.js';
+// quienes la escena hace caminar (todo el video): los gestos no los giran ni los desplazan (nunca caminan hacia atrás)
+const WALK_ACTS = new Set(['caminar', 'correr', 'levantarse', 'caer', 'subir', 'escalar', 'acercarse', 'alejarse', 'llevar-maleta', 'montar-bici', 'caer-bici', 'levantarse-bici', 'subir-avion', 'llegar-avion']);
+const isWalker = (scene, act) => WALK_ACTS.has(act) || (scene === 'camino' && !['sentarse', 'descansar', 'celular', 'phone'].includes(act));
 import { drawFigure as rawFigure, POSES, lerpPose, walkPose, breathe, figureSize, WHITE, BG } from './figure.js';
 
 export const RED = '#E5484D';
@@ -91,7 +94,7 @@ function drawFigure(ctx, o) {
     const everyone = CUR.allPeople || CUR.people; // los índices de los sucesos son los del guion (también el ausente)
     mIdx = everyone.indexOf(o.pe);
     if (mIdx < 0) mIdx = everyone.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
-    if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName) }); o = r.o; icons = r.icons; }
+    if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName), walker: isWalker(CUR.sceneName, o.pe.act), segT0: CUR.segT0 ?? -Infinity }); o = r.o; icons = r.icons; }
   }
   // VIDA: si no hace ningún suceso, pequeños gestos reales (mirar, cambiar el peso, mover una mano); nadie se queda quieto
   if (CUR && o.pe && o.pe.act !== 'bailar' && !(icons && icons.length) && o.neutral !== 'none') {

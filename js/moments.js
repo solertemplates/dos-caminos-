@@ -583,14 +583,26 @@ export function figureMoments(o, idx, now, info = {}) {
   const icons = [];
   const lying = o.pose.tr > 1.2;
   const sitting = o.pose.fl1 > 0.8 || o.pose.bl1 > 0.8;
-  const standing = !lying && !sitting && !info.riding && (o.pose.tr || 0) < 0.6;
+  const P0 = now.pos || {};
+  // ¿lo está moviendo la escena (camina, corre, va en bici)? Entonces los gestos no lo giran ni lo desplazan:
+  // si no, al mirar o acercarse a quien queda detrás, parecería que camina hacia atrás
+  const prev = P0[idx];
+  const dt = prev && prev.t != null ? Math.abs(now.t - prev.t) : 0;
+  const movingNow = dt > 0 && dt < 0.5 && Math.abs(o.x - prev.bx) / dt > 0.03 * o.F;
+  // también entre paso y paso (escenas que caminan a tramos): si la escena lo movió hace menos de 1,2 s, sigue «caminando»
+  const lastMove = movingNow ? now.t : prev && prev.lastMove != null && now.t >= prev.lastMove ? prev.lastMove : -99;
+  const walking = !!info.riding || !!info.walker || movingNow || now.t - lastMove < 1.2;
+  o = { ...o, _lastMove: lastMove };
+  const standing = !lying && !sitting && !info.riding && !walking && (o.pose.tr || 0) < 0.6;
   const hits = (e) => e.who === 'all' || e.who === idx;
   const partner = (e) => (e.target >= 0 && e.target !== idx ? e.target : idx === 0 ? 1 : 0);
-  const P = now.pos || {};
+  // solo posiciones de ahora (si alguien no se dibuja —dentro del avión, en otra escena—, su posición vieja no vale)
+  const P = {};
+  for (const [k, v] of Object.entries(now.pos || {})) if (v && v.t != null && now.t >= v.t && now.t - v.t < 0.2) P[k] = v;
   const walkLegs = (pose, d, kk) => lerpPose(pose, { ...pose, ...legsOf(walkPose(Math.abs(d) / (o.F * 0.4) * Math.PI)) }, smooth(Math.min(kk, 1 - kk) * 8));
   // movimientos que se quedan: se aleja / se acerca, y acercarse al otro para darle el corazón, la mano en el hombro o el abrazo
   for (const e of now.moves) {
-    if (e.type === 'llega' || !hits(e) || !standing || e.iconOnly || info.busy || info.apart) continue;
+    if (e.type === 'llega' || !hits(e) || !standing || e.iconOnly || info.busy || info.apart || e.t0 < (info.segT0 ?? -Infinity)) continue;
     const M = MOMENTS[e.type];
     if (M.approach) {
       const tp = P[partner(e)];
@@ -598,11 +610,19 @@ export function figureMoments(o, idx, now, info = {}) {
       const me = P[idx];
       const gap = M.approach === 'mid' ? 0.13 : M.approach;
       let dest;
-      if (M.approach === 'mid') { const b0 = me ? me.bx : o.x; dest = (b0 + tp.bx) / 2 - Math.sign(tp.bx - b0) * gap * o.F; }
+      // punto medio con las posiciones de ESTA escena (no las de una escena anterior)
+      if (M.approach === 'mid') { const b0 = o.x, b1 = tp.t === now.t || (tp.t != null && Math.abs(now.t - tp.t) < 0.2) ? tp.bx : tp.x; dest = (b0 + b1) / 2 - Math.sign(b1 - b0) * gap * o.F; }
       else dest = tp.x - Math.sign(tp.x - o.x) * gap * o.F;
       let D = dest - o.x;
       // demasiado lejos (otra casa, otra orilla): no cruza paredes ni precipicios; el gesto se hace desde su sitio
       if (Math.abs(tp.x - o.x) > 1.7 * o.F || Math.sign(D) !== Math.sign(tp.x - o.x)) D = 0;
+      // nunca se va detrás de alguien que está caminando (lo dejaría atrás o lo haría retroceder)
+      if (tp.lastMove != null && now.t - tp.lastMove < 1.2) D = 0;
+      // la distancia se fija una vez, al empezar el gesto (si no, al moverse el otro se arrastraría hacia atrás)
+      const memo = now.pos.__moves || (now.pos.__moves = {});
+      const key = `${e.t0.toFixed(3)}:${e.type}:${idx}`;
+      if (memo[key] == null) memo[key] = D;
+      D = memo[key];
       if (Math.abs(D) < 0.03 * o.F) continue;
       const kw = clamp((now.t - e.t0) / Math.min(1.2, (e.t1 - e.t0) * 0.38));
       const d = D * smooth(kw);
@@ -619,7 +639,7 @@ export function figureMoments(o, idx, now, info = {}) {
     o = { ...o, x: o.x + dir * d, facing: walking ? dir : away ? dir : o.facing, pose: walking ? lerpPose(o.pose, walkPose(d / (o.F * 0.4) * Math.PI), smooth(Math.min(k, 1 - k) * 8)) : o.pose, alpha: (o.alpha ?? 1) * (away ? 1 - 0.35 * smooth(k) : 1) };
   }
   for (const e of now.hold || []) {
-    if (!hits(e) || lying || info.busy) continue;
+    if (!hits(e) || lying || info.busy || e.t0 < (info.segT0 ?? -Infinity)) continue;
     let target = poseFor('tristeza', o.pose, now.t - e.t0, { ...e, k: 1 }, standing);
     if (!standing || info.riding) target = upperOf(o.pose, target);
     o = { ...o, pose: target };
@@ -633,11 +653,13 @@ export function figureMoments(o, idx, now, info = {}) {
       if (e0.type === 'dar-corazon' && e0.target === idx) { e = { ...e0, type: 'recibir-corazon', target: e0.who }; role = 'recv'; }
       else continue;
     }
-    const tp = P[partner(e)];
-    // mirar hacia el otro (o darle la espalda)
+    let tp = P[partner(e)];
+    // gestos que necesitan al otro en pantalla (abrazo, mano en el hombro, sujetarlo, darle el corazón):
+    // si no está (dentro del avión, en otra escena…), se lleva las manos al pecho con un corazón (lo piensa desde lejos)
+    if (!tp && ['abrazo-largo', 'abraza', 'estoy-contigo', 'sujeta', 'dar-corazon'].includes(e.type) && (now.pos || {})[partner(e)] !== undefined) { e = { ...e, type: 'corazon' }; }
     const face = role === 'recv' ? 'target' : M.face;
     // (también sentado: se gira en el asiento; acostado o en bici, no)
-    if (face && tp && !lying && !info.riding && !info.busy && !e.iconOnly && Math.abs(tp.x - o.x) > 0.05 * o.F) {
+    if (face && tp && !lying && !info.riding && !walking && !info.busy && !e.iconOnly && Math.abs(tp.x - o.x) > 0.05 * o.F) {
       const dir = Math.sign(tp.x - o.x) * (face === 'away' ? -1 : 1);
       if (e.env > 0.5) o = { ...o, facing: dir };
     }
@@ -646,7 +668,7 @@ export function figureMoments(o, idx, now, info = {}) {
     if (allowPose) {
       let target = poseFor(e.type, o.pose, e.lt, e, standing);
       if (target) {
-        if (!standing || info.riding) target = upperOf(o.pose, target);
+        if (!standing || info.riding || walking) target = upperOf(o.pose, target);
         if (info.busy) target = { ...o.pose, tr: target.tr ?? o.pose.tr, hd: target.hd ?? o.pose.hd };
         o = { ...o, pose: lerpPose(o.pose, target, e.env) };
         const free = standing && !info.busy;
@@ -676,7 +698,7 @@ const legsOf = (p) => ({ fl1: p.fl1, fl2: p.fl2, bl1: p.bl1, bl2: p.bl2 });
 // guarda dónde quedó cada personaje (para el siguiente fotograma)
 export function recordFigure(now, idx, bx, o, fig) {
   if (!now || !now.pos) return;
-  now.pos[idx] = { bx, x: o.x, H: fig.H, head: fig.head, chest: [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3], hands: [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2] };
+  now.pos[idx] = { t: now.t, lastMove: o._lastMove, bx, x: o.x, facing: o.facing, H: fig.H, head: fig.head, chest: [fig.shoulder[0] * 0.7 + fig.hip[0] * 0.3, fig.shoulder[1] * 0.7 + fig.hip[1] * 0.3], hands: [(fig.fh[0] + fig.bh[0]) / 2, (fig.fh[1] + fig.bh[1]) / 2] };
 }
 
 // corazoncito rojo (el que se entregan)
