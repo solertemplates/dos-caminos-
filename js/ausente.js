@@ -2,7 +2,7 @@
 // Está en OTRO lugar, en el mismo suelo de la escena pero al fondo y al otro lado, más pequeño por la distancia:
 // en la calle, junto a una farola (y un banco si cabe), riéndose con el móvil o con dos siluetas grises de amigos.
 // Entre los dos, la pared de la casa con la puerta cerrada. Los amigos son siluetas del decorado, no personajes.
-import { drawFigure as rawFigure, POSES, lerpPose, breathe, WHITE } from './figure.js';
+import { drawFigure as rawFigure, POSES, lerpPose, breathe, WHITE, BG } from './figure.js';
 import { kit, glow, AMBER, smooth } from './scenes.js';
 
 // dónde está la pared y hacia qué lado queda la calle (la escena «mesa» lo fija en S.outside)
@@ -44,7 +44,7 @@ export function drawAbsent(ctx, S, list) {
   ctx.strokeStyle = WHITE; ctx.lineCap = 'round';
   ctx.globalAlpha = 0.85; ctx.lineWidth = Math.max(2, F * 0.016);
   ctx.beginPath(); ctx.moveTo(wallX, 0); ctx.lineTo(wallX, -wh); ctx.stroke();
-  ctx.globalAlpha = 0.95; ctx.fillStyle = '#000';
+  ctx.globalAlpha = 0.95; ctx.fillStyle = BG;
   ctx.fillRect(wallX - dw / 2, -dh, dw, dh);
   ctx.lineWidth = Math.max(1.6, F * 0.012);
   ctx.strokeRect(wallX - dw / 2, -dh, dw, dh);

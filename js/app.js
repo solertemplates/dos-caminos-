@@ -2,7 +2,7 @@
 import { parseScripts } from './parser.js';
 import { APP_VERSION } from './version.js';
 import { EXAMPLES } from './examples.js';
-import { makeTimeline, layoutFor, makeStars, renderCover } from './render.js';
+import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES } from './render.js';
 import { renderAudio } from './audio.js';
 import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
 import { remuxWithAudio } from './remux.js';
@@ -222,6 +222,16 @@ function scriptSeed(script, opts) {
   for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0) % 100000;
 }
+// FONDO: el del guion; si no trae (o dice «aleatorio»), uno al azar distinto del del video anterior
+function pickBg(script, opts) {
+  if (opts.bg) return opts.bg; // al rehacer (portada, cambiar música): el mismo color que tenía el video
+  let last = '';
+  try { last = localStorage.getItem('dc.lastBg') || ''; } catch (e) {}
+  let bg = script.bg && script.bg !== 'aleatorio' && BG_NAMES.includes(script.bg) ? script.bg : null;
+  if (!bg) { const pool = BG_NAMES.filter((b) => b !== last); bg = pool[Math.floor(Math.random() * pool.length)]; }
+  try { localStorage.setItem('dc.lastBg', bg); } catch (e) {}
+  return bg;
+}
 function buildJob(script, idx, opts) {
   const lang = opts.lang;
   const en = lang === 'en';
@@ -247,7 +257,7 @@ function buildJob(script, idx, opts) {
   // la misma semilla para el mismo guion: crear el mismo guion varias veces da el mismo video
   const seed = opts.seed ?? scriptSeed(script, opts);
   return {
-    tl, seed, layoutKind, lang,
+    tl, seed, layoutKind, lang, bg: pickBg(script, opts),
     layout: layoutFor(layoutKind),
     stars: makeStars(seed),
     sides: script.sides,
@@ -324,7 +334,7 @@ async function makeOne(sc, idx, opts) {
     coverBuf: cover ? await cover.arrayBuffer() : null, coverType: 'image/jpeg',
     phrase: v.phrase || '', question: v.question || '', // para los comentarios
     // receta para rehacer el audio (música + efectos) sin volver a dibujar el video
-    recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {} }, seed: job.seed, layoutKind: job.layoutKind },
+    recipe: { script: sc, idx, opts: { duration: D, lang: opts.lang, total: opts.total, finals: opts.finals || {}, bg: job.bg }, seed: job.seed, layoutKind: job.layoutKind },
   };
 }
 

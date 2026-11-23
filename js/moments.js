@@ -3,7 +3,7 @@
 // «llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen»); si no, la app elige
 // sucesos variados para la escena. Aquí está: la lista de sucesos que se saben dibujar,
 // cómo se lee cada frase, el reparto en el tiempo y el dibujo (escenario, personajes y contador).
-import { POSES, lerpPose, walkPose, drawFigure as rawFigure, figureSize, WHITE } from './figure.js';
+import { POSES, lerpPose, walkPose, drawFigure as rawFigure, figureSize, WHITE, BG } from './figure.js';
 import { glow, heart, RED, AMBER, GOLD, smooth, clamp } from './scenes.js';
 import { drawObject } from './objects.js';
 
@@ -358,7 +358,7 @@ function drawSun(ctx, S, a, k) {
 }
 function drawNight(ctx, S, a) {
   const { l, r, top, bot } = S.box;
-  ctx.save(); ctx.globalAlpha = 0.26 * a; ctx.fillStyle = '#000'; ctx.fillRect(l, top, r - l, bot - top); ctx.restore();
+  ctx.save(); ctx.globalAlpha = 0.26 * a; ctx.fillStyle = BG; ctx.fillRect(l, top, r - l, bot - top); ctx.restore();
   const [x, y] = skySpot(S);
   ctx.save(); ctx.globalAlpha = 0.85 * a; ctx.fillStyle = '#E9E4D6';
   ctx.beginPath(); ctx.arc(x, y, S.F * 0.1, 0, 7); ctx.fill();

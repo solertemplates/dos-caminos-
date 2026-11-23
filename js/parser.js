@@ -16,6 +16,7 @@ const KEY = {
   frase: 'phrase', reflexion: 'phrase', phrase: 'phrase',
   pregunta: 'question', question: 'question',
   etapas: 'stages', stages: 'stages', momentos: 'stages',
+  fondo: 'bg', background: 'bg', color: 'bg',
   inspiracion: 'inspiration', inspiration: 'inspiration', // de qué video viral sale la idea (no se dibuja)
 };
 
@@ -227,6 +228,10 @@ function splitBlocks(text) {
   return out;
 }
 
+// FONDO: azul / marron / vino / verde / negro / aleatorio (sin línea = aleatorio)
+const BG_ALIAS = { negro: 'negro', black: 'negro', azul: 'azul', 'azul marino': 'azul', marino: 'azul', 'azul noche': 'azul', navy: 'azul', blue: 'azul', marron: 'marron', cafe: 'marron', brown: 'marron', vino: 'vino', granate: 'vino', burdeos: 'vino', wine: 'vino', verde: 'verde', green: 'verde', aleatorio: 'aleatorio', random: 'aleatorio' };
+function bgName(v) { const n = norm(v || '').replace(/[^a-z ]/g, '').trim(); return BG_ALIAS[n] || BG_ALIAS[n.split(' ')[0]] || 'aleatorio'; }
+
 export function parseScripts(text) {
   const scripts = [];
   const errors = [];
@@ -286,6 +291,7 @@ export function parseScripts(text) {
       layout,
       hook: f.hook || '',
       phrase: f.phrase || '',
+      bg: bgName(f.bg),
       question: f.question || '',
       sides: isTime ? [A, A, A] : [A, B],
       stages: isTime ? stagesOf(f.stages, ['HOY', 'EN UN MES', 'EN UN AÑO']) : null,

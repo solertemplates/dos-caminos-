@@ -3,7 +3,9 @@
 // Torso: 0 = vertical, positivo = inclinado hacia delante.
 
 export const WHITE = '#F4F2EC';
-export const BG = '#000000';
+// color del fondo del video (lo fija render.js en cada fotograma); se usa para tapar líneas (saya, colina…)
+export let BG = '#000000';
+export function setBG(c) { BG = c; }
 
 const LEGS_STAND = { fl1: 0.06, fl2: 0.02, bl1: -0.06, bl2: -0.05 };
 const LEGS_SIT = { fl1: 1.5, fl2: 0.05, bl1: 1.45, bl2: -0.02 };

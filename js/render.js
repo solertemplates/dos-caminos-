@@ -2,7 +2,35 @@
 import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral, setCurrent, objState } from './scenes.js';
 import { drawObject } from './objects.js';
 import { USES } from './uses.js';
-import { WHITE } from './figure.js';
+import { WHITE, setBG } from './figure.js';
+
+// FONDOS: color oscuro sólido + degradado circular suave y opaco en el centro (el centro un poco más claro).
+// Todos con el mismo contraste que el negro para los personajes blancos, el texto y el corazón rojo.
+export const BACKGROUNDS = {
+  negro: { edge: '#000000', center: '#0b0b0d' },
+  azul: { edge: '#040814', center: '#0d1830' },
+  marron: { edge: '#0c0704', center: '#1e130b' },
+  vino: { edge: '#0e0408', center: '#22080f' },
+  verde: { edge: '#030b08', center: '#0a1b14' },
+};
+export const BG_NAMES = Object.keys(BACKGROUNDS);
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const mid = (a, b) => '#' + hexRgb(a).map((v, i) => Math.round((v + hexRgb(b)[i]) / 2).toString(16).padStart(2, '0')).join('');
+export function bgOf(job) { return BACKGROUNDS[job.bg] || BACKGROUNDS.negro; }
+// velos oscuros (detrás de la frase final, la portada, la noche): del color del fondo, no negro puro
+export function veil(job, a) { const [r, g, b] = hexRgb(bgOf(job).edge); return `rgba(${r},${g},${b},${a})`; }
+function paintBackground(ctx, job) {
+  const P = bgOf(job);
+  ctx.fillStyle = P.edge;
+  ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W / 2, H * 0.47, 0, W / 2, H * 0.47, H * 0.62);
+  g.addColorStop(0, P.center);
+  g.addColorStop(1, P.edge);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  // lo que «tapa» líneas (la saya, la colina, la luna…) se pinta con el color medio del degradado: no se nota la mancha
+  setBG(mid(P.edge, P.center));
+}
 import './scenes2.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
@@ -256,8 +284,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
   const st = stateAt(tl, t);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.globalAlpha = 1;
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, W, H);
+  paintBackground(ctx, job); // color del fondo (FONDO del guion); estrellas, fugaces y efectos, igual que siempre
   drawStars(ctx, job.stars, t);
   if (t < 1.2) shootingStar(ctx, t);
 
@@ -443,9 +470,9 @@ export function renderFrame(ctx, job, t, scale = 1) {
     {
       const v = smooth((e - 0.1) / 0.6);
       const g = ctx.createLinearGradient(0, topY - 160, 0, topY + 430);
-      g.addColorStop(0, `rgba(0,0,0,${0.85 * v})`);
-      g.addColorStop(0.45, `rgba(0,0,0,${0.78 * v})`);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
+      g.addColorStop(0, veil(job, 0.85 * v));
+      g.addColorStop(0.45, veil(job, 0.78 * v));
+      g.addColorStop(1, veil(job, 0));
       ctx.globalAlpha = 1;
       ctx.fillStyle = g;
       ctx.fillRect(0, topY - 160, W, 590);
@@ -577,7 +604,7 @@ export function renderCover(ctx, job, scale = 1) {
   const top = yC - blockH / 2;
   // velo negro suave detrás del título para que se lea limpio
   const g = ctx.createLinearGradient(0, top - 190, 0, top + blockH + 120);
-  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.28, 'rgba(0,0,0,0.82)'); g.addColorStop(0.8, 'rgba(0,0,0,0.82)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  g.addColorStop(0, veil(job, 0)); g.addColorStop(0.28, veil(job, 0.82)); g.addColorStop(0.8, veil(job, 0.82)); g.addColorStop(1, veil(job, 0));
   ctx.fillStyle = g;
   ctx.fillRect(0, top - 190, W, blockH + 310);
   // corazón rojo encima del título

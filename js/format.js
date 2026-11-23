@@ -44,6 +44,7 @@ TITULO: título corto (distinto en cada guion)
 FRASE: frase final fuerte que aparece grande al terminar el video, tal cual (siempre; pon *una palabra clave* entre asteriscos para que salga en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
+FONDO: azul | marron | vino | verde | negro | aleatorio (opcional: color oscuro del fondo; si no lo pones, la app elige uno sin repetir el del video anterior)
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final

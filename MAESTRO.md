@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 23 nov 2026 (varias escenas por lado, sin fotogramas negros, bailar, vida de los personajes, ausente con «se queda»).
+Última actualización: 23 nov 2026 (colores de fondo: negro, azul, marrón, vino y verde; línea FONDO).
 
 ---
 
@@ -70,7 +70,16 @@ Web app para iPhone (GitHub Pages, se instala con «Añadir a pantalla de inicio
 
 ## 2. Sello fijo de «Dos Caminos» (no cambiar nunca)
 
-1. **Fondo negro con estrellitas** que aparecen y desaparecen suavemente, como en el universo (no se desplazan).
+1. **Fondo oscuro con estrellitas** que aparecen y desaparecen suavemente, como en el universo (no se desplazan). El fondo es un **color oscuro sólido con un degradado circular suave y opaco en el centro** (el centro un poco más claro). Hay 5 colores, para que los videos no se vean todos iguales:
+   | FONDO | Borde | Centro |
+   |---|---|---|
+   | `negro` | #000000 | #0b0b0d |
+   | `azul` (azul marino / azul noche) | #040814 | #0d1830 |
+   | `marron` | #0c0704 | #1e130b |
+   | `vino` (vino / granate oscuro) | #0e0408 | #22080f |
+   | `verde` (verde muy oscuro) | #030b08 | #0a1b14 |
+
+   Todos tienen el mismo contraste que el negro (medido en el centro, la parte más clara): personajes blancos 15,8–17,6 : 1 (negro 17,6), corazón rojo 4,5–4,8 : 1 (negro 5,0), texto gris claro ~7 : 1, ámbar ~10 : 1. **Solo cambia el color**: las estrellitas, las estrellas fugaces, la luna, los cometas y todos los efectos y detalles siguen igual. Lo que «tapa» líneas (la saya, la colina que esconde el sol, la luna de la cama, la puerta de `ausente`) y los velos oscuros (detrás de la frase final, la portada, la noche) toman el color del fondo, no negro puro. La **portada** usa el mismo color que su video. Código: `BACKGROUNDS` y `paintBackground` en `js/render.js`.
 2. **Muñequitos blancos** con la misma simetría y proporciones del video del puente: cabeza redonda blanca rellena, cuerpo y extremidades de palitos blancos, siempre **dos brazos y dos piernas** y siempre **pisando el suelo** (o de rodillas / sentados, apoyados). Movimientos suaves.
    - La **muñequita** lleva **moñito atrás** y **sayita** sencilla.
    - Sin nombres, sin caras, sin protagonista fijo.
@@ -192,6 +201,7 @@ TITULO: título corto (distinto en cada guion)
 FRASE: frase final del video, tal cual (siempre, fuerte; *palabra* en rojo)
 TEMA: pareja | familia | hijos | dinero | trabajo | amistad | salud | movil | constancia | fe
 EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
+FONDO: azul | marron | vino | verde | negro | aleatorio   (opcional)
 DIVISION: arriba-abajo | lados | tiempo
 GANCHO: frase de 3 a 6 palabras
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
@@ -231,6 +241,7 @@ PREGUNTA_EN: closing question in natural US English
   ```
   (Una escena sin acción entre paréntesis usa las del campo de acciones.) En «se rinde», el lado malo sigue las escenas del bueno y se queda en la escena donde se rindió. No vale en el tipo «tiempo».
 - **Si un lado no trae escena** (p. ej. `ELLA GASTA | DÍA {1-30} | mujer | gastar | se vacía`), la app usa la escena del otro lado (los dos caminos comparten escena) y lo avisa; si ninguno la trae, la deduce de las acciones. Nunca pone el puente con una sola persona ni inventa a una segunda persona.
+- **FONDO** (opcional): `azul`, `marron`, `vino`, `verde`, `negro` o `aleatorio` (también valen «azul marino», «marrón», «granate»…). Si no viene la línea (o dice `aleatorio`, o un color que no existe), la app elige uno al azar **sin repetir el color del video anterior**. El color se guarda con cada video (la portada, «Cambiar música» y la portada rehecha usan el mismo).
 - **MOMENTOS** (opcional, una línea por lado, también vale `MOMENTOS_A`): de 3 a 8 sucesos separados por `>`, escritos con palabras sencillas de la lista de §6 «Sucesos». No salen escritos en pantalla: se dibujan. Ejemplo:
   ```
   A-MOMENTOS: llueve > se cubren juntos > ella tropieza > él la sujeta > se ríen
