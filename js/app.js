@@ -304,17 +304,19 @@ async function makeOne(sc, idx, opts) {
     canvas: $('#stage'), job, audio, D, scale: S.quality, signal: abort.signal, force,
     onProgress: (k) => { $('#progBar').style.width = `${((idx + k) / opts.total) * 100}%`; },
   });
-  // En iPhone se graba en tiempo real mientras se investiga por qué el método rápido sale mudo
-  // (Ajustes → Diagnóstico → «Método en iPhone» permite probar el rápido).
-  const iosForced = isIOS() && S.iosMethod !== 'fast';
-  let out = await enc(iosForced ? 'realtime' : undefined);
+  // En iPhone, por defecto el método ESTABLE: imagen a 30 fps constantes (H.264, fotograma clave cada segundo)
+  // y la música grabada en tiempo real (el AAC que suena en Fotos), en un MP4 normal → CapCut sin tirones.
+  // (Ajustes → Diagnóstico → «Método en iPhone» permite probar los otros.)
+  const iosMode = isIOS() ? S.iosMethod2 || 'estable' : null;
+  const iosForced = iosMode && iosMode !== 'fast' ? iosMode : false;
+  let out = await enc(iosForced || undefined);
   let mp4 = await inspectOut(out);
   let heard = await hearMp4(out);
   const encDiag = [...out.diag.tried];
   // comprobación final dentro del archivo: si el MP4 no trae la música entera, se rehace en tiempo real
   const mixLoud = (audio.__info?.whole?.rms || 0) > 0.01;
   const mute = (h) => h && h.decoded && mixLoud && h.whole.rms < 0.002;
-  if (out.method === 'webcodecs' && (!audioOk(mp4, D) || mute(heard)) && out.diag.support.mediaRecorder) {
+  if ((out.method === 'webcodecs' || out.method === 'estable') && (!audioOk(mp4, D) || mute(heard)) && out.diag.support.mediaRecorder) {
     encDiag.push({ method: 'comprobación del MP4', ok: false, error: !audioOk(mp4, D) ? (mp4 ? `audio en el MP4: ${mp4.tracks.find((t) => t.kind === 'audio') ? 'incompleto' : 'ninguno'}` : 'no se pudo leer el MP4') : 'el audio del MP4 se oye en silencio' });
     const out2 = await enc('realtime');
     encDiag.push(...out2.diag.tried);
@@ -407,7 +409,7 @@ $('#remusicGo').addEventListener('click', async () => {
     const song = await pickSong(rec.recipe?.script?.emotion || 'emotiva', $('#remusicSel').value);
     st.textContent = 'Preparando la música nueva…';
     const audio = await renderAudio({ job, D, musicData: song?.data, sfxOn: !!rec.recipe && S.sfx, sfxVol: S.sfxVol, musicVol: S.musicVol });
-    const realtime = isIOS() && S.iosMethod !== 'fast';
+    const realtime = isIOS() && S.iosMethod2 !== 'fast';
     if (realtime) st.textContent = `Grabando la música nueva (${D} s)… deja la pantalla encendida.`;
     const a = await encodeAudioOnly(audio, { realtime, onProgress: (k) => { if (realtime) st.textContent = `Grabando la música nueva… ${Math.round(k * 100)} %`; } });
     info.audio = { method: a.method, codec: a.codec, chunks: a.chunks.length };
@@ -943,7 +945,7 @@ bindSetting('#musicVol', 'musicVol', (e) => Number(e.value), (e, v) => (e.value 
 bindSetting('#layoutSel', 'layout', (e) => e.value, (e, v) => (e.value = v));
 bindSetting('#qualitySel', 'quality', (e) => Number(e.value), (e, v) => (e.value = String(v)));
 bindSetting('#sfxOn', 'sfx', (e) => e.checked, (e, v) => (e.checked = v));
-bindSetting('#iosMethod', 'iosMethod', (e) => e.value, (e, v) => (e.value = v));
+bindSetting('#iosMethod', 'iosMethod2', (e) => e.value, (e, v) => (e.value = v));
 bindSetting('#starNote', 'starNote', (e) => e.checked, (e, v) => (e.checked = v));
 
 function paintSettings() { paintPhrases(); paintSongs(); }

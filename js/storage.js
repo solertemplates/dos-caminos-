@@ -87,7 +87,9 @@ export const DEFAULTS = {
   starNote: true,
   handle: '',
   music: 'random', // 'random' o el id de una canción del banco
-  iosMethod: 'realtime', // en iPhone: 'realtime' (seguro) o 'fast' (WebCodecs, en prueba)
+  // en iPhone: 'estable' (30 fps constantes + música en tiempo real, por defecto), 'realtime' (antiguo: fotogramas
+  // irregulares, CapCut va a tirones) o 'fast' (WebCodecs, en prueba). Clave nueva para que nadie se quede en el antiguo.
+  iosMethod2: 'estable',
 };
 export const settings = {
   get: () => ({ ...DEFAULTS, ...LS.get('settings', {}) }),

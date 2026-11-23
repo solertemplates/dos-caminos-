@@ -213,11 +213,12 @@
       <p class="hint">Muestra qué pasó en el último video: si tiene música dentro, qué formato salió, qué método usó el iPhone y qué error hubo al crear o al guardar.</p>
       <label class="field"><span>Método en iPhone</span>
         <select id="iosMethod">
-          <option value="realtime">Tiempo real (seguro)</option>
+          <option value="estable">Estable (recomendado)</option>
+          <option value="realtime">Tiempo real (antiguo)</option>
           <option value="fast">Rápido (en prueba)</option>
         </select>
       </label>
-      <p class="hint">«Tiempo real» graba el video mientras se reproduce: tarda lo que dura el video y hay que dejar la pantalla encendida, pero la música sale bien. «Rápido» es el método que salía sin sonido; úsalo solo para probar si ya funciona.</p>
+      <p class="hint">«Estable» crea el video a 30 fotogramas por segundo constantes (H.264, un fotograma clave cada segundo) y graba la música en tiempo real: CapCut, TikTok y Facebook lo leen sin tirones. Tarda lo que dura el video; deja la pantalla encendida. «Tiempo real» es el método antiguo (fotogramas irregulares: en CapCut va a tirones). «Rápido» es el método que salía sin sonido; úsalo solo para probar.</p>
       <button class="chip strong" id="diagShow" type="button">Ver diagnóstico del último video</button>
       <pre class="diag" id="diagOut" hidden></pre>
       <button class="chip" id="diagCopy" type="button" hidden>Copiar diagnóstico</button>

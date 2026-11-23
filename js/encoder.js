@@ -11,12 +11,12 @@ export async function detectSupport(width, height) {
   if (support && support.w === width) return support;
   const s = { w: width, webcodecs: false, vcodec: null, mr: null };
   try {
-    if (typeof VideoEncoder !== 'undefined' && typeof AudioEncoder !== 'undefined' && typeof VideoFrame !== 'undefined') {
+    if (typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined') {
       for (const codec of VCODECS) {
         const r = await VideoEncoder.isConfigSupported({ codec, width, height, bitrate: 6_000_000, framerate: FPS });
         if (r.supported) { s.vcodec = codec; break; }
       }
-      const a = await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: 48000, numberOfChannels: 2, bitrate: 128000 });
+      const a = typeof AudioEncoder !== 'undefined' ? await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: 48000, numberOfChannels: 2, bitrate: 128000 }) : { supported: false };
       s.webcodecs = !!(s.vcodec && a.supported);
     }
   } catch (e) { console.warn(e); }
@@ -78,6 +78,19 @@ export async function encodeVideo({ canvas, job, audio, D, scale, onProgress, si
       if (signal?.aborted) throw e;
       diag.tried.push({ method: 'rápido (WebCodecs)', ok: false, error: `${e.name}: ${e.message}` });
       console.warn('WebCodecs falló, uso MediaRecorder', e);
+    }
+  }
+  // ESTABLE (iPhone, por defecto): imagen a 30 fps constantes con el codificador H.264 del teléfono
+  // y la música grabada en tiempo real (el AAC que suena en Fotos), juntas en un MP4 normal
+  if (force === 'estable' && sup.vcodec && sup.mr) {
+    try {
+      const out = await encodeStable({ canvas, ctx, job, audio, D, scale, width, height, codec: sup.vcodec, onProgress, signal });
+      diag.tried.push({ method: 'estable (imagen a 30 fps constantes + música en tiempo real)', ok: true, ...out.diag });
+      return { ...out, method: 'estable', diag };
+    } catch (e) {
+      if (signal?.aborted) throw e;
+      diag.tried.push({ method: 'estable', ok: false, error: `${e.name}: ${e.message}` });
+      console.warn('estable falló, uso tiempo real', e);
     }
   }
   if (!sup.mr) throw new Error('Este navegador no puede crear video. Actualiza iOS/Safari.');
@@ -149,7 +162,7 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
     // fotograma 0 = portada (la miniatura del video); la historia empieza en el fotograma 1
     if (i === 0) renderCover(ctx, job, scale); else renderFrame(ctx, job, i / FPS, scale);
     const vf = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
-    venc.encode(vf, { keyFrame: i % (FPS * 2) === 0 });
+    venc.encode(vf, { keyFrame: i % FPS === 0 }); // fotograma clave cada segundo (regular)
     vf.close();
     while (venc.encodeQueueSize > 6) await sleep(2);
     if (i % 6 === 0) { onProgress?.(i / frames); await sleep(0); }
@@ -163,6 +176,68 @@ async function encodeWebCodecs({ canvas, ctx, job, audio, D, scale, width, heigh
   venc.close();
   aenc.close();
   return { blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4', diag: { videoCodec: codec, aacChunks: audioChunks, aacSeconds: +(audioUs / 1e6).toFixed(2), adtsHeadersRemoved: adts, aacConfigFromSafari: descFromEncoder ? safariDesc : 'no', aacConfigUsed: hex(asc), aacBytesPerBlock: `media ${Math.round(aBytes / Math.max(1, audioChunks))}, mín ${aMin === Infinity ? 0 : aMin}, máx ${aMax}` } };
+}
+
+// MÉTODO ESTABLE: 30 fps constantes (cada fotograma dura exactamente 1/30 s), fotograma clave cada segundo,
+// H.264 + AAC en un MP4 normal (no fragmentado). CapCut, TikTok y Facebook lo leen sin tirones.
+// La imagen la codifica el iPhone fotograma a fotograma (no depende de cuándo pinta la pantalla);
+// mientras tanto la música se graba en tiempo real con MediaRecorder (el AAC que sí suena en Fotos).
+async function encodeStable({ canvas, ctx, job, audio, D, scale, width, height, codec, onProgress, signal }) {
+  const amime = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'].find((m) => { try { return MediaRecorder.isTypeSupported(m); } catch (e) { return false; } });
+  if (!amime) throw new Error('MediaRecorder no graba audio MP4');
+  let aProg = 0, vProg = 0;
+  const prog = () => onProgress?.(Math.min(aProg, vProg));
+  // 1) la música empieza a grabarse ya (tarda lo que dura el video)
+  const audioP = recordAudio(audio, amime, (k) => { aProg = k; prog(); }, signal);
+  audioP.catch(() => {});
+  // 2) mientras, la imagen: fotograma i en t = i/30 exactos
+  const vchunks = [];
+  let err = null, keys = 0;
+  const venc = new VideoEncoder({ output: (c, m) => { vchunks.push({ c, m }); if (c.type === 'key') keys++; }, error: (e) => (err = e) });
+  venc.configure({ codec, width, height, bitrate: scale >= 1 ? 8_000_000 : 5_000_000, framerate: FPS, latencyMode: 'quality', avc: { format: 'avc' } });
+  const frames = Math.round(D * FPS);
+  for (let i = 0; i < frames; i++) {
+    if (signal?.aborted) { try { venc.close(); } catch (e) {} throw new DOMException('cancelado', 'AbortError'); }
+    if (err) throw err;
+    if (i === 0) renderCover(ctx, job, scale); else renderFrame(ctx, job, i / FPS, scale);
+    const vf = new VideoFrame(canvas, { timestamp: Math.round((i * 1e6) / FPS), duration: Math.round(1e6 / FPS) });
+    venc.encode(vf, { keyFrame: i % FPS === 0 }); // fotograma clave cada segundo
+    vf.close();
+    while (venc.encodeQueueSize > 6) await sleep(2);
+    if (i % 6 === 0) { vProg = i / frames; prog(); await sleep(0); }
+  }
+  await venc.flush();
+  venc.close();
+  if (err) throw err;
+  vProg = 1;
+  if (vchunks.length < frames) throw new Error(`el codificador dio ${vchunks.length} de ${frames} fotogramas`);
+  // 3) esperar a la música y juntarlo todo
+  const a = await audioP;
+  if (signal?.aborted) throw new DOMException('cancelado', 'AbortError');
+  // en iPhone MediaRecorder graba AAC; (solo en las pruebas del ordenador se admite Opus: Chromium no tiene AAC)
+  if (a.codec !== 'aac' && !(a.codec === 'opus' && globalThis.__dcTestOpus)) throw new Error(`audio grabado en ${a.codec}, no AAC`);
+  // se quita el silencio del arranque de la grabación (la música empieza en el fotograma 0)
+  const leadUs = Math.max(0, Math.round((a.lead || 0) * 1e6));
+  const ach = trimLead(a).chunks.filter((c) => c.ts < D * 1e6);
+  const audioUs = ach.length ? ach[ach.length - 1].ts + ach[ach.length - 1].dur - ach[0].ts : 0; // de principio a fin
+  if (!ach.length || audioUs < D * 1e6 * 0.9) throw new Error(`audio incompleto (${(audioUs / 1e6).toFixed(1)} s de ${D} s)`);
+  const target = new ArrayBufferTarget();
+  const muxer = new Muxer({
+    target,
+    video: { codec: 'avc', width, height, frameRate: FPS },
+    audio: { codec: a.codec === 'opus' ? 'opus' : 'aac', numberOfChannels: a.channels, sampleRate: a.sampleRate },
+    fastStart: 'in-memory',
+    firstTimestampBehavior: 'offset',
+  });
+  for (const { c, m } of vchunks) muxer.addVideoChunk(c, m);
+  const asc = a.codec === 'opus' ? a.description : a.description && a.description.byteLength >= 2 ? a.description : aacConfig(a.sampleRate, a.channels);
+  ach.forEach((c, i) => muxer.addAudioChunkRaw(c.data, 'key', c.ts, c.dur, i === 0 ? { decoderConfig: { codec: a.codec === 'opus' ? 'opus' : 'mp4a.40.2', sampleRate: a.sampleRate, numberOfChannels: a.channels, ...(asc ? { description: asc } : {}) } } : undefined));
+  muxer.finalize();
+  onProgress?.(1);
+  return {
+    blob: new Blob([target.buffer], { type: 'video/mp4' }), ext: 'mp4', mime: 'video/mp4', realtime: true,
+    diag: { videoCodec: codec, frames: vchunks.length, fps: FPS, keyFrames: keys, recorderMime: amime, aacBlocks: ach.length, aacSeconds: +(audioUs / 1e6).toFixed(2), audioLeadRemovedMs: Math.round(leadUs / 1000), aacConfig: asc ? hex(asc) : "" },
+  };
 }
 
 async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgress, signal }) {
@@ -215,7 +290,7 @@ async function encodeRealtime({ canvas, ctx, job, audio, D, scale, mime, onProgr
 export async function encodeAudioOnly(audio, { realtime = false, onProgress } = {}) {
   if (realtime) {
     const mime = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'].find((m) => { try { return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m); } catch (e) { return false; } });
-    if (mime) return { ...(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
+    if (mime) return { ...trimLead(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
   }
   const tries = [
     { codec: 'aac', cfg: { codec: 'mp4a.40.2', sampleRate: audio.sampleRate, numberOfChannels: 2, bitrate: 160000 } },
@@ -228,7 +303,7 @@ export async function encodeAudioOnly(audio, { realtime = false, onProgress } = 
     }
   }
   const mime = ['audio/mp4;codecs=mp4a.40.2', 'audio/mp4'].find((m) => { try { return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(m); } catch (e) { return false; } });
-  if (mime) return { ...(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
+  if (mime) return { ...trimLead(await recordAudio(audio, mime, onProgress)), method: 'tiempo real' };
   throw new Error('este navegador no puede crear audio para MP4');
 }
 
@@ -260,7 +335,16 @@ async function encodeAudioWC(audio, codec, cfg, onProgress) {
   return { codec, sampleRate: audio.sampleRate, channels: 2, description: description && description.byteLength >= (codec === 'opus' ? 18 : 2) ? description : codec === 'aac' ? aacConfig(audio.sampleRate, 2) : undefined, chunks };
 }
 
-async function recordAudio(audio, mime, onProgress) {
+// quita los bloques AAC del silencio del arranque (desde que empieza a grabar hasta que suena la música)
+function trimLead(a) {
+  const leadUs = Math.max(0, Math.round((a.lead || 0) * 1e6));
+  let ch = a.chunks.filter((c) => c.ts + c.dur / 2 >= leadUs);
+  if (!ch.length) ch = a.chunks;
+  const base = ch[0].ts;
+  return { ...a, chunks: ch.map((c) => ({ ...c, ts: c.ts - base })) };
+}
+
+async function recordAudio(audio, mime, onProgress, signal) {
   const own = !(sharedAC && sharedAC.state !== 'closed');
   const ac = own ? new (window.AudioContext || window.webkitAudioContext)({ sampleRate: audio.sampleRate }) : sharedAC;
   await ac.resume();
@@ -272,15 +356,19 @@ async function recordAudio(audio, mime, onProgress) {
   const parts = [];
   rec.ondataavailable = (e) => e.data.size && parts.push(e.data);
   const done = new Promise((r) => (rec.onstop = r));
+  // cuándo empieza de verdad la grabación (para quitar el silencio del principio)
+  let recAt = null;
+  const started = new Promise((r) => (rec.onstart = () => { recAt = ac.currentTime; r(); }));
   rec.start(500);
+  await Promise.race([started, sleep(1500)]);
   const t0 = ac.currentTime + 0.05;
   src.start(t0);
   const D = audio.duration;
-  while (ac.currentTime - t0 < D) { onProgress?.((ac.currentTime - t0) / D); await sleep(200); }
+  while (ac.currentTime - t0 < D && !signal?.aborted) { onProgress?.((ac.currentTime - t0) / D); await sleep(200); }
   await sleep(150);
   rec.stop();
   await done;
   try { src.stop(); } catch (e) {}
   if (own) ac.close();
-  return audioChunksFromMp4(await new Blob(parts).arrayBuffer());
+  return { ...audioChunksFromMp4(await new Blob(parts).arrayBuffer()), lead: recAt == null ? 0 : Math.max(0, t0 - recAt) };
 }
