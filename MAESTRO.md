@@ -3,9 +3,27 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 24 nov 2026 (v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 24 nov 2026 (v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
+
+## ⭐ FÓRMULA DOS CAMINOS (usar SIEMPRE al escribir guiones)
+
+1. Un símbolo visual que se entienda sin leer (puente, hucha, fuego, avión, cama vacía).
+2. Toca un MIEDO, un DOLOR o un SUEÑO real del que mira.
+3. Varias escenas por lado (30 s: 4-5; 60 s: hasta 10), con una historia que avanza en el tiempo.
+4. PLANO: mixto, con primer plano en los momentos emotivos. ANGULO: mixto.
+5. FONDO según la emoción (azul distancia, vino traición o celos, marrón familia, verde salud o esperanza).
+6. PORTADA de 3-5 palabras, una en rojo, corazón roto o entero.
+7. Los dos caminos empiezan IGUALES; la diferencia aparece en el segundo 2-3.
+8. Suspenso hasta el final: el golpe llega en los últimos 5 segundos, con una imagen que duela y una frase para compartir.
+9. Voz en tercera persona, 27-28 s, menos de 500 caracteres, frases cortas y pausas.
+10. Nunca repetir tema. El móvil no siempre es el malo.
+11. Prioridad: pareja, madre e hijo, emigración, familia hispana.
+12. Primero el guion de la app, luego la voz.
+13. Cada guion debe superar al anterior.
+
+El botón «Copiar instrucciones para Claude» (`js/format.js`) empieza con esta misma fórmula.
 
 ## ⭐ REGLA DE ORO (para escribir guiones)
 
