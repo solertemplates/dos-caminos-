@@ -260,8 +260,10 @@ export function planMoments(job, info) {
   const drawn = (i) => (roles && roles[i] === 'bad' ? job.sides[gi] : job.sides[i]);
   const mk = (i, seedK) => {
     const side = job.sides[i], ds = drawn(i);
-    const user = (side.moments || []).map((txt) => ({ ...classifyMoment(txt, ds.people) }));
-    return sidePlan({ user, T0, T1, seed: job.seed * 7 + seedK, role: roles ? roles[i] : isTime ? 'good' : side.good ? 'good' : 'bad', people: ds.people, scene: ds.scene, arcWin, late0 });
+    // el reparto completo del lado (con personajes por escena, todos los que salen en alguna escena)
+    const cast = ds.cast && ds.cast.length > ds.people.length ? ds.cast : ds.people;
+    const user = (side.moments || []).map((txt) => ({ ...classifyMoment(txt, cast) }));
+    return sidePlan({ user, T0, T1, seed: job.seed * 7 + seedK, role: roles ? roles[i] : isTime ? 'good' : side.good ? 'good' : 'bad', people: cast, scene: ds.scene, arcWin, late0 });
   };
   if (isTime) {
     const one = mk(0, 1);
@@ -275,7 +277,7 @@ export function planMoments(job, info) {
   if (roles) {
     const bi = roles.indexOf('bad');
     const own = plans[bi].filter((e) => e.t0 >= info.tD);
-    plans[bi] = plans[gi].filter((e) => e.t0 < info.tD).map((e) => ({ ...e, t1: Math.min(e.t1, info.tD + 0.35) })).concat(own); // se apaga después de tD (antes, idéntico)
+    plans[bi] = plans[gi].filter((e) => e.t0 < info.tD).map((e) => (e.t1 > info.tD + 0.35 ? { ...e, cut: info.tD + 0.35 } : e)).concat(own); // misma duración (antes de tD, idéntico) y se apaga justo después de tD
     // y el bueno no cambia lo suyo antes de tD (su plan es la referencia)
   }
   return plans;
@@ -295,9 +297,9 @@ export function momentsNow(plan, t) {
     if (M.kind === 'fig' && !M.move) { if (e.who === 'all') { for (const k in lastFig) lastFig[k] = null; lastFig.all = e; } else { lastFig[e.who] = e; } }
     if (M.weather) { weatherPrev = weather; weather = e; }
     if (M.move || M.approach) moves.push(e);
-    if (t <= e.t1) {
+    if (t <= e.t1 && !(e.cut != null && t > e.cut)) {
       const k = clamp((t - e.t0) / (e.t1 - e.t0));
-      const env = smooth((t - e.t0) / 0.3) * (1 - smooth((t - e.t1 + 0.32) / 0.32));
+      const env = smooth((t - e.t0) / 0.3) * (1 - smooth((t - e.t1 + 0.32) / 0.32)) * (e.cut != null ? 1 - smooth((t - e.cut + 0.32) / 0.32) : 1);
       act.push({ ...e, k, env, lt: t - e.t0, dur: e.t1 - e.t0 });
     }
   }

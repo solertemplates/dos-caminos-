@@ -3,7 +3,7 @@
 import { drawObject } from './objects.js';
 import { figureMoments, drawFigureIcons, recordFigure, BUSY_ACTS, APART_SCENES } from './moments.js';
 import { USES, usePose, useLift, drawUseProp } from './uses.js';
-import { dancePose, lifePose } from './bailar.js';
+import { dancePose, lifePose, familyPose } from './bailar.js';
 // quienes la escena hace caminar (todo el video): los gestos no los giran ni los desplazan (nunca caminan hacia atrás)
 const WALK_ACTS = new Set(['caminar', 'correr', 'levantarse', 'caer', 'subir', 'escalar', 'acercarse', 'alejarse', 'llevar-maleta', 'montar-bici', 'caer-bici', 'levantarse-bici', 'subir-avion', 'llegar-avion']);
 const isWalker = (scene, act) => WALK_ACTS.has(act) || (scene === 'camino' && !['sentarse', 'descansar', 'celular', 'phone'].includes(act));
@@ -16,6 +16,33 @@ export function setNeutral(v) { NEUTRAL = v; }
 // estado de la escena que se está dibujando (lo fija render.js) para las acciones con objetos
 let CUR = null;
 export function setCurrent(S) { CUR = S; }
+// PERSONAJES QUE LA ESCENA NO DIBUJA (muchas escenas dibujan 1 o 2 personas): con hasta 3 por escena, los que faltan
+// se dibujan junto a los demás (un niño, entre sus padres o al lado del adulto), con su acción, gestos y sucesos.
+// Nunca se añade a nadie que no esté en el guion.
+export function drawExtras(ctx, S) {
+  const drawn = S._drawn || new Set();
+  // solo el tercero (y siguientes): si una escena deja sin dibujar a uno de los dos primeros es a propósito
+  // (p. ej. va dentro del avión), y entonces no se le dibuja
+  const left = (S.people || []).filter((p, i) => i >= 2 && !drawn.has(p) && p.act !== 'ausente');
+  if (!left.length) return;
+  const pos = [];
+  // dónde están los que sí se dibujaron (este fotograma)
+  const P = S.moments && S.moments.pos;
+  for (const p of S.people || []) if (drawn.has(p) && P && P[p.pid ?? -1] && Math.abs(P[p.pid].t - S.t) < 0.2) pos.push(P[p.pid]);
+  const F = S.F;
+  left.forEach((pe, j) => {
+    const kid = pe.kind === 'nino' || pe.kind === 'nina';
+    let x, facing = 1;
+    if (pos.length >= 2 && !APART_SCENES.has(S.sceneName)) { const a = pos[0].bx, b = pos[1].bx; x = (a + b) / 2 + (Math.abs(a - b) < F * 0.5 ? F * 0.32 : 0); facing = a < x ? -1 : 1; }
+    else if (pos.length) { x = pos[0].bx + (pos[0].facing || 1) * F * (kid ? 0.34 : 0.45); facing = -(pos[0].facing || 1); }
+    else x = -S.w * 0.2 + j * F * 0.4;
+    x = Math.max(-S.w / 2 + F * 0.15, Math.min(S.w / 2 - F * 0.15, x + j * F * 0.3));
+    const phone = pe.act === 'celular' || pe.act === 'phone' || pe.act === 'ignorar';
+    const pose = breathe(phone ? POSES.phone : POSES.stand, S.t + j);
+    const fig = drawFigure(ctx, { x, pose, F, facing, kind: pe.kind, pe, alpha: personDim(S) });
+    if (phone && S.r < 0.5 && fig) phoneAt(ctx, fig.fh, F);
+  });
+}
 export { isWalker, rawFigure };
 function neutralPose(pose) {
   const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
@@ -63,6 +90,9 @@ function applyArc(pose, A, badAct) {
 function drawFigure(ctx, o) {
   // «bailar»: la pareja baila junta (se coloca, se mece, pasos y giros); al empezar, en su sitio y de pie
   if (CUR && o.pe && o.pe.act === 'bailar') o = dancePose(o, CUR, NEUTRAL);
+  // «abrazar-hijo»: los padres se agachan y abrazan al niño (el niño en medio), contentos
+  if (CUR && o.pe) o = familyPose(o, CUR, NEUTRAL);
+  if (CUR && o.pe) (CUR._drawn = CUR._drawn || new Set()).add(o.pe); // quién ha dibujado ya la escena
   // acción de uso real de un objeto (tocar-guitarra, beber-cafe…): pose propia y el objeto en la mano o el cuerpo
   const use = o.pe && USES[o.pe.act];
   const k = { ...(CUR ? { t: CUR.t, p: CUR.p, r: CUR.r, good: CUR.good } : { t: 0, p: 0, r: 0, good: true }), F: o.F, H: figureSize(o.kind, o.F), travel: o.travel };
@@ -95,10 +125,12 @@ function drawFigure(ctx, o) {
     const everyone = CUR.allPeople || CUR.people; // los índices de los sucesos son los del guion (también el ausente)
     mIdx = everyone.indexOf(o.pe);
     if (mIdx < 0) mIdx = everyone.findIndex((p) => p.kind === o.pe.kind && p.act === o.pe.act);
-    if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: BUSY_ACTS.has(o.pe.act) && !use, apart: APART_SCENES.has(CUR.sceneName), walker: isWalker(CUR.sceneName, o.pe.act), segT0: CUR.segT0 ?? -Infinity }); o = r.o; icons = r.icons; }
+    // número fijo de la persona en todo el guion (personajes por escena): el mismo en todas las escenas
+    if (mIdx >= 0 && everyone[mIdx].pid != null) mIdx = everyone[mIdx].pid;
+    if (mIdx >= 0 && NEUTRAL < 0.5) { const r = figureMoments(o, mIdx, CUR.moments, { riding, busy: (BUSY_ACTS.has(o.pe.act) && !use) || !!o.familyHug, apart: APART_SCENES.has(CUR.sceneName), walker: isWalker(CUR.sceneName, o.pe.act) || !!o.familyHug, segT0: CUR.segT0 ?? -Infinity }); o = r.o; icons = r.icons; }
   }
   // VIDA: si no hace ningún suceso, pequeños gestos reales (mirar, cambiar el peso, mover una mano); nadie se queda quieto
-  if (CUR && o.pe && o.pe.act !== 'bailar' && !(icons && icons.length) && o.neutral !== 'none') {
+  if (CUR && o.pe && o.pe.act !== 'bailar' && !o.familyHug && !(icons && icons.length) && o.neutral !== 'none') {
     const sitting = o.pose.fl1 > 0.8 || o.pose.bl1 > 0.8;
     o = lifePose(o, mIdx >= 0 ? mIdx : 0, CUR.t, { busy: BUSY_ACTS.has(o.pe.act) || !!use || riding, standing: !sitting, sitting });
   }
@@ -130,6 +162,12 @@ function drawFigure(ctx, o) {
   if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons, CUR.moments);
   // vista aérea: se apunta cada figura (con dónde está la escena dibujándola) para dibujarla desde arriba
   if (CUR && CUR.collect) CUR.collect.push({ o, icons, use: use && !riding ? use : null, k, offerHeart, m: ctx.getTransform ? ctx.getTransform() : null });
+  // abrazo de familia: un corazoncito sube de vez en cuando sobre el niño (contentos)
+  if (o.familyHug > 0.5 && o.pe && (o.pe.kind === 'nino' || o.pe.kind === 'nina') && !(CUR && CUR.collect)) {
+    const q = (CUR.t % 2.4) / 2.4, hx = fig.head[0], hy = fig.head[1] - o.F * (0.25 + 0.35 * q);
+    glow(ctx, fig.head[0], fig.head[1], o.F * 0.45, AMBER, 0.35 * o.familyHug);
+    heart(ctx, hx, hy, o.F * 0.09, RED, Math.sin(q * Math.PI) * o.familyHug);
+  }
   if (offerHeart > 0) {
     const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
     const dim = 1 - 0.5 * smooth((CUR.r - 0.5) / 0.4);

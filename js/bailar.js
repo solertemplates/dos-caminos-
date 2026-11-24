@@ -78,3 +78,41 @@ export function lifePose(o, idx, t, { busy = false, standing = true, sitting = f
   }
   return { ...o, pose: p };
 }
+
+// «abrazar-hijo»: los padres (los adultos con abrazar-hijo) se agachan de rodillas a los lados del niño y lo abrazan;
+// el niño en medio, con los brazos abiertos alrededor de ellos; se mecen un poco, contentos (corazoncitos que suben).
+// Vale en cualquier escena: en las escenas con muebles en el centro, el abrazo va a un lado.
+const FURNITURE = new Set(['sofa', 'mesa', 'cama', 'cocina', 'oficina', 'tienda', 'libros', 'gimnasio', 'regalo', 'carta', 'coche', 'alcancia', 'reloj', 'fogata', 'arbol', 'escalera', 'aeropuerto']);
+const isKid = (p) => p && (p.kind === 'nino' || p.kind === 'nina');
+export function familyMembers(S) {
+  const all = (S.allPeople || S.people || []).filter((p) => p.act !== 'ausente');
+  const adults = all.filter((p) => !isKid(p) && p.act === 'abrazar-hijo');
+  if (!adults.length) return null;
+  const kid = all.find(isKid);
+  if (!kid) return null;
+  return { adults: adults.slice(0, 2), kid };
+}
+export function familyPose(o, S, neutral = 0) {
+  const fam = familyMembers(S);
+  if (!fam || (!fam.adults.includes(o.pe) && o.pe !== fam.kid)) return o;
+  const t = S.t, F = o.F;
+  const c = S.familyX ?? (FURNITURE.has(S.sceneName) ? -S.w * 0.3 : 0);
+  const sway = Math.sin(t * 1.6) * 0.05;
+  const gap = F * 0.21;
+  let x, facing, pose;
+  if (o.pe === fam.kid) {
+    x = c;
+    facing = fam.adults.length > 1 ? 1 : 1;
+    const bounce = 0.5 + 0.5 * Math.sin(t * 3.2);
+    pose = { tr: 0.02 + sway * 0.4, hd: -0.25 + 0.05 * bounce, fa1: 1.85 + 0.1 * bounce, fa2: 2.25, ba1: 1.75 + 0.1 * bounce, ba2: 2.2, fl1: 0.06, fl2: 0.02, bl1: -0.06, bl2: -0.05 };
+  } else {
+    const j = fam.adults.indexOf(o.pe);
+    const side = fam.adults.length === 1 ? -1 : j === 0 ? -1 : 1;
+    x = c + side * gap;
+    facing = -side;
+    // de rodillas, inclinados hacia el niño, con los brazos rodeándolo
+    pose = { tr: 0.22 + sway, hd: 0.15, fa1: 1.2, fa2: 1.85, ba1: 1.05, ba2: 1.7, fl1: 0.12, fl2: -1.5, bl1: 0.0, bl2: -1.6 };
+  }
+  const k = 1 - neutral;
+  return { ...o, x: o.x + (x - o.x) * k, facing: k > 0.5 ? facing : o.facing, pose: lerpPose(o.pose, pose, k), familyHug: k, y: (o.y || 0) * (1 - k) };
+}

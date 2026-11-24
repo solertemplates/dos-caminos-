@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 24 nov 2026 (v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 24 nov 2026 (v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -342,7 +342,7 @@ PREGUNTA_EN: Where do you want to be a year from now?
 
 ## 6. Vocabulario completo que entiende el formato
 
-Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2; 3 en `mesa`), bien colocados y con el mismo sello. Cada escena tiene un decorado propio que se reconoce desde el primer segundo, para que los videos no parezcan repetidos.
+Regla: **todas las escenas dibujan a todos los personajes del guion** (hasta 3 en cualquier escena: 2 adultos y un niño o una niña), bien colocados y con el mismo sello. Cada escena tiene un decorado propio que se reconoce desde el primer segundo, para que los videos no parezcan repetidos.
 
 ### Escenas (26)
 
@@ -434,7 +434,14 @@ Regla: **todas las escenas dibujan a todos los personajes del guion** (máximo 2
 | `nino` | niño, más pequeño (también: hijo) | `hombre+nino` |
 | `nina` | niña, con moñito y sayita (también: hija) | `mujer+nina` |
 
-Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mismo orden que los personajes: `hombre+mujer | construir+esperar`. Si hay menos acciones que personajes, se repite la última.
+Se unen con `+`. **Hasta 3 personajes en cualquier escena: 2 adultos y un niño o una niña pequeños** (con más, la app usa los 3 primeros y avisa). Las acciones van en el mismo orden que los personajes: `hombre+mujer | construir+esperar`. Si hay menos acciones que personajes, se repite la última.
+
+- **El tercero en escenas pensadas para dos:** muchas escenas dibujan a 1 o 2 personas; el tercero (normalmente el niño) se dibuja junto a los demás (entre sus padres, o al lado del adulto en las escenas de dos casas u orillas), con su acción, sus gestos y sus sucesos. Si una escena deja sin dibujar a uno de los dos primeros es a propósito (p. ej. va dentro del avión) y no se le dibuja. Nunca se añade a nadie que no esté en el guion.
+- **⭐ Personajes por escena** (guiones de varias escenas): si el campo de personajes lleva `>`, cada parte son los personajes de esa escena, en el mismo orden que las escenas (si hay menos partes que escenas, las que faltan repiten la última y la app avisa):
+  ```
+  A: ABRAZAN A SU HIJO Y SIGUEN CUIDÁNDOSE | AÑO {1-20} | casa>sofa>escalera>abrazo | hombre+mujer+nino>hombre+mujer>hombre+mujer>hombre+mujer | abrazar-hijo+abrazar-hijo+abrazar>hablar+abrazar>subir+subir>acercarse+acercarse | se abrazan
+  ```
+  En la primera escena papá y mamá abrazan a su niño, felices; en las siguientes, la pareja sola. Cada persona es **la misma en todas las escenas** (un número fijo por persona: «él», «ella», «el niño» de los MOMENTOS son siempre los mismos, aunque cambie el orden). **Sin `>`, todo funciona igual que antes** (comprobado: los mismos videos, píxel a píxel). Ángulos, planos, fondo y la regla del arco siguen igual (comprobado: ≤ 59 píxeles distintos, estrellas, también con el abrazo de familia).
 
 ### Acciones
 
@@ -470,6 +477,7 @@ Se unen con `+`. Máximo 2 personajes (3 en `mesa`). Las acciones van en el mism
 | `aprovechar` / `perder` | Termina tareas una a una / mira el móvil mientras el reloj corre | `reloj \| hombre \| aprovechar` |
 | `llamar` / `ignorar` | Llama o contesta / deja sonar el teléfono | `telefono \| mujer+hombre \| llamar+llamar` |
 | `dar` / `guardar` | Lleva el regalo y lo entrega / lo guarda en el estante | `regalo \| hombre+nina \| dar+esperar` |
+| `abrazar-hijo` | **Los padres se agachan y abrazan al niño, contentos** (vale en cualquier escena): los adultos con `abrazar-hijo` se ponen de rodillas a los lados del niño o la niña (si hay uno solo, a un lado), inclinados hacia él y con los brazos rodeándolo; el niño en medio, con los brazos abiertos alrededor de ellos y dando saltitos; se mecen un poco, con una luz cálida y un corazoncito que sube de vez en cuando. En escenas con muebles en el centro (sofá, mesa, cama…) el abrazo va a un lado. Al empezar están de pie en su sitio, iguales en los dos lados. Al niño se le pone cualquier acción (p. ej. `abrazar`) | `casa \| hombre+mujer+nino \| abrazar-hijo+abrazar-hijo+abrazar \| se abrazan` |
 | `bailar` | **Dos personas bailan juntas** (vale en cualquier escena): se colocan frente a frente delante de la escena, se dan una mano por delante (a la altura del hombro) y ponen la otra en la cintura u hombro del otro; se mecen juntas de lado a lado con **pasos que avanzan lo que se mueven**, rebotan un poco a cada tiempo (~97 por minuto) y cada 5 s ella/él (el segundo personaje) **gira bajo el brazo levantado** del primero. Una sola persona con `bailar` baila sola (se mece con los brazos al compás). En el final feliz se abrazan despacio. Al empezar están de pie en su sitio, iguales en los dos lados | `sofa \| hombre+mujer \| bailar+bailar \| se abrazan` |
 | `ausente` | **No está con quien lo espera.** Sin recuadros: está a ras de suelo, en el mismo suelo de la escena, pero **al fondo y al otro lado**, más pequeño por la distancia, **en la calle** (farola con luz cálida y un banco si cabe), riéndose con el móvil o con **dos siluetas grises de amigos**. Entre los dos, **la pared de la casa con la puerta cerrada**. Quien espera se queda sola en su sitio. En `mesa`: la casa se corre hacia quien espera; su silla vacía, los dos platos (el suyo vacío) y la puerta justo detrás de la silla vacía; quien espera, sentada con las manos en la mesa, levanta la vista hacia la puerta y vuelve a mirar el plato vacío. En las demás escenas, la escena se dibuja un poco más pequeña y corrida hacia quien se queda para dejar sitio a la pared y la calle. Con `ausente` el lado malo es siempre de tipo «luchar solo» (aunque el final sea «se queda»), para que el ausente nunca aparezca en la escena con el otro. Vale en cualquier escena (también se escribe no-viene, no-esta, se-fue) | `mesa \| mujer+hombre \| esperar+ausente \| se alejan` |
 | `orar` / `orar-domingo` | (Solo fe, con moderación) ora cada día / solo el domingo | `arbol \| hombre \| orar` |

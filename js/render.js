@@ -1,5 +1,5 @@
 // Dos Caminos — composición del video: fondo de estrellas, división, textos, escenas y línea de tiempo.
-import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral, setCurrent, objState } from './scenes.js';
+import { SCENES, clamp, smooth, lerp, glow, heart, RED, AMBER, setNeutral, setCurrent, objState, drawExtras } from './scenes.js';
 import { drawObject } from './objects.js';
 import { USES } from './uses.js';
 import { WHITE, setBG } from './figure.js';
@@ -421,13 +421,13 @@ export function renderFrame(ctx, job, t, scale = 1) {
         const st = ai % 2 === 0 ? -1 : 1, narrow = pn.stageW < 2.5 * pn.F;
         const s = narrow ? 0.7 : 0.75, d = -st * pn.stageW * (narrow ? 0.15 : 0.125);
         ctx.save(); ctx.translate(d, 0); ctx.scale(s, s);
-        scene.draw(ctx, S);
+        S._drawn = new Set(); scene.draw(ctx, S); drawExtras(ctx, S);
         ctx.restore();
         S.sceneTx = { d, s };
         S.outside = { side: st, wallX: st * (pn.stageW / 2 * s - Math.abs(d) + 0.06 * pn.F) };
         const g = (p) => (p ? [p[0] * s + d, p[1] * s] : p);
         S.focus = g(S.focus); S.objSpot = g(S.objSpot);
-      } else scene.draw(ctx, S);
+      } else { S._drawn = new Set(); scene.draw(ctx, S); drawExtras(ctx, S); }
       if (S.absent.length) { S.recInv = S.sceneTx || null; drawAbsent(ctx, S, S.absent); S.recInv = null; }
     });
     if (V.top > 0.001) {
@@ -436,7 +436,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
       const lat = { focus: S.focus, objSpot: S.objSpot, sceneTx: S.sceneTx };
       S.collect = [];
       const cc = collectCtx();
-      scene.draw(cc, S);
+      S._drawn = new Set(); scene.draw(cc, S); drawExtras(cc, S);
       if (V.top < 0.999) Object.assign(S, lat); // (el corazón final y el objeto siguen donde estaban)
       const figs = S.collect; S.collect = null;
       withAlpha(ctx, sceneAlpha * V.top, () => drawAerial(ctx, S, figs));
@@ -451,7 +451,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     }
     S = mainS;
     // para la cámara: dónde está la escena si va corrida («ausente») y quién es quién
-    if (plans[i]) { plans[i].camTx = S.sceneTx || null; plans[i].camPeople = S.allPeople; }
+    if (plans[i]) { plans[i].camTx = S.sceneTx || null; plans[i].camPeople = Object.fromEntries(S.allPeople.map((p, j) => [p.pid ?? j, p])); }
     const sceneAlpha = S.sceneAlpha;
     const side = { ...side0, scene: S.sceneName };
     // sucesos del escenario: lluvia, sol, alguien llega, algo cae, se enciende…

@@ -115,6 +115,8 @@ function resolveAct(raw, scene) {
   if (['llegar-avion', 'llegar-en-avion', 'aterrizar', 'bajar-del-avion', 'volver-en-avion', 'land', 'arrive-by-plane'].includes(a)) return 'llegar-avion';
   // «bailar»: bailan juntos (vale en cualquier escena)
   if (['bailar', 'baila', 'bailan', 'dance', 'dancing'].includes(a)) return 'bailar';
+  // «abrazar-hijo»: los padres se agachan y abrazan al niño, contentos (vale en cualquier escena)
+  if (['abrazar-hijo', 'abrazar-hija', 'abrazar-al-hijo', 'abrazar-a-la-hija', 'abrazar-nino', 'abrazar-nina', 'abrazo-familiar', 'abrazar-al-nino', 'hug-child', 'hug-kid', 'family-hug'].includes(a)) return 'abrazar-hijo';
   if (SCENE_ACTS[scene]?.includes(a)) return a;
   return ACT_ALIAS[a] || ACT_ALIAS[raw] || a;
 }
@@ -174,10 +176,21 @@ function parseSide(val, theme, errs, label) {
   if (parts.length >= 3 && !isScene(parts[2]) && !/[>(]/.test(parts[2]) && isPeople(parts[2])) parts = [parts[0], parts[1], '', ...parts.slice(2)];
   const [title = '', sub = '', sceneRaw = '', peopleRaw = '', actsRaw = '', resRaw0 = ''] = parts;
   let resRaw = resRaw0;
-  let kinds = splitPeople(peopleRaw).map((p) => PERSON_ALIAS[p] || (p.startsWith('muj') ? 'mujer' : p.startsWith('ni') ? 'nino' : 'hombre'));
-  // nunca se inventan personajes: si el lado no nombra a nadie, una sola persona
-  if (!kinds.length) kinds = ['hombre'];
-  kinds = kinds.slice(0, 4);
+  // PERSONAJES POR ESCENA: «hombre+mujer+nino>hombre+mujer» = los de cada escena (en orden); sin «>», los mismos en todas.
+  // Hasta 3 por escena: como mucho 2 adultos y 1 niño o niña.
+  const kindOf = (p) => PERSON_ALIAS[p] || (p.startsWith('muj') ? 'mujer' : p.startsWith('ni') ? 'nino' : 'hombre');
+  const kindGroups = (peopleRaw.includes('>') ? peopleRaw.split(/\s*>\s*/) : [peopleRaw]).map((g) => {
+    let ks = splitPeople(g).map(kindOf);
+    // nunca se inventan personajes: si no nombra a nadie, una sola persona
+    if (!ks.length) ks = ['hombre'];
+    const adults = ks.filter((k) => k === 'hombre' || k === 'mujer'), kids = ks.filter((k) => k === 'nino' || k === 'nina');
+    if (ks.length > 3 || adults.length > 2 || kids.length > 2) {
+      errs.push(`${label}: como mucho 3 personajes por escena (2 adultos y un niño o una niña); uso los 3 primeros.`);
+      ks = ks.slice(0, 3);
+    }
+    return ks;
+  });
+  let kinds = kindGroups[0];
   // escenas y acciones por escena
   const scItems = sceneRaw ? sceneRaw.split(/\s*>\s*/).filter(Boolean) : [];
   const actGroups = actsRaw ? actsRaw.split(/\s*>\s*/) : [];
@@ -204,19 +217,26 @@ function parseSide(val, theme, errs, label) {
     if (kinds.length < 2 && (scene === 'puente' || scene === 'abrazo')) scene = 'camino';
     segs.push({ scene, actsRaw: actGroups[0] || '', guessed: sceneRaw ? `escena «${sceneRaw}» no existe` : 'falta la escena' });
   }
-  const mkPeople = (scene, raw) => {
+  // cada persona tiene un número fijo (pid) en todo el guion: el mismo «él», «ella» o «el niño» en todas las escenas
+  const cast = [];
+  const pidOf = (ks) => { const seen = {}; return ks.map((k) => { const n = (seen[k] = (seen[k] || 0) + 1); let j = cast.findIndex((c) => c.kind === k && c.n === n); if (j < 0) { cast.push({ kind: k, n }); j = cast.length - 1; } return j; }); };
+  const mkPeople = (scene, raw, ks) => {
     let acts = norm(raw).split(/\s*[+,]\s*/).filter(Boolean).map((a) => resolveAct(a, scene));
     if (!acts.length) acts = ['construir'];
-    return kinds.map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)] }));
+    const pids = pidOf(ks);
+    return ks.map((kind, i) => ({ kind, act: acts[Math.min(i, acts.length - 1)], pid: pids[i] }));
   };
-  const segments = segs.map((g) => ({ scene: g.scene, people: mkPeople(g.scene, g.actsRaw) }));
+  const segments = segs.map((g, k) => ({ scene: g.scene, people: mkPeople(g.scene, g.actsRaw, kindGroups[Math.min(k, kindGroups.length - 1)]) }));
+  if (kindGroups.length > 1 && kindGroups.length !== segments.length) errs.push(`${label}: ${kindGroups.length} grupos de personajes para ${segments.length} escenas; los que faltan repiten el último.`);
+  // el reparto completo (para los sucesos: «el niño», «ella»…), con la acción de su primera escena
+  const castPeople = cast.map((c, j) => { for (const g of segments) { const p = g.people.find((q) => q.pid === j); if (p) return { kind: c.kind, act: p.act, pid: j }; } return { kind: c.kind, act: 'esperar', pid: j }; });
   const scene = segments[0].scene, people = segments[0].people;
   // REGLA: lo que se ve coincide con lo que dice el texto. Si dice que alguien no viene / no está / se fue, va con «ausente».
   const said = norm(`${title} ${sub}`);
   if (/\b(no viene|no vino|no llega|nunca llega|nunca viene|no esta|no estan|se fue|se va de casa|no aparece|doesn'?t come|never comes|isn'?t there|not there|never shows)\b/.test(said) && !segments.some((g) => g.people.some((p) => p.act === 'ausente')) && people.length > 1)
     errs.push(`${label}: el texto dice que alguien no viene o no está, pero sale en la escena. Pon «ausente» en la acción de esa persona (ej.: esperar+ausente).`);
   const cls = classifyResult(resRaw, segments[segments.length - 1].scene);
-  return { title, sub, scene, people, segments: segments.length > 1 ? segments : null, result: resRaw, guessed: segs[0].guessed || null, ...cls };
+  return { title, sub, scene, people, cast: castPeople, segments: segments.length > 1 ? segments : null, result: resRaw, guessed: segs[0].guessed || null, ...cls };
 }
 
 function splitBlocks(text) {

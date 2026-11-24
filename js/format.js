@@ -137,7 +137,8 @@ REGLAS DEL TEXTO
 - TITULO: máximo 10 palabras y nunca repetido entre guiones. FRASE (siempre, fuerte): máximo 14 palabras; es la frase final del video y sale tal cual. Marca como mucho una palabra clave entre *asteriscos* (sale en rojo). PREGUNTA: máximo 9 palabras.
 
 VOCABULARIO (usa solo estas palabras)
-- personajes: hombre, mujer, nino, nina (unidos con +; máximo 2, o 3 en mesa). Todos salen en pantalla, salvo los que lleven la acción «ausente». No aparece nadie que no esté aquí.
+- personajes: hombre, mujer, nino, nina (unidos con +). Hasta 3 en cualquier escena: 2 adultos y un niño o una niña pequeños. Todos salen en pantalla, salvo los que lleven la acción «ausente». No aparece nadie que no esté aquí.
+- PERSONAJES POR ESCENA: en un guion de varias escenas, si el campo de personajes lleva «>», cada parte son los personajes de esa escena (en el mismo orden que las escenas). Ej.: casa>sofa>escalera>abrazo | hombre+mujer+nino>hombre+mujer>hombre+mujer>hombre+mujer | abrazar-hijo+abrazar-hijo+abrazar>hablar+abrazar>subir+subir>acercarse+acercarse (en la primera escena papá y mamá abrazan a su niño; en las siguientes, la pareja sola). Sin «>», los mismos personajes en todas las escenas.
 - escena y sus acciones (una acción por personaje, unidas con +):
   puente: construir, esperar, celular, descansar
   arbol: regar, cuidar, celular, dormir, orar, orar-domingo
@@ -174,7 +175,7 @@ VOCABULARIO (usa solo estas palabras)
   Ejemplo: «TITULO: Te regalo una flor» → la flor reemplaza al corazón de quien espera en el puente.
 - ACCIONES CON OBJETOS (valen en cualquier escena; el personaje usa el objeto en la mano o en el cuerpo; si la escena lo hace caminar —camino, aeropuerto…— camina con pasos reales llevando el objeto):
   tocar-guitarra, leer-libro, beber-cafe, dar-flor, lanzar-pelota, escribir-lapiz, llevar-mochila, ponerse-sombrero, hacer-foto, dar-carta, comer-pan, contar-dinero, contar-monedas, usar-llave, dar-anillo, montar-bici, dar-regalo, llevar-maleta, encender-vela, atarse-zapatos, mirar-foto, alcanzar-estrella, sostener-globo, volar-cometa, ponerse-gafas, beber-agua, servir-plato, comer-manzana, llevar-pastel, abrazar-osito, llevar-planta, martillar, escribir-cuaderno, levantar-trofeo, escuchar-musica, cerrar-candado, sembrar-semilla, ponerse-corona
-  Más: bailar (dos personas bailan juntas: mano con mano, se mecen y ella gira bajo su brazo; vale en cualquier escena), caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
+  Más: bailar (dos personas bailan juntas: mano con mano, se mecen y ella gira bajo su brazo; vale en cualquier escena), abrazar-hijo (los padres se agachan de rodillas y abrazan al niño o la niña, que está en medio con los brazos abiertos; contentos, con corazoncitos; vale en cualquier escena: pon abrazar-hijo a los adultos y al niño, p. ej., abrazar), caer-bici (se cae de la bici), levantarse-bici (se cae y se vuelve a montar), ausente (no está con el otro: sale al fondo, en la calle, al otro lado de la puerta cerrada; vale en cualquier escena). En el camino, si el título dice «bicicleta», caer y levantarse ya son con bici.
   Ejemplos: «sofa | hombre+mujer | tocar-guitarra+beber-cafe | se abrazan» · «camino | nina | montar-bici | llega» · «puente | hombre+mujer | construir+dar-flor | se unen».
 
 EJEMPLO
