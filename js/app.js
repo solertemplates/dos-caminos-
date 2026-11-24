@@ -264,7 +264,7 @@ function buildJob(script, idx, opts) {
   // la misma semilla para el mismo guion: crear el mismo guion varias veces da el mismo video
   const seed = opts.seed ?? scriptSeed(script, opts);
   return {
-    tl, seed, layoutKind, lang, bg: pickBg(script, opts), plano: script.plano || 'mixto', fontIdx: pickFont(opts),
+    tl, seed, layoutKind, lang, bg: pickBg(script, opts), plano: script.plano || 'mixto', angulo: script.angulo || 'mixto', fontIdx: pickFont(opts),
     coverSpec: (en ? E.cover : script.cover) || null,
     layout: layoutFor(layoutKind),
     stars: makeStars(seed),

@@ -125,11 +125,42 @@ export function solveFigure(pose, H, facing, kind) {
   return pts;
 }
 
+// ÁNGULOS DE CÁMARA (ver js/angulos.js): la figura como un muñeco en 3D muy simple. Cada brazo y cada pierna
+// sale de su lado del cuerpo (los de delante hacia la cámara, los de detrás al otro lado) y se proyecta:
+//   view.yaw (0–1): se gira hacia la cámara (1 = de frente, unos 70°: tres cuartos, aún se ve hacia quién mira)
+//   view.top (0–1): vista desde arriba (1 ≈ 69°: se ven los hombros, la cabeza y lo que tiene delante)
+//   view.depth: profundidad sobre el suelo (vista desde arriba: más cerca de la cámara = más abajo)
+// Sin view (o todo a 0) se dibuja exactamente como siempre (vista lateral).
+const BUN = (P, pose, facing) => {
+  const ang = pose.tr + pose.hd * 0.6;
+  return [P.head[0] - facing * Math.cos(ang) * P.r * 0.78 - facing * Math.sin(ang) * P.r * 0.35, P.head[1] - Math.cos(ang) * P.r * 0.42 + Math.sin(ang) * P.r * 0.2];
+};
+export function projectFigure(P, H, facing, v, pose) {
+  const yaw = (v.yaw || 0) * 1.22, th = (v.top || 0) * 1.2;
+  const cy = Math.cos(yaw), sy = Math.sin(yaw), ct = Math.cos(th), st = Math.sin(th);
+  const sw = 0.085 * H, hw = 0.05 * H, d0 = v.depth || 0;
+  const pr = (p, z) => {
+    const X = p[0] * cy + facing * z * sy;
+    const depth = z * cy + p[0] * facing * sy * 0.6 + d0;
+    return [X, p[1] * ct + depth * st];
+  };
+  const Q = {
+    hip: pr(P.hip, 0), hipF: pr(P.hip, hw), hipB: pr(P.hip, -hw),
+    fk: pr(P.fk, hw), ff: pr(P.ff, hw), bk: pr(P.bk, -hw), bf: pr(P.bf, -hw),
+    shoulder: pr(P.shoulder, 0), shF: pr(P.shoulder, sw), shB: pr(P.shoulder, -sw),
+    fe: pr(P.fe, sw * 1.15), fh: pr(P.fh, sw * 1.2), be: pr(P.be, -sw * 1.15), bh: pr(P.bh, -sw * 1.2),
+    head: pr(P.head, 0), bun: pr(BUN(P, pose, facing), 0),
+    r: P.r, H: P.H, footDir: cy, top: v.top || 0,
+  };
+  return Q;
+}
+
 // Dibuja la figura con los pies (o rodillas) sobre groundY. Devuelve puntos en coordenadas del escenario.
 export function drawFigure(ctx, o) {
   const { x, y = 0, pose, F, facing = 1, kind = 'hombre', alpha = 1 } = o;
   const H = figureSize(kind, F);
-  const P = solveFigure(pose, H, facing, kind);
+  const v = o.view && ((o.view.yaw || 0) > 0.001 || (o.view.top || 0) > 0.001 || o.view.depth) ? o.view : null;
+  const P = v ? projectFigure(solveFigure(pose, H, facing, kind), H, facing, v, pose) : solveFigure(pose, H, facing, kind);
   const female = kind === 'mujer' || kind === 'nina';
   ctx.save();
   ctx.translate(x, y);
@@ -146,10 +177,10 @@ export function drawFigure(ctx, o) {
     ctx.stroke();
   };
   // piernas
-  seg(P.hip, P.bk, P.bf);
-  seg(P.hip, P.fk, P.ff);
+  if (v) { seg(P.hip, P.bk, P.bf); seg(P.hip, P.fk, P.ff); } // de frente: las piernas en V desde la cadera
+  else { seg(P.hip, P.bk, P.bf); seg(P.hip, P.fk, P.ff); }
   // pies (pequeño trazo hacia delante)
-  const foot = 0.05 * H;
+  const foot = 0.05 * H * (v ? Math.max(0.35, P.footDir) : 1);
   seg(P.bf, [P.bf[0] + facing * foot, P.bf[1]]);
   seg(P.ff, [P.ff[0] + facing * foot, P.ff[1]]);
   if (female) {
@@ -180,18 +211,16 @@ export function drawFigure(ctx, o) {
   }
   // torso y cuello
   seg(P.hip, P.shoulder);
-  // brazos
-  seg(P.shoulder, P.be, P.bh);
-  seg(P.shoulder, P.fe, P.fh);
+  // brazos (en 3D, cada uno sale de su hombro)
+  if (v) { seg(P.shB, P.shF); seg(P.shB, P.be, P.bh); seg(P.shF, P.fe, P.fh); }
+  else { seg(P.shoulder, P.be, P.bh); seg(P.shoulder, P.fe, P.fh); }
   // cabeza
   ctx.beginPath();
   ctx.arc(P.head[0], P.head[1], P.r, 0, Math.PI * 2);
   ctx.fill();
   if (female) {
-    // pelo recogido (moño)
-    const ang = pose.tr + pose.hd * 0.6;
-    const bx = P.head[0] - facing * Math.cos(ang) * P.r * 0.78 - facing * Math.sin(ang) * P.r * 0.35;
-    const by = P.head[1] - Math.cos(ang) * P.r * 0.42 + Math.sin(ang) * P.r * 0.2;
+    // pelo recogido (moño); de frente queda detrás de la cabeza
+    const [bx, by] = v ? P.bun : BUN(P, pose, facing);
     ctx.beginPath();
     ctx.arc(bx, by, P.r * 0.44, 0, Math.PI * 2);
     ctx.fill();

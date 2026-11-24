@@ -36,6 +36,7 @@ import './aeropuerto.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
 import { cameraAt, camBox } from './camara.js';
+import { viewAt, drawAerial, collectCtx, AERIAL_SCENES } from './angulos.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
@@ -338,9 +339,22 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.clip();
     ctx.translate(pn.cx, pn.groundY);
     // PLANO: general (cuerpo entero) o primer plano (cintura para arriba, cerca de la cámara)
-    const cam = cameraAt(job, i, pn, t);
-    const zoomed = cam.z > 1.001;
-    if (zoomed) { ctx.translate(cam.ox, cam.oy); ctx.scale(cam.z, cam.z); }
+    // ÁNGULO: lateral, de frente (yaw), desde arriba (top) o contrapicado (low); ver js/angulos.js
+    let V = viewAt(job, i, t);
+    // escenas sin vista desde arriba propia: «picado» suave (la escena un poco desde arriba, más baja y aplastada)
+    const drawnSegs = ((job.roles && job.roles[i] === 'bad' ? job.sides[job.roles.indexOf('good')] : side0).segments) || [job.roles && job.roles[i] === 'bad' ? job.sides[job.roles.indexOf('good')] : side0];
+    let pic = 0;
+    if (V.top > 0 && !drawnSegs.every((g) => AERIAL_SCENES.has(g.scene) || g.people.some((p) => p.act === 'ausente'))) { pic = V.top; V = { ...V, top: 0 }; }
+    const cam0 = cameraAt(job, i, pn, t);
+    // desde arriba o desde abajo no hay primer plano (se ve el sitio entero)
+    const nz = Math.max(V.top, V.low);
+    const cz = 1 + (cam0.z - 1) * (1 - nz);
+    // contrapicado suave: los personajes más altos y el horizonte más bajo
+    const nz2 = Math.max(nz, pic);
+    const cz2 = 1 + (cam0.z - 1) * (1 - nz2);
+    const cam = { zx: cz2 * (1 + 0.04 * V.low), zy: cz2 * (1 + 0.2 * V.low) * (1 - 0.24 * pic), ox: cam0.ox * (1 - nz2), oy: cam0.oy * (1 - nz2) + pn.F * 0.1 * V.low - pn.F * 0.12 * pic };
+    const zoomed = cam.zx > 1.001 || cam.zy > 1.001;
+    if (zoomed) { ctx.translate(cam.ox, cam.oy); ctx.scale(cam.zx, cam.zy); }
     const ps = panelState(layout, i, st, tl.C);
     // el lado malo dibuja la MISMA escena y las mismas acciones que el bueno (empiezan iguales);
     // sus propias acciones solo deciden cómo se queda al rendirse
@@ -382,7 +396,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
       moments: st.phase === 'hook' ? null : momentsNow(plans[i], t),
     };
     // en primer plano, la lluvia, la noche y los demás sucesos llenan lo que se ve
-    if (zoomed) S.box = { l: (S.box.l - cam.ox) / cam.z, r: (S.box.r - cam.ox) / cam.z, top: (S.box.top - cam.oy) / cam.z, bot: (S.box.bot - cam.oy) / cam.z };
+    if (zoomed) S.box = { l: (S.box.l - cam.ox) / cam.zx, r: (S.box.r - cam.ox) / cam.zx, top: (S.box.top - cam.oy) / cam.zy, bot: (S.box.bot - cam.oy) / cam.zy };
+    S.view = { yaw: V.yaw, top: 0.4 * pic };
     let a = endDim * hookIn * ps.show * dr.a;
     if (isTime && st.phase === 'end' && i < 2) a *= 1 - 0.2 * smooth(st.endK * 2.5);
     if (!side0.good && st.phase !== 'main') a *= 1 - 0.15 * ps.r;
@@ -397,7 +412,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // las escenas fijan su propio globalAlpha; lo multiplicamos con un contenedor
     setNeutral(ps.neutral);
     setCurrent(S);
-    withAlpha(ctx, sceneAlpha, () => {
+    // desde arriba: se cruza la vista lateral con la aérea (fundido entre las dos, nunca negro)
+    if (V.top < 0.999) withAlpha(ctx, sceneAlpha * (1 - V.top), () => {
       if (S.absent.length && side.scene !== 'mesa') {
         // «ausente» en cualquier escena: la escena se dibuja un poco más pequeña y corrida hacia quien se queda;
         // al otro lado queda sitio para la pared con la puerta y la calle donde está el ausente
@@ -414,6 +430,17 @@ export function renderFrame(ctx, job, t, scale = 1) {
       } else scene.draw(ctx, S);
       if (S.absent.length) { S.recInv = S.sceneTx || null; drawAbsent(ctx, S, S.absent); S.recInv = null; }
     });
+    if (V.top > 0.001) {
+      // vista aérea: la escena se «dibuja» aparte (sin verse) para saber dónde está y qué hace cada uno;
+      // luego se dibujan el suelo, los muebles y los personajes desde arriba
+      const lat = { focus: S.focus, objSpot: S.objSpot, sceneTx: S.sceneTx };
+      S.collect = [];
+      const cc = collectCtx();
+      scene.draw(cc, S);
+      if (V.top < 0.999) Object.assign(S, lat); // (el corazón final y el objeto siguen donde estaban)
+      const figs = S.collect; S.collect = null;
+      withAlpha(ctx, sceneAlpha * V.top, () => drawAerial(ctx, S, figs));
+    }
     if (job.countFigs) job.countFigs[i] = Math.max(job.countFigs[i] || 0, S._figs || 0);
     if (job.planeLog && S._plane) job.planeLog[i] = S._plane; // (pruebas: dónde está el avión)
     setNeutral(0);
@@ -444,7 +471,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
     ctx.restore();
     // en primer plano, un velo suave del color del fondo bajo los títulos para que se lean limpios
     if (zoomed) {
-      const vk = smooth((cam.z - 1) / 0.6), [cx0, cy0, cw] = pn.clip;
+      const vk = smooth((Math.max(cam.zx, cam.zy) - 1) / 0.6), [cx0, cy0, cw] = pn.clip;
       const yb = pn.groundY + camBox(layout).top + 30;
       const g = ctx.createLinearGradient(0, cy0, 0, yb);
       g.addColorStop(0, veil(job, 0.8 * vk)); g.addColorStop(0.7, veil(job, 0.6 * vk)); g.addColorStop(1, veil(job, 0));

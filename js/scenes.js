@@ -16,6 +16,7 @@ export function setNeutral(v) { NEUTRAL = v; }
 // estado de la escena que se está dibujando (lo fija render.js) para las acciones con objetos
 let CUR = null;
 export function setCurrent(S) { CUR = S; }
+export { isWalker, rawFigure };
 function neutralPose(pose) {
   const chair = pose.fl1 > 0.8 && pose.fl2 > -0.1 && pose.fl2 < 0.6;
   return chair ? POSES.sit : POSES.stand;
@@ -101,8 +102,12 @@ function drawFigure(ctx, o) {
     const sitting = o.pose.fl1 > 0.8 || o.pose.bl1 > 0.8;
     o = lifePose(o, mIdx >= 0 ? mIdx : 0, CUR.t, { busy: BUSY_ACTS.has(o.pe.act) || !!use || riding, standing: !sitting, sitting });
   }
+  // ÁNGULO «de frente»: se gira hacia la cámara (no quien camina, va en bici o está acostado: esos, siempre de lado)
+  const V = CUR && CUR.view;
+  if (V && V.yaw > 0.001 && o.pe && !isWalker(CUR.sceneName, o.pe.act) && !riding && o.pose.tr < 1.0 && o.neutral !== 'none') o = { ...o, view: { yaw: V.yaw } };
+  if (V && V.top > 0.001 && !riding) o = { ...o, view: { ...(o.view || {}), top: V.top } }; // picado suave: se ven un poco los hombros
   const fig = rawFigure(ctx, o);
-  if (CUR) CUR._figs = (CUR._figs || 0) + 1; // para comprobar que solo salen los personajes del guion
+  if (CUR && !CUR.collect) CUR._figs = (CUR._figs || 0) + 1; // (la pasada oculta de la vista aérea no cuenta) // para comprobar que solo salen los personajes del guion
   if (mIdx >= 0) {
     // el ausente se dibuja fuera de la escena principal: su posición se guarda en las coordenadas de la escena
     const inv = CUR.recInv;
@@ -113,6 +118,8 @@ function drawFigure(ctx, o) {
     }
   }
   if (icons && icons.length) drawFigureIcons(ctx, fig, o, icons, CUR.moments);
+  // vista aérea: se apunta cada figura (con dónde está la escena dibujándola) para dibujarla desde arriba
+  if (CUR && CUR.collect) CUR.collect.push({ o, icons, use: use && !riding ? use : null, k, offerHeart, m: ctx.getTransform ? ctx.getTransform() : null });
   if (offerHeart > 0) {
     const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
     const dim = 1 - 0.5 * smooth((CUR.r - 0.5) / 0.4);

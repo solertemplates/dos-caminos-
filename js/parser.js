@@ -18,6 +18,7 @@ const KEY = {
   etapas: 'stages', stages: 'stages', momentos: 'stages',
   fondo: 'bg', background: 'bg', color: 'bg',
   plano: 'plano', planos: 'plano', camara: 'plano', shot: 'plano', shots: 'plano', camera: 'plano',
+  angulo: 'angulo', angulos: 'angulo', angle: 'angulo', vista: 'angulo', view: 'angulo',
   portada: 'cover', miniatura: 'cover', cover: 'cover', thumbnail: 'cover',
   inspiracion: 'inspiration', inspiration: 'inspiration', // de qué video viral sale la idea (no se dibuja)
 };
@@ -247,6 +248,15 @@ function planoName(v) {
   if (/cerca|primer|close|grande/.test(n)) return 'cerca';
   return 'mixto';
 }
+// ANGULO: lateral | frente | aereo | mixto (por defecto mixto)
+function anguloName(v) {
+  const n = norm(v || '');
+  if (/contra/.test(n)) return 'mixto'; // el contrapicado va dentro de mixto
+  if (/lateral|lado|side|perfil/.test(n)) return 'lateral';
+  if (/frente|frontal|front|cara/.test(n)) return 'frente';
+  if (/aere|arriba|cenital|top|above|aerial|picado/.test(n)) return 'aereo';
+  return 'mixto';
+}
 // PORTADA: texto de 3 a 5 palabras (*palabra* en rojo) | roto o entero
 export function coverSpec(v) {
   if (!v) return null;
@@ -316,6 +326,7 @@ export function parseScripts(text) {
       phrase: f.phrase || '',
       bg: bgName(f.bg),
       plano: planoName(f.plano),
+      angulo: anguloName(f.angulo),
       cover: coverSpec(f.cover),
       question: f.question || '',
       sides: isTime ? [A, A, A] : [A, B],

@@ -18,7 +18,7 @@ function outsideOf(S) {
 
 // lo que hace fuera: se ríe con el móvil → se ríe con los amigos (cada ~2,8 s, con transición suave)
 function absentPose(t, j) {
-  const T = 2.8, q = t / T + j * 0.37, ph = Math.floor(q) % 2, k = q - Math.floor(q);
+  const T = 2.8, q = t / T + j * 0.37, ph = ((Math.floor(q) % 2) + 2) % 2, k = q - Math.floor(q);
   const b = Math.abs(Math.sin(t * 13));
   const poses = [
     { ...POSES.phone, tr: 0.02 - 0.04 * b, hd: 0.45 - 0.1 * b },

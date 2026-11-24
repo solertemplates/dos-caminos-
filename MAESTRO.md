@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 23 nov 2026 (v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 24 nov 2026 (v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -203,6 +203,24 @@ Ejemplo bici: los dos pedalean igual, los dos se caen de la bici a la vez; uno s
 - **Regla del arco:** los planos salen de los sucesos y de las posiciones (idénticos en los dos lados antes del momento difícil) y usan la misma zona de encuadre en los dos paneles → los dos lados siguen idénticos píxel a píxel (comprobado: ≤ 43 píxeles distintos, las estrellitas, en 15, 30 y 45 s con primeros planos antes del momento difícil). El tipo «tiempo» va siempre en plano general.
 - Código: `js/camara.js`.
 
+### ⭐ Ángulos de cámara (línea `ANGULO`)
+
+Como en el cine, no todo se ve de lado:
+
+| Ángulo | Qué se ve | Cómo lo hace la app |
+|---|---|---|
+| **Lateral** | De lado, como siempre | — |
+| **De frente** | Los personajes se giran hacia la cámara (tres cuartos), para ver bien los gestos, las lágrimas y el abrazo | Cada muñequito es un muñeco 3D muy simple: cada brazo y cada pierna sale de su lado del cuerpo (hombros, cadera) y se proyecta girado ~70°; las piernas en V, el moño queda detrás de la cabeza. Quien camina, va en bici o está acostado sigue de lado (`js/figure.js` `projectFigure`) |
+| **Desde arriba (aéreo)** | El suelo visto desde arriba (un óvalo suave), los muebles desde arriba y los personajes desde arriba (cabeza, hombros, brazos) | La escena se «dibuja» aparte sin verse para saber dónde está y qué hace cada uno, y se dibuja desde arriba: **mesa** (mesa con lámpara encendida, sillas, platos; con `ausente`, **su silla vacía, su plato vacío** y la puerta cerrada), **cama** (con una persona, **cama de matrimonio con un lado vacío**; con dos, dos camas), **camino** (en el lado malo con dos personas, **el camino se separa en dos** y cada uno va por su rama), **sofá**, **abrazo**, **parque**, **cocina**, **teléfono** (las dos casas). En las demás escenas, «desde arriba» es un **picado suave**: la escena un poco desde arriba, más baja, y los personajes inclinados (se ven los hombros) |
+| **Contrapicado suave** | Desde abajo: los personajes más altos y el horizonte más bajo | Solo en mixto: al subir y escalar (a mitad de la escena), al celebrar, al final de llegar, ganar o crecer, y cuando **el avión despega** |
+
+- `ANGULO: mixto` (**por defecto**): de lado al empezar y **al pasar de una escena a otra**; **de frente** en el llanto, el abrazo, recibir el corazón y «estoy contigo»; **desde arriba** en la soledad (tristeza, ansiedad o llanto de quien se queda solo: con alguien `ausente`, o en el lado malo en la segunda mitad) y en el **final triste**; **lateral para caminar**; **contrapicado** para subir, ganar y el avión. Final feliz con abrazo, de frente; con llegar, ganar o crecer, desde abajo.
+- `ANGULO: frente`: casi todo de frente. `ANGULO: aereo`: todo desde arriba (o picado suave en las escenas sin vista desde arriba propia). `ANGULO: lateral`: siempre de lado. El tipo «tiempo», siempre de lado.
+- **Cambios suaves** (~0,6 s): de lado a de frente los personajes se giran poco a poco; a «desde arriba» hay un fundido entre las dos vistas; el contrapicado crece despacio. **Nunca negro.** Las estrellas, el fondo de color, los sucesos (lluvia, corazones, lágrimas) y los planos siguen igual; desde arriba y desde abajo no hay primer plano.
+- **Regla del arco:** los ángulos salen de los sucesos y de las escenas; antes del momento difícil nadie es «el malo» todavía, así que los dos lados siguen idénticos píxel a píxel (comprobado con mixto, frente y aéreo: ≤ 59 píxeles distintos, las estrellitas).
+- La **portada** usa el ángulo del momento elegido (p. ej. la mesa con la silla vacía desde arriba).
+- Código: `js/angulos.js` (cuándo y cómo, y la vista aérea de cada escena).
+
 ### ⭐ Ritmo y sucesos (REGLA FIJA DE RITMO)
 
 - **SIN NEGRO:** ningún fotograma negro ni fundido a negro (TikTok los elegía como miniatura): fotograma 0 = portada; desde el fotograma 1 la escena ya está dibujada; al pasar de una escena a otra, fundido entre las dos; en el cierre la escena solo se atenúa un poco (el velo oscuro va solo detrás de la frase); en la grabación en tiempo real se repinta la portada al empezar y la última imagen al terminar. Comprobado leyendo fotograma a fotograma el principio, los segundos 1,5–2,6 y el final de un video creado.
@@ -228,6 +246,7 @@ EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 FONDO: azul | marron | vino | verde | negro | aleatorio   (opcional)
 DIVISION: arriba-abajo | lados | tiempo
 PLANO: general | cerca | mixto   (opcional; por defecto mixto)
+ANGULO: lateral | frente | aereo | mixto   (opcional; por defecto mixto)
 GANCHO: frase de 3 a 6 palabras
 PORTADA: 3 a 5 palabras para la miniatura, *clave* en rojo | roto | entero   (opcional)
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
@@ -654,6 +673,7 @@ Ejemplos de cada final nuevo:
 | `js/remux.js` | Cambiar la música de un MP4 ya creado sin recodificar el video (lee las muestras, normales o fragmentadas, y vuelve a empaquetar) |
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
+| `js/angulos.js` | Ángulos de cámara (línea ANGULO): lateral, de frente, desde arriba (vista aérea de cada escena) y contrapicado |
 | `js/camara.js` | Planos: general y primer plano (línea PLANO), cámara que se acerca y se aleja |
 | `js/portada.js` | Portada / miniatura: momento más emotivo, texto grande con palabra roja, corazón roto o entero, fuentes que rotan |
 | `fonts/` | 5 fuentes de la portada (Anton, Archivo Black, Bebas Neue, Montserrat Black, Oswald Bold; SIL OFL, `fonts/OFL.txt`) |
