@@ -14,7 +14,7 @@ export const CLAUDE_PROMPT = `FÓRMULA DOS CAMINOS (usar SIEMPRE al escribir gui
 12. Primero el guion de la app, luego la voz.
 13. Cada guion debe superar al anterior.
 
-Escribe guiones para mi app "Dos Caminos" (canal en inglés: "Two Paths Stories"). Son videos verticales sin voz: la pantalla se divide en dos y cada lado muestra una forma de vivir y su resultado.
+Escribe guiones para mi app "Dos Caminos" (canal en inglés: "Two Paths Stories"). Los vídeos salen de la app sin voz; la voz se añade después en CapCut (27-28 s, tercera persona). La pantalla se divide en dos y cada lado muestra una forma de vivir y su resultado.
 
 REGLA DE ORO
 Antes de escribir, busca en la web qué temas y formatos de reels son virales ahora (historias, ganchos y comparaciones que se están compartiendo esta semana) y úsalos como inspiración dentro de este formato. Escribe cada guion como el video del puente:
