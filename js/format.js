@@ -13,6 +13,7 @@ export const CLAUDE_PROMPT = `FÓRMULA DOS CAMINOS (usar SIEMPRE al escribir gui
 11. Prioridad: pareja, madre e hijo, emigración, familia hispana.
 12. Primero el guion de la app, luego la voz.
 13. Cada guion debe superar al anterior.
+14. FRASE FINAL: cada guion y cada voz terminan con una frase final fuerte, corta y para compartir, que contraste dos ideas y duela. Ejemplo modelo: «El dinero llega por transferencia… pero el amor solo llega con tiempo.» Nada de finales flojos.
 
 Escribe guiones para mi app "Dos Caminos" (canal en inglés: "Two Paths Stories"). Los vídeos salen de la app sin voz; la voz se añade después en CapCut (27-28 s, tercera persona). La pantalla se divide en dos y cada lado muestra una forma de vivir y su resultado.
 
@@ -62,7 +63,7 @@ EMOCION: romantica | tension | triste | emotiva | inspiracional | alegre
 FONDO: azul | marron | vino | verde | negro | aleatorio (opcional: color oscuro del fondo; si no lo pones, la app elige uno sin repetir el del video anterior)
 DIVISION: arriba-abajo | lados | tiempo
 PLANO: general | cerca | mixto (opcional; por defecto mixto: plano general al empezar cada escena y primer plano —personajes grandes, de la cintura para arriba— en los momentos emotivos; cerca = casi todo en primer plano; general = siempre cuerpo entero)
-ANGULO: lateral | frente | aereo | mixto (opcional; por defecto mixto: elige según el momento: desde arriba para la soledad y el final triste —la mesa con la silla vacía, la cama con un lado vacío, el camino que se separa—, de frente para el llanto y el abrazo, de lado para caminar y un contrapicado suave desde abajo para subir, ganar o el avión despegando; frente = los personajes miran a la cámara casi todo el video (quien camina, de lado mientras camina); aereo = casi todo desde arriba (vale en todas las escenas); lateral = siempre de lado)
+ANGULO: lateral | frente | aereo | mixto (opcional; por defecto mixto: elige según el momento: desde arriba para la soledad y el final triste —la mesa con la silla vacía, la cama con un lado vacío, el camino que se separa—, de frente para el llanto y el abrazo, de lado para caminar y un contrapicado suave desde abajo para subir, ganar o el avión despegando; frente = los personajes miran a la cámara casi todo el video (quien camina, de lado mientras camina); aereo = desde arriba en las escenas con objetos; lateral = siempre de lado. La vista desde arriba solo se usa con muebles u objetos que se reconocen desde arriba —mesa, cama, sofá, escalera, tienda, libros, puente, teléfono, cocina, fogata, árbol, y el camino solo cuando se separa—; si solo hay personas moviéndose, por ejemplo una madre corriendo detrás de su niña, se ve de lado o de frente)
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
 PORTADA: 3 a 5 palabras para la miniatura, con *una palabra clave* en rojo | roto o entero (el corazón de la portada). Ej.: PORTADA: TE ESPERÓ *TODA* LA NOCHE | roto
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final

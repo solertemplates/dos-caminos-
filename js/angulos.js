@@ -23,8 +23,10 @@ const BLEND = 0.6;
 
 // escenas con vista aérea propia (en las demás, el suelo y los personajes desde arriba)
 // (v41: todas las escenas se pueden ver desde arriba; las que no tienen dibujo propio, el suelo con sus personajes y su luz)
-export const AERIAL_SCENES = new Set(['mesa', 'cama', 'sofa', 'camino', 'abrazo', 'parque', 'cocina', 'telefono', 'escalera', 'tienda', 'libros', 'montana', 'puente',
-  'arbol', 'alcancia', 'casa', 'fogata', 'oficina', 'coche', 'gimnasio', 'huerto', 'lluvia', 'carta', 'reloj', 'regalo', 'aeropuerto']);
+// (v43) VISTA DESDE ARRIBA SOLO CON OBJETOS: solo en escenas con muebles u objetos que se reconocen desde arriba
+// (la mesa con la silla vacía, la cama con un lado vacío, el sofá, la escalera, el puente…) y en el camino solo
+// cuando se separa en dos. Si solo hay personas moviéndose (abrazo, parque, montaña…), nunca desde arriba: de lado o de frente.
+export const AERIAL_SCENES = new Set(['mesa', 'cama', 'sofa', 'escalera', 'tienda', 'libros', 'puente', 'telefono', 'cocina', 'fogata', 'arbol']);
 const FRONT = new Set(['llora', 'abraza', 'abrazo-largo', 'recibir-corazon', 'estoy-contigo']);
 const LONELY = new Set(['tristeza', 'ansiedad', 'llora', 'aleja']);
 const POWER = new Set(['celebra', 'alegria']);
@@ -42,7 +44,6 @@ export function anglesFor(job, plans, i) {
   const tl = job.tl;
   if (mode === 'lateral') return [];
   if (mode === 'frente') return [{ t0: tl.mainStart + CHOICE, t1: 1e9, v: 'frente' }];
-  if (mode === 'aereo') return [{ t0: -1, t1: 1e9, v: 'aereo' }];
   const role = job.roles ? job.roles[i] : null;
   const own = job.sides[i];
   const side = job.roles && role === 'bad' ? job.sides[job.roles.indexOf('good')] : own;
@@ -52,7 +53,23 @@ export function anglesFor(job, plans, i) {
   const segT = segs.map((g, k) => [tAt(k / nSeg), k === nSeg - 1 ? tl.resStart : tAt((k + 1) / nSeg)]);
   const segAt = (t) => { let k = 0; segT.forEach(([a], j) => { if (a != null && t >= a) k = j; }); return k; };
   const absent = (g) => g.people.some((p) => p.act === 'ausente');
-  const aerialOk = (g) => AERIAL_SCENES.has(g.scene) || absent(g);
+  // el camino solo desde arriba cuando se separa en dos (lado malo con dos personas que caminan; en «se rinde», en el final)
+  // (si corren o van en bici, solo se ven personas moviéndose: nunca desde arriba)
+  const RUN = /^(correr|montar-bici|caer|levantarse|caer-bici|levantarse-bici)$/;
+  const aerialOk = (g, t = tl.resStart) => AERIAL_SCENES.has(g.scene) || (g.scene === 'camino' && g.people.filter((p) => p.act !== 'ausente').length >= 2 && !g.people.some((p) => RUN.test(p.act)) && !own.good && (!job.roles || t >= tl.resStart));
+  // ANGULO: aereo → desde arriba en las escenas con objetos; en las demás, de lado
+  if (mode === 'aereo') {
+    const L = [];
+    segs.forEach((g, k) => {
+      let [a, b] = segT[k];
+      if (a == null) return;
+      if (k === 0) a = -1;
+      if (k === nSeg - 1 || b == null) b = 1e9;
+      if (AERIAL_SCENES.has(g.scene)) L.push({ t0: a, t1: b, v: 'aereo' });
+      else if (aerialOk(g, 1e9)) L.push({ t0: job.roles ? Math.max(a, tl.resStart) : a, t1: b, v: 'aereo' });
+    });
+    return L;
+  }
   const out = [];
   // contrapicado por escena: subir / escalar (a mitad de la escena) y el avión que despega (al final de la escena)
   segs.forEach((g, k) => {
@@ -79,7 +96,7 @@ export function anglesFor(job, plans, i) {
     const types = s.evs.map((e) => e.type);
     let v = null;
     const lonely = types.some((x) => LONELY.has(x)) && (absent(g) || (badAt(s.t0) && s.t0 > tl.mainStart + (tl.resStart - tl.mainStart) * 0.45));
-    if (lonely && aerialOk(g) && !types.includes('abraza') && !types.includes('abrazo-largo')) v = 'aereo';
+    if (lonely && aerialOk(g, s.t0) && !types.includes('abraza') && !types.includes('abrazo-largo')) v = 'aereo';
     else if (types.some((x) => FRONT.has(x))) v = 'frente';
     else if (!badAt(s.t0) && types.some((x) => POWER.has(x))) v = 'contra';
     if (v) out.push({ t0: s.t0, t1: s.t1, v });

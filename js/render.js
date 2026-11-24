@@ -344,7 +344,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
     // escenas sin vista desde arriba propia: «picado» suave (la escena un poco desde arriba, más baja y aplastada)
     const drawnSegs = ((job.roles && job.roles[i] === 'bad' ? job.sides[job.roles.indexOf('good')] : side0).segments) || [job.roles && job.roles[i] === 'bad' ? job.sides[job.roles.indexOf('good')] : side0];
     let pic = 0;
-    if (V.top > 0 && !drawnSegs.every((g) => AERIAL_SCENES.has(g.scene) || g.people.some((p) => p.act === 'ausente'))) { pic = V.top; V = { ...V, top: 0 }; }
+    // (v43: ya no hay «picado» de reserva: angulos.js solo pide la vista desde arriba en escenas con objetos)
+    void drawnSegs;
     const cam0 = cameraAt(job, i, pn, t);
     // desde arriba o desde abajo no hay primer plano (se ve el sitio entero)
     const nz = Math.max(V.top, V.low);
