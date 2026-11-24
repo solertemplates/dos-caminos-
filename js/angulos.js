@@ -22,9 +22,11 @@ const RED = '#E5484D', AMBER = '#F4B860';
 const BLEND = 0.6;
 
 // escenas con vista aérea propia (en las demás, el suelo y los personajes desde arriba)
-export const AERIAL_SCENES = new Set(['mesa', 'cama', 'sofa', 'camino', 'abrazo', 'parque', 'cocina', 'telefono']);
+// (v41: todas las escenas se pueden ver desde arriba; las que no tienen dibujo propio, el suelo con sus personajes y su luz)
+export const AERIAL_SCENES = new Set(['mesa', 'cama', 'sofa', 'camino', 'abrazo', 'parque', 'cocina', 'telefono', 'escalera', 'tienda', 'libros', 'montana', 'puente',
+  'arbol', 'alcancia', 'casa', 'fogata', 'oficina', 'coche', 'gimnasio', 'huerto', 'lluvia', 'carta', 'reloj', 'regalo', 'aeropuerto']);
 const FRONT = new Set(['llora', 'abraza', 'abrazo-largo', 'recibir-corazon', 'estoy-contigo']);
-const LONELY = new Set(['tristeza', 'ansiedad', 'llora']);
+const LONELY = new Set(['tristeza', 'ansiedad', 'llora', 'aleja']);
 const POWER = new Set(['celebra', 'alegria']);
 const CLIMB = new Set(['subir', 'escalar']);
 
@@ -93,6 +95,7 @@ export function anglesFor(job, plans, i) {
   const cuts = segT.slice(1).map(([a]) => a).filter((a) => a != null);
   const list = out.sort((a, b) => a.t0 - b.t0);
   for (const c of cuts) for (const x of list) {
+    if (x.v === 'frente') continue; // el llanto y el abrazo siguen de frente aunque cambie la escena
     if (x.t0 >= c - 0.7 && x.t1 <= c + 1.4) x.t1 = x.t0; // dentro: fuera
     else if (x.t0 < c - 0.7 && x.t1 > c - 0.7) x.t1 = c - 0.7;
     else if (x.t0 >= c - 0.7 && x.t0 < c + 1.4) x.t0 = c + 1.4;
@@ -156,7 +159,9 @@ export function drawAerial(ctx, S, figs) {
   const y0 = -F * (narrow ? 0.62 : 0.5);
   const P = (x, depth, h = 0) => [x, y0 + depth * ST + h * CT]; // punto del suelo (h: altura, negativa hacia arriba)
   // la cámara de arriba, más cerca (todo un poco más grande alrededor del centro del suelo)
-  const K = scene === 'camino' ? 1 : narrow ? 1.1 : 1.45; // (el camino ya ocupa todo el ancho)
+  // (el camino ya ocupa todo el ancho; y nunca tanto que alguien se salga: p. ej. al alejarse hacia los bordes)
+  const reach = figs.reduce((mx, f) => { const m = f.m || { a: 1, e: 0 }; return Math.max(mx, Math.abs(m.e + m.a * f.o.x) + F * 0.3); }, F * 0.8);
+  const K = scene === 'camino' ? 1 : Math.max(1, Math.min(narrow ? 1.1 : 1.45, (w / 2 - F * 0.05) / reach));
   const hw = Math.min(w / 2 / K - F * 0.04, F * 2.1), dd = F * (narrow ? 0.7 : 0.62);
   ctx.save();
   ctx.translate(0, y0); ctx.scale(K, K); ctx.translate(0, -y0);
@@ -182,6 +187,13 @@ export function drawAerial(ctx, S, figs) {
   else if (scene === 'camino') aerialCamino(ctx, S, P, items, depthOf, hw);
   else if (scene === 'cocina') { sl(ctx, F, 0.8); const [x, y] = P(-w * 0.1, -dd * 0.75); rr(ctx, x - F * 0.6, y - F * 0.12, F * 1.2, F * 0.24, F * 0.03); ctx.stroke(); for (const k of [-1, 1]) { ctx.beginPath(); ctx.arc(x + k * F * 0.25, y, F * 0.07, 0, 7); ctx.stroke(); } }
   else if (scene === 'parque') { sl(ctx, F, 0.6); const [x, y] = P(-w * 0.34, -dd * 0.55, 0); ctx.beginPath(); ctx.arc(x, y, F * 0.32, 0, 7); ctx.stroke(); ctx.globalAlpha = 0.15; ctx.fillStyle = WHITE; ctx.fill(); }
+  else if (scene === 'escalera') aerialEscalera(ctx, S, P);
+  else if (scene === 'tienda') aerialTienda(ctx, S, P);
+  else if (scene === 'libros') aerialLibros(ctx, S, P);
+  else if (scene === 'montana') aerialMontana(ctx, S, P);
+  else if (scene === 'puente') aerialPuente(ctx, S, P, dd);
+  else if (scene === 'fogata') { const [x, y] = P(0, 0); glowAt(ctx, x, y, F * 0.9, '#FF7A45', S.good ? 0.9 : 0.5 * (1 - smooth(S.r))); sl(ctx, F, 0.6); ctx.beginPath(); ctx.ellipse(x, y, F * 0.2, F * 0.2 * ST, 0, 0, 7); ctx.stroke(); }
+  else if (scene === 'arbol') { const [x, y] = P(0, -F * 0.2, -F * 0.9); sl(ctx, F, 0.6); ctx.beginPath(); ctx.arc(x, y, F * 0.42, 0, 7); ctx.stroke(); ctx.globalAlpha = 0.12; ctx.fillStyle = WHITE; ctx.fill(); }
   else if (scene === 'telefono') { sl(ctx, F, 0.7); for (const k of [-1, 1]) { const [x, y] = P(k * w * 0.27, 0); rr(ctx, x - F * 0.42, y - F * 0.32, F * 0.84, F * 0.64, F * 0.02); ctx.stroke(); } }
   // las figuras, de atrás hacia delante
   items.sort((a, b) => (depthOf[a.j] || 0) - (depthOf[b.j] || 0));
@@ -193,6 +205,50 @@ export function drawAerial(ctx, S, figs) {
     if (it.use && it.use.prop !== 'bike') { try { drawUseProp(ctx, it.use, fig, { ...oo, y: oo.y }, it.k, {}); } catch (e) {} }
   }
   ctx.restore();
+}
+
+// escalera desde arriba: los escalones como franjas que van hacia la luz
+function aerialEscalera(ctx, S, P) {
+  const { F, w } = S;
+  const K = 7, x0 = -w * 0.3, sw = (w * 0.62) / K, sh = F * 0.08, d = F * 0.42;
+  sl(ctx, F, 0.8);
+  for (let i = 0; i < K; i++) { const [x, y] = P(x0 + i * sw, -d / 2, -(i + 1) * sh); ctx.strokeRect(x, y, sw, d * ST); }
+  const shine = S.good ? 0.45 + 0.55 * smooth(S.r / 0.5) : 0.45 * (1 - 0.6 * smooth(S.r / 0.6));
+  const [gx, gy] = P(x0 + K * sw + sw * 0.4, 0, -K * sh); glowAt(ctx, gx, gy, F * 0.6, '#F4A259', shine);
+}
+// tienda desde arriba: el toldo a rayas y el mostrador
+function aerialTienda(ctx, S, P) {
+  const { F } = S;
+  const sw = F * 0.95, d = F * 0.55;
+  const [x, y] = P(-sw / 2, -d / 2, -F * 1.05);
+  sl(ctx, F, 0.85); ctx.strokeRect(x, y, sw, d * ST);
+  for (let i = 1; i < 6; i++) { ctx.globalAlpha = 0.45; ctx.beginPath(); ctx.moveTo(x + (i * sw) / 6, y); ctx.lineTo(x + (i * sw) / 6, y + d * ST); ctx.stroke(); }
+}
+// libros desde arriba: la mesita y la pila de libros
+function aerialLibros(ctx, S, P) {
+  const { F, w } = S;
+  const [x, y] = P(w * 0.14, 0, -F * 0.3);
+  sl(ctx, F, 0.8); ctx.strokeRect(x - F * 0.18, y - F * 0.14 * ST, F * 0.36, F * 0.28 * ST);
+  const n = 1 + Math.floor(4 * smooth(S.p));
+  for (let k = 0; k < n; k++) { ctx.globalAlpha = 0.5 + 0.1 * k; ctx.strokeRect(x - F * 0.1 + k * 3, y - F * 0.07 * ST - k * 3, F * 0.2, F * 0.14 * ST); }
+}
+// montaña desde arriba: curvas de nivel y la bandera naranja en la cima
+function aerialMontana(ctx, S, P) {
+  const { F, w } = S;
+  const [x, y] = P(w * 0.24, 0, -F * 0.85);
+  sl(ctx, F, 0.5);
+  for (let k = 1; k <= 4; k++) { ctx.beginPath(); ctx.ellipse(x - k * F * 0.04, y + k * F * 0.05, k * F * 0.3, k * F * 0.2 * ST, 0, 0, 7); ctx.globalAlpha = 0.6 - k * 0.1; ctx.stroke(); }
+  ctx.globalAlpha = 0.95; ctx.fillStyle = '#F4A259'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + F * 0.14, y - F * 0.03); ctx.lineTo(x, y - F * 0.08); ctx.fill();
+}
+// puente desde arriba: las dos orillas, el vacío en medio y las tablas puestas
+function aerialPuente(ctx, S, P, dd) {
+  const { F, w } = S;
+  const gL = -w * 0.27, gR = w * 0.27;
+  const [ax, ay] = P(gL, -dd), [bx, by] = P(gR, dd);
+  ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(ax, ay, bx - ax, by - ay); ctx.restore();
+  sl(ctx, F, 0.7); ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, by); ctx.moveTo(bx, ay); ctx.lineTo(bx, by); ctx.stroke();
+  const prog = S.good ? smooth(S.p) : smooth(S.p) * 0.5, N = 9, pw = (gR - gL) / N;
+  for (let k = 0; k < Math.round(N * prog); k++) { const [x, y] = P(gL + k * pw, -F * 0.16); ctx.strokeRect(x + 2, y, pw - 4, F * 0.32 * ST); }
 }
 
 function aerialMesa(ctx, S, P, items, people) {

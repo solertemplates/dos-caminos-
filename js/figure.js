@@ -127,7 +127,7 @@ export function solveFigure(pose, H, facing, kind) {
 
 // ÁNGULOS DE CÁMARA (ver js/angulos.js): la figura como un muñeco en 3D muy simple. Cada brazo y cada pierna
 // sale de su lado del cuerpo (los de delante hacia la cámara, los de detrás al otro lado) y se proyecta:
-//   view.yaw (0–1): se gira hacia la cámara (1 = de frente, unos 70°: tres cuartos, aún se ve hacia quién mira)
+//   view.yaw (0–1): se gira hacia la cámara (1 = de frente, unos 77°: casi de frente, aún se ve hacia quién mira)
 //   view.top (0–1): vista desde arriba (1 ≈ 69°: se ven los hombros, la cabeza y lo que tiene delante)
 //   view.depth: profundidad sobre el suelo (vista desde arriba: más cerca de la cámara = más abajo)
 // Sin view (o todo a 0) se dibuja exactamente como siempre (vista lateral).
@@ -136,7 +136,7 @@ const BUN = (P, pose, facing) => {
   return [P.head[0] - facing * Math.cos(ang) * P.r * 0.78 - facing * Math.sin(ang) * P.r * 0.35, P.head[1] - Math.cos(ang) * P.r * 0.42 + Math.sin(ang) * P.r * 0.2];
 };
 export function projectFigure(P, H, facing, v, pose) {
-  const yaw = (v.yaw || 0) * 1.22, th = (v.top || 0) * 1.2;
+  const yaw = (v.yaw || 0) * 1.35, th = (v.top || 0) * 1.2; // de frente ≈ 77°
   const cy = Math.cos(yaw), sy = Math.sin(yaw), ct = Math.cos(th), st = Math.sin(th);
   const sw = 0.085 * H, hw = 0.05 * H, d0 = v.depth || 0;
   const pr = (p, z) => {

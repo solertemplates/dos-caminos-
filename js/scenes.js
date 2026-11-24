@@ -103,15 +103,25 @@ function drawFigure(ctx, o) {
     o = lifePose(o, mIdx >= 0 ? mIdx : 0, CUR.t, { busy: BUSY_ACTS.has(o.pe.act) || !!use || riding, standing: !sitting, sitting });
   }
   // ÁNGULO «de frente»: se gira hacia la cámara (no quien camina, va en bici o está acostado: esos, siempre de lado)
+  // Quien camina se queda de lado mientras se mueve; cuando se para (para abrazar, llorar, esperar) se gira
+  // poco a poco hacia la cámara, y al volver a caminar vuelve a ponerse de lado (turnK, por persona y fotograma)
   const V = CUR && CUR.view;
-  if (V && V.yaw > 0.001 && o.pe && !isWalker(CUR.sceneName, o.pe.act) && !riding && o.pose.tr < 1.0 && o.neutral !== 'none') o = { ...o, view: { yaw: V.yaw } };
+  let turnK = 1;
+  if (V && V.yaw > 0.001 && o.pe && isWalker(CUR.sceneName, o.pe.act) && mIdx >= 0 && CUR.moments && CUR.moments.pos) {
+    const prev = CUR.moments.pos[mIdx];
+    const dt = prev ? CUR.t - prev.t : -1;
+    const fresh = prev && dt >= 0 && dt < 0.3 && prev.turnK != null;
+    const moving = prev && dt > 0 && dt < 0.3 && Math.abs(bx - prev.bx) > o.F * 0.0025 * (dt * 30);
+    turnK = fresh ? (dt === 0 ? prev.turnK : Math.max(0, Math.min(1, prev.turnK + (moving ? -1 : 1) * dt / 0.45))) : moving ? 0 : 1;
+  }
+  if (V && V.yaw > 0.001 && o.pe && !riding && o.pose.tr < 1.0 && o.neutral !== 'none' && turnK > 0.001) o = { ...o, view: { yaw: V.yaw * turnK } };
   if (V && V.top > 0.001 && !riding) o = { ...o, view: { ...(o.view || {}), top: V.top } }; // picado suave: se ven un poco los hombros
   const fig = rawFigure(ctx, o);
   if (CUR && !CUR.collect) CUR._figs = (CUR._figs || 0) + 1; // (la pasada oculta de la vista aérea no cuenta) // para comprobar que solo salen los personajes del guion
   if (mIdx >= 0) {
     // el ausente se dibuja fuera de la escena principal: su posición se guarda en las coordenadas de la escena
     const inv = CUR.recInv;
-    if (!inv) recordFigure(CUR.moments, mIdx, bx, o, fig);
+    if (!inv) { recordFigure(CUR.moments, mIdx, bx, o, fig); if (CUR.moments && CUR.moments.pos && CUR.moments.pos[mIdx]) CUR.moments.pos[mIdx].turnK = turnK; }
     else {
       const m = (p) => [(p[0] - inv.d) / inv.s, p[1] / inv.s];
       recordFigure(CUR.moments, mIdx, (bx - inv.d) / inv.s, { ...o, x: (o.x - inv.d) / inv.s }, { ...fig, H: fig.H / inv.s, head: m(fig.head), shoulder: m(fig.shoulder), hip: m(fig.hip), fh: m(fig.fh), bh: m(fig.bh) });
