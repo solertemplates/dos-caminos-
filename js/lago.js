@@ -9,7 +9,9 @@ const { setLine, line, groundMass, resultBlend, personDim, drawFigure } = kit;
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 
 // barca de perfil: (x, y) = centro del fondo; q = cuánto está arreglada (0–1); oars: ángulo de los remos (o null)
-function boat(ctx, F, x, y, L, q, oars) {
+// opts.crooked: tablas torcidas (el rápido); opts.shiny: tablas brillantes con destellos (el perfeccionista);
+// opts.lifted: la tabla que el perfeccionista tiene quitada (no se dibuja en la barca)
+function boat(ctx, F, x, y, L, q, oars, opts = {}) {
   const h = F * 0.15;
   ctx.save();
   setLine(ctx, F, 0.95, 1);
@@ -28,9 +30,18 @@ function boat(ctx, F, x, y, L, q, oars) {
   for (let k = 1; k <= n; k++) {
     const yy = y - h + (k * h) / (n + 1);
     const done = q >= k / n - 0.02;
-    setLine(ctx, F, done ? 0.75 : 0.35, 0.7);
-    if (done) line(ctx, x - L * 0.42 + k * 2, yy, x + L * 0.42 - k * 2, yy);
-    else { ctx.setLineDash([F * 0.03, F * 0.05]); line(ctx, x - L * 0.4, yy, x + L * 0.4, yy); ctx.setLineDash([]); }
+    if (done && opts.lifted === k) continue; // la tabla que tiene en las manos
+    setLine(ctx, F, done ? (opts.shiny ? 1 : 0.75) : 0.35, opts.shiny && done ? 0.9 : 0.7);
+    if (done) {
+      // el rápido las clava torcidas; el perfeccionista, perfectas y brillantes
+      const tilt = opts.crooked ? Math.sin(k * 7.3) * h * 0.18 : 0, sh = opts.crooked ? Math.sin(k * 3.1) * L * 0.04 : 0;
+      line(ctx, x - L * 0.42 + k * 2 + sh, yy - tilt, x + L * 0.42 - k * 2 + sh, yy + tilt);
+      if (opts.shiny) {
+        const gx = x - L * 0.38 + ((opts.t * 0.35 + k * 0.23) % 1) * L * 0.76;
+        ctx.save(); ctx.fillStyle = AMBER; ctx.globalAlpha = 0.9; ctx.beginPath(); ctx.arc(gx, yy, F * 0.012, 0, 7); ctx.fill();
+        ctx.strokeStyle = AMBER; ctx.globalAlpha = 0.6; ctx.lineWidth = 1.5; line(ctx, gx - F * 0.03, yy, gx + F * 0.03, yy); line(ctx, gx, yy - F * 0.03, gx, yy + F * 0.03); ctx.restore();
+      }
+    } else { ctx.setLineDash([F * 0.03, F * 0.05]); line(ctx, x - L * 0.4, yy, x + L * 0.4, yy); ctx.setLineDash([]); }
   }
   // remos
   setLine(ctx, F, 0.85, 0.8);
@@ -83,16 +94,24 @@ SCENES.lago = {
     ctx.restore(); ctx.stroke();
     const L = F * 0.7, bx0 = xs - L / 2 - F * 0.08;
     // cuánto está arreglada: el que sale la termina; el que no, nunca la acaba (siempre le falta un detalle)
-    const q = S.good ? smooth(S.p * 1.25) : 0.82 * smooth(S.p);
+    // MODO juntos: el perfeccionista (A) y el rápido (B) trabajan distinto desde el principio
+    const perf = S.lagoStyle === 'perfeccionista', fast = S.lagoStyle === 'rapido';
+    let q = S.good ? smooth(S.p * 1.25) : 0.82 * smooth(S.p);
+    if (perf) q = Math.min(0.42, 0.42 * smooth(S.p * 1.4)); // casi no avanza: dos tablas, brillantes
+    if (fast) q = smooth(S.p * 2.05); // a mitad del video ya está terminada (fea, pero entera)
     const pe = S.people[0] || { kind: 'hombre', act: 'arreglar-barco' };
     const r = S.r;
+    // el perfeccionista repite con la misma tabla: lija y pule → la mide con la regla → la quita y la vuelve a poner
+    const cyc = perf ? (t % 6) / 6 : 0;
+    const topPlank = Math.max(1, Math.round(q * 5));
+    const lifted = perf && cyc > 0.74 && cyc < 0.96 && r < 0.55 ? topPlank : null;
     const k1 = S.good ? smooth(r / 0.15) : 0, k2 = S.good ? smooth((r - 0.15) / 0.47) : 0, land = S.good ? smooth((r - 0.64) / 0.12) : 0;
     // la barca: en la orilla → al agua → cruza → varada en la otra orilla
     const bxWater = xs + L / 2 + F * 0.06, bxFar = xo - L / 2 - F * 0.02;
     const bx = k2 > 0 ? lerp(bxWater, bxFar, k2) : lerp(bx0, bxWater, k1);
     const by = k1 > 0.5 ? F * 0.06 + Math.sin(t * 3) * F * 0.008 : 0;
     const rowing = k1 > 0.5 && land < 0.5;
-    boat(ctx, F, bx, by, L, q, rowing ? 0.5 + 0.45 * Math.sin(t * 6) : null);
+    boat(ctx, F, bx, by, L, q, rowing ? 0.5 + 0.45 * Math.sin(t * 6) : null, { crooked: fast, shiny: perf, lifted, t });
     S.objHand = true;
     if (S.good) S.focus = [fx - F * 0.2, -F * 1.35];
     let x, y = 0, pose, facing = 1;
@@ -107,13 +126,46 @@ SCENES.lago = {
       x = bx - L * 0.05; y = by - F * 0.15;
       const a = Math.sin(t * 6);
       pose = { ...POSES.sit, tr: -0.05 + 0.15 * a, hd: -0.05, fa1: 1.2 + 0.4 * a, fa2: 1.5 + 0.3 * a, ba1: 1.15 + 0.4 * a, ba2: 1.45 + 0.3 * a };
+    } else if (perf) {
+      // el perfeccionista: lija y pule, mide con la regla, quita la tabla y la vuelve a poner… una y otra vez.
+      // Al final se queda puliendo, mira cómo se aleja el otro y se sienta desanimado (lo hace render.js con giveUp)
+      x = bx0 - L / 2 - F * 0.12;
+      const look = smooth((r - 0.5) / 0.15);
+      let tool = null;
+      if (cyc < 0.5 || r >= 0.55) {
+        const rub = Math.sin(t * 11);
+        pose = { ...POSES.crouch, tr: 0.62, hd: 0.45, fa1: 1.0 + 0.32 * rub, fa2: 1.25 + 0.3 * rub, ba1: 0.85, ba2: 1.1 };
+        tool = 'lija';
+      } else if (cyc < 0.74) {
+        pose = { ...POSES.crouch, tr: 0.55, hd: 0.6, fa1: 1.15, fa2: 1.4, ba1: 1.05, ba2: 1.35 };
+        tool = 'regla';
+      } else {
+        const up = Math.sin(((cyc - 0.74) / 0.22) * Math.PI);
+        pose = { ...POSES.crouch, tr: 0.45 - 0.25 * up, hd: 0.2 - 0.3 * up, fa1: 1.2 + 0.9 * up, fa2: 1.4 + 0.9 * up, ba1: 1.1 + 0.9 * up, ba2: 1.35 + 0.9 * up };
+        tool = 'tabla';
+      }
+      if (look > 0) { pose = lerpPose(pose, { ...pose, hd: -0.15, tr: 0.35 }, look); facing = look > 0.5 ? -1 : 1; } // mira hacia el otro, que se va
+      const fig = drawFigure(ctx, { x, y, pose: breathe(pose, t, 0.5), F, facing, kind: pe.kind, pe, alpha: personDim(S) });
+      if (fig && tool && S.giveUp < 0.3) {
+        const hx = (fig.fh[0] + fig.bh[0]) / 2, hy = (fig.fh[1] + fig.bh[1]) / 2;
+        ctx.save(); setLine(ctx, F, 0.9, 0.8);
+        if (tool === 'lija') { ctx.strokeRect(hx - F * 0.04, hy - F * 0.02, F * 0.08, F * 0.04); }
+        else if (tool === 'regla') { line(ctx, hx - F * 0.18, hy, hx + F * 0.18, hy); for (let k = -3; k <= 3; k++) line(ctx, hx + k * F * 0.05, hy, hx + k * F * 0.05, hy - F * 0.025); }
+        else { setLine(ctx, F, 1, 0.9); line(ctx, hx - F * 0.2, hy - F * 0.01, hx + F * 0.2, hy + F * 0.01); }
+        ctx.restore();
+      }
+      return;
+    } else if (fast && q >= 1 && k1 <= 0) {
+      // el rápido: la barca ya está (fea, pero entera); mira el agua con la mano en la barca, listo para salir
+      x = bx0 - L / 2 - F * 0.1;
+      pose = { ...POSES.stand, tr: 0.05, hd: -0.15 + 0.08 * Math.sin(t * 1.3), fa1: 1.25, fa2: 1.3, ba1: 0.15, ba2: 0.3 };
     } else {
-      // agachado junto a la barca, arreglándola (golpea con el martillo)
+      // agachado junto a la barca, arreglándola (golpea con el martillo; el rápido, mucho más deprisa)
       x = bx0 - L / 2 - F * 0.12 + k1 * F * 0.4;
-      const hit = Math.pow(0.5 + 0.5 * Math.sin(t * 5), 1.5);
+      const hit = Math.pow(0.5 + 0.5 * Math.sin(t * (fast ? 11 : 5)), 1.5);
       pose = { ...POSES.crouch, tr: 0.75, hd: 0.3, fa1: 0.45 + 1.1 * hit, fa2: 0.3 + 1.4 * hit, ba1: 0.5, ba2: 0.3 };
       if (k1 > 0) pose = lerpPose(pose, { ...POSES.stand, tr: 0.3, fa1: 1.2, fa2: 1.4, ba1: 1.1, ba2: 1.3 }, smooth(k1 * 2)); // empuja la barca
-      if (!S.good && r > 0) pose = lerpPose(pose, { ...POSES.floor, hd: 1.0, tr: 0.45, fa1: 0.35, fa2: 0.2, ba1: 0.3, ba2: 0.18 }, resultBlend(S, 0.1, 0.6)); // se desanima
+      if (!S.good && r > 0 && !perf) pose = lerpPose(pose, { ...POSES.floor, hd: 1.0, tr: 0.45, fa1: 0.35, fa2: 0.2, ba1: 0.3, ba2: 0.18 }, resultBlend(S, 0.1, 0.6)); // se desanima
     }
     drawFigure(ctx, { x, y, pose: breathe(pose, t, 0.5), F, facing, kind: pe.kind, pe, alpha: personDim(S), neutral: k1 > 0.5 ? 'none' : undefined });
     // el segundo (si lo hay) espera en la orilla

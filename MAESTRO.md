@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 26 nov 2026 (v46: MODO juntos como una Y y escena lago; v45: MODO juntos; v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 26 nov 2026 (v47: en «juntos» con el lago, el perfeccionista y el rápido; v46: MODO juntos como una Y y escena lago; v45: MODO juntos; v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -250,6 +250,10 @@ Como en el cine, no todo se ve de lado:
 - **Sin títulos, sin frases, sin gancho y sin subtítulos:** solo los personajes, los objetos, **un contador arriba en el centro** si el subtítulo lo trae (`DÍA {1-30}`) y la música.
 - Cómo lo hace la app: cada lado es la misma escena dibujada en su mitad (la de A en espejo, para que los dos queden hacia el centro y sus objetos hacia fuera).
 - Escenas probadas: **arbol** (regar), **lago** (arreglar-barco), **computadora** (= oficina, trabajar). Vale con cualquier escena.
+- **⭐ El lago en «juntos» (v47): aquí NO hacen lo mismo; la diferencia se ve desde el segundo 2.**
+  - **A (izquierda), el perfeccionista:** lija y pule la misma tabla una y otra vez, la mide con una regla, la quita y la vuelve a poner (ciclo de 6 s). Su barca casi no avanza: dos tablas perfectas y brillantes (destellos ámbar), las demás a trozos.
+  - **B (derecha), el rápido:** martillea deprisa y pone las tablas aunque queden torcidas; su barca avanza a la vista. **A mitad del video ya está terminada** (fea, pero entera) y B espera a su lado, con la mano en la barca, mirando el agua. La de A sigue a medias, pero brillante.
+  - **Últimos 4 segundos:** B empuja la barca al agua, rema, cruza y celebra con los brazos arriba en la otra orilla (corazón grande). A se queda puliendo la misma tabla, se gira a mirar cómo se aleja B y se sienta desanimado.
 - La portada se mantiene (en este modo, el texto va arriba, sobre el cielo).
 - **Por defecto (sin la línea MODO) todo sigue como antes** (comprobado: los mismos videos, píxel a píxel). No se combina con INICIO ni con la división.
 

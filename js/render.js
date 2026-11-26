@@ -648,10 +648,11 @@ function renderCore(ctx, job, t, scale = 1) {
 const JUNTOS_X = 0.6; // fundido (s) del objeto de A hacia su final
 const JUNTOS_S = 0.7; // tamaño de cada mitad
 // línea de tiempo: igual que siempre, pero el final (el resultado) son los últimos 3 s y no hay cierre con texto
-export function juntosTimeline(tl) {
-  const resStart = tl.D - 3;
+// (en el lago, los últimos 4 s: el rápido empuja la barca, rema, cruza y celebra)
+export function juntosTimeline(tl, sides = []) {
+  const resStart = tl.D - (sides.some((sd) => sd && sd.scene === 'lago') ? 4 : 3);
   const mainDur = resStart - tl.mainStart;
-  return { ...tl, resStart, res: 3, endStart: tl.D + 1, end: 1, mainDur, C: Math.max(4, Math.min(22, Math.round(mainDur / 1.6))) };
+  return { ...tl, resStart, res: tl.D - resStart, endStart: tl.D + 1, end: 1, mainDur, C: Math.max(4, Math.min(22, Math.round(mainDur / 1.6))) };
 }
 function renderJuntos(ctx, job, t, scale) {
   const { tl, layout } = job;
@@ -677,15 +678,17 @@ function renderJuntos(ctx, job, t, scale) {
     // dónde está el centro de la pantalla en las coordenadas de esta mitad (de ahí salen al principio)
     const lx = (W / 2 + (A ? -1 : 1) * pn.F * 0.13 * s - hx) / (m * s);
     // dos estados del objeto de A al final (el común y el suyo); B, siempre el bueno
-    const states = A && r > 0 ? [{ good: true, a: 1 - rk }, { good: false, a: rk }] : [{ good: true, a: 1 }];
+    // lago: A es el perfeccionista y B el rápido desde el principio (cada uno lo suyo; la escena se encarga del final)
+    const lago = sceneName === 'lago';
+    const states = lago ? [{ good: !A, a: 1 }] : A && r > 0 ? [{ good: true, a: 1 - rk }, { good: false, a: rk }] : [{ good: true, a: 1 }];
     for (const stt of states) {
       if (stt.a <= 0.001) continue;
       const S = {
         w: hw / s, F: pn.F, people: people.filter((p) => p.act !== 'ausente'), allPeople: people, absent: [], good: stt.good, bad: stt.good ? null : sd.bad || 'decay',
-        p: ps.p, r: stt.good ? (A ? 0 : r) : r, t, C: tl.C, segT0: -Infinity, seed: job.seed, arc: null, role: null, sceneName,
+        p: ps.p, r: lago ? r : stt.good ? (A ? 0 : r) : r, t, lagoStyle: lago ? (A ? 'perfeccionista' : 'rapido') : null, C: tl.C, segT0: -Infinity, seed: job.seed, arc: null, role: null, sceneName,
         dimmed: false, focus: null, object: null, moments: null, view: { yaw: 0 },
         arrive: arrive < 1 ? { k: arrive, x: lx } : null,
-        giveUp: A ? smooth(r / 0.5) : 0, victory: !A && sceneName !== 'lago' ? smooth(r / 0.4) : 0,
+        giveUp: A ? (lago ? smooth((r - 0.72) / 0.22) : smooth(r / 0.5)) : 0, victory: !A && !lago ? smooth(r / 0.4) : 0,
         box: { l: -hw / s / 2, r: hw / s / 2, top: (pn.clip[1] - pn.groundY) / s, bot: (pn.clip[1] + pn.clip[3] - pn.groundY) / s },
       };
       ctx.save();
