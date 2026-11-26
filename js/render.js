@@ -326,6 +326,7 @@ export function momentsOf(job) {
 
 // UNA SOLA HISTORIA Y LUEGO SE DIVIDE (INICIO / SEPARAR) y subtítulos de la VOZ: ver js/voz.js
 export function renderFrame(ctx, job, t, scale = 1) {
+  if (job.modo === 'juntos') return renderJuntos(ctx, job, t, scale);
   const I = !job.isIntro && job.intro;
   if (I && t < I.Ts) {
     // antes de dividirse: la historia común, a pantalla completa
@@ -632,6 +633,99 @@ function renderCore(ctx, job, t, scale = 1) {
     // regla de ritmo en el cierre largo: una estrella fugaz como la del principio (el final se parece al inicio)
     const se = e - (tl.end - 2.4);
     if (tl.end > 4 && se > 0 && se < 1.2) shootingStar(ctx, se);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// MODO: juntos — UNA sola escena a pantalla completa, sin dividir: el objeto principal (el árbol…) en el centro,
+// el personaje del camino A a la izquierda y el del B a la derecha, los dos haciendo la misma acción a la vez.
+// Un solo contador arriba en el centro, sin más textos. En el momento final, el del camino que termina mal se rinde
+// y se va caminando hacia su borde; el otro sigue. El objeto cambia solo de su lado: florece del lado del que
+// sigue y se seca del lado del que se va. (Cada mitad es la misma escena: la derecha en espejo.)
+const JUNTOS_X = 0.6; // fundido (s) entre el estado común y el final de cada lado
+function juntosPivot(job, scene, pn, people) {
+  if (job._pivot != null) return job._pivot;
+  const S = { w: pn.stageW, F: pn.F, people, allPeople: people, absent: [], good: true, bad: null, p: 1, r: 1, t: 0, C: job.tl.C, seed: job.seed, sceneName: job.sides[0].scene, focus: null, box: { l: -pn.stageW / 2, r: pn.stageW / 2, top: -pn.F * 3, bot: pn.F }, moments: null };
+  setCurrent(S);
+  try { scene.draw(collectCtx(), S); } catch (e) {}
+  setCurrent(null);
+  job._pivot = S.focus ? S.focus[0] : 0;
+  return job._pivot;
+}
+function renderJuntos(ctx, job, t, scale) {
+  const { tl, layout } = job;
+  const st = stateAt(tl, t);
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.globalAlpha = 1;
+  paintBackground(ctx, job);
+  drawStars(ctx, job.stars, t);
+  if (t < 1.2) shootingStar(ctx, t);
+  const pn = layout.panels[0];
+  const gi = job.sides[1] && job.sides[1].good && !job.sides[0].good ? 1 : job.sides[0].good ? 0 : 1; // el camino que sigue
+  const G = job.sides[gi];
+  const sceneName = G.scene;
+  const scene = SCENES[sceneName] || SCENES.arbol;
+  // la misma acción a la vez: las acciones del camino que sigue, con los personajes de cada lado
+  const peopleOf = (sd) => sd.people.map((p, j) => ({ ...p, act: (G.people[j] || G.people[0]).act }));
+  const pivot = juntosPivot(job, scene, pn, peopleOf(G));
+  const ps = panelState(layout, 0, st, tl.C);
+  const endDim = st.phase === 'end' ? 1 - 0.2 * smooth(st.endK * 2.5) : 1;
+  const rk = st.phase === 'main' || st.phase === 'hook' ? 0 : smooth((t - tl.resStart) / JUNTOS_X);
+  const half = (idx) => {
+    const sd = job.sides[idx];
+    const right = idx === 1;
+    const people = peopleOf(sd);
+    const quits = !sd.good;
+    // dos estados: el común (los dos igual) y el final de su camino; se funden al llegar el momento final
+    const states = quits ? [{ good: true, a: 1 - rk, leave: 0 }, { good: false, a: rk, leave: clamp(ps.r * 1.15) }] : [{ good: true, a: 1, leave: 0 }];
+    for (const stt of states) {
+      if (stt.a <= 0.001) continue;
+      const S = {
+        w: pn.stageW, F: pn.F, people: people.filter((p) => p.act !== 'ausente'), allPeople: people, absent: [], good: stt.good, bad: sd.bad,
+        p: ps.p, r: stt.good ? (sd.good ? ps.r : 0) : ps.r, t, C: tl.C, segT0: -Infinity, seed: job.seed, arc: null, role: null, sceneName,
+        dimmed: false, focus: null, object: null, moments: null, leave: stt.leave, view: { yaw: 0 },
+        box: { l: -pn.stageW / 2, r: pn.stageW / 2, top: pn.clip[1] - pn.groundY, bot: pn.clip[1] + pn.clip[3] - pn.groundY },
+      };
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(right ? W / 2 : 0, pn.clip[1], W / 2, pn.clip[3]);
+      ctx.clip();
+      ctx.translate(pn.cx, pn.groundY);
+      if (right) ctx.scale(-1, 1); // la derecha es la misma escena en espejo: el personaje B a la derecha del objeto
+      ctx.translate(-pivot, 0);
+      setNeutral(ps.neutral);
+      setCurrent(S);
+      withAlpha(ctx, stt.a * endDim, () => { S._drawn = new Set(); scene.draw(ctx, S); drawExtras(ctx, S); });
+      setNeutral(0);
+      setCurrent(null);
+      ctx.restore();
+      if (sd.good && stt.good && S.focus && ps.r > 0.45) {
+        // final feliz: el corazón grande, del lado del que sigue
+        const k = smooth((ps.r - 0.45) / 0.4);
+        const fx = (right ? -1 : 1) * (S.focus[0] - pivot) + pn.cx, fy = S.focus[1] + pn.groundY;
+        const hx = right ? Math.max(fx, W / 2 + pn.F * 0.35) : Math.min(fx, W / 2 - pn.F * 0.35);
+        const beat = 1 + 0.07 * Math.max(0, Math.sin(t * 5.2)) * Math.max(0, Math.sin(t * 5.2 + 0.6));
+        glow(ctx, hx, fy, pn.F * 1.05 * k, RED, 0.95);
+        heart(ctx, hx, fy, pn.F * 0.3 * k * beat, RED, Math.max(0.85, endDim) * k);
+      }
+    }
+  };
+  half(0);
+  half(1);
+  // un solo contador arriba en el centro (el del camino que sigue); ningún otro texto
+  const sub = (job.texts.sides[gi] || job.texts.sides[0] || {}).sub;
+  if (sub) {
+    const a = smooth((t - 1.2) / 0.5);
+    const jump = st.phase === 'hook' ? 0 : counterPulse(momentsNow(momentsOf(job)[gi], t));
+    ctx.save();
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.globalAlpha = a * (0.85 + 0.15 * jump);
+    ctx.fillStyle = jump > 0.4 ? AMBER : WHITE;
+    ctx.textBaseline = 'alphabetic';
+    const fs = Math.round(46 * (1 + 0.2 * jump));
+    ctx.font = `400 ${fs}px ${FONT}`;
+    spaced(ctx, counterText(sub, ps.cp).toUpperCase(), W / 2, 300, fs * 0.2);
+    ctx.restore();
   }
 }
 

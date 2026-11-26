@@ -19,6 +19,7 @@ const KEY = {
   fondo: 'bg', background: 'bg', color: 'bg',
   plano: 'plano', planos: 'plano', camara: 'plano', shot: 'plano', shots: 'plano', camera: 'plano',
   angulo: 'angulo', angulos: 'angulo', angle: 'angulo', vista: 'angulo', view: 'angulo',
+  modo: 'modo', mode: 'modo',
   inicio: 'intro', comun: 'intro', intro: 'intro', start: 'intro',
   separar: 'split', dividir: 'split', split: 'split',
   voz: 'voz', voice: 'voz', narracion: 'voz',
@@ -378,6 +379,7 @@ export function parseScripts(text) {
       phrase: f.phrase || '',
       bg: bgName(f.bg),
       plano: planoName(f.plano),
+      modo: /junt|together|una sola|sin dividir/.test(norm(f.modo || '')) && !isTime ? 'juntos' : null, // MODO: juntos
       intro, split: Number.isFinite(splitRaw) ? splitRaw : null,
       voz: parseVoz(f.voz, errs, label), subs: f.subs ? !/^(no|off|false|sin)/.test(norm(f.subs)) : true,
       angulo: anguloName(f.angulo),

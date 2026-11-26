@@ -281,6 +281,8 @@ function buildJob(script, idx, opts) {
     },
     title: ownTitle.trim() || phrase.replace(/\*/g, ''),
   };
+  // MODO: juntos — una sola escena a pantalla completa, A a la izquierda y B a la derecha (sin dividir ni textos)
+  if (script.modo === 'juntos') { job.modo = 'juntos'; job.layoutKind = 'full'; job.layout = layoutFor('full'); return job; }
   // UNA SOLA HISTORIA Y LUEGO SE DIVIDE (INICIO / SEPARAR) y VOZ sincronizada con subtítulos
   return prepareStory(job, { intro: script.intro, split: script.split, voz: script.voz, vozEn: script.en?.voz, subs: script.subs });
 }

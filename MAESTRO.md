@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 26 nov 2026 (v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 26 nov 2026 (v45: MODO juntos; v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -242,6 +242,15 @@ Como en el cine, no todo se ve de lado:
 - La **portada** usa el ángulo del momento elegido (p. ej. la mesa con la silla vacía desde arriba).
 - Código: `js/angulos.js` (cuándo y cómo, y la vista aérea de cada escena).
 
+### ⭐ MODO: juntos (una sola escena, sin dividir)
+
+- Con `MODO: juntos` **no se divide la pantalla**: una sola escena a pantalla completa, con **el objeto principal en el centro** (el árbol, la casa…: el que la escena marca como su objeto), **el personaje del camino A a la izquierda y el del B a la derecha**, **los dos haciendo la misma acción a la vez** (la del camino que sigue).
+- **Un solo contador arriba en el centro** (el del camino que sigue). **Sin títulos de cada camino ni ningún otro texto** (ni gancho, ni frase final, ni pregunta, ni subtítulos).
+- **En el momento final** (el resultado), el del camino que termina mal **se rinde** (cabeza baja, brazos caídos) **y se va** caminando hacia su borde, mirando hacia donde va, con pasos reales, hasta desaparecer; el otro sigue. **El objeto cambia solo de su lado:** florece del lado del que sigue (con el corazón grande) y se seca del lado del que se va (las dos mitades se funden ~0,6 s, nunca negro).
+- Cómo lo hace la app: cada mitad de la pantalla es la misma escena (la derecha en espejo), centrada en su objeto; hasta el final las dos mitades están en el mismo estado y en el final cada una pasa al de su camino.
+- La portada se mantiene (en este modo, el texto va arriba, sobre el cielo, y la escena queda limpia debajo).
+- **Por defecto (sin la línea MODO) todo sigue como antes** (comprobado: los mismos videos, píxel a píxel). No se combina con INICIO ni con la división.
+
 ### ⭐ Una sola historia y luego se divide (líneas `INICIO` y `SEPARAR`)
 
 Ver A y B juntos desde el principio satura. Con `INICIO`:
@@ -286,6 +295,7 @@ PLANO: general | cerca | mixto   (opcional; por defecto mixto)
 ANGULO: lateral | frente | aereo | mixto   (opcional; por defecto mixto)
 GANCHO: frase de 3 a 6 palabras
 PORTADA: 3 a 5 palabras para la miniatura, *clave* en rojo | roto | entero   (opcional)
+MODO: juntos   (opcional: una sola escena sin dividir, A a la izquierda y B a la derecha)
 INICIO: escenas | personajes | acciones   (opcional: la historia común antes de dividirse)
 INICIO-MOMENTOS: sucesos de la parte común   (opcional)
 SEPARAR: segundo en que se divide   (opcional; por defecto el 40 %)

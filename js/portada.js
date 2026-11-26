@@ -152,8 +152,8 @@ function drawCover(ctx, job) {
   const kind = job.layout.kind;
   // el texto va sobre el otro lado (el momento emotivo se ve limpio)
   // (lados: arriba, sobre el cielo; las caras quedan debajo)
-  const yC = kind === 'lr' ? 480 : kind === 'time' ? 765 : mom.side === 1 ? 470 : mom.side === 0 ? 1075 : 760;
-  const maxBlock = (kind === 'ab' && mom.side >= 0) || kind === 'lr' ? 330 : 430;
+  const yC = kind === 'lr' ? 480 : kind === 'full' ? 470 : kind === 'time' ? 765 : mom.side === 1 ? 470 : mom.side === 0 ? 1075 : 760;
+  const maxBlock = (kind === 'ab' && mom.side >= 0) || kind === 'lr' || kind === 'full' ? 330 : 430;
   const font = coverFontOf(job);
   const fam = font.ok === false ? FALLBACK : `"${font.family}", ${FALLBACK}`;
   const words = coverText(job);

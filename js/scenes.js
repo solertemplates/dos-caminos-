@@ -135,6 +135,16 @@ function drawFigure(ctx, o) {
     o = lifePose(o, mIdx >= 0 ? mIdx : 0, CUR.t, { busy: BUSY_ACTS.has(o.pe.act) || !!use || riding, standing: !sitting, sitting });
   }
   // ÁNGULO «de frente»: se gira hacia la cámara (no quien camina, va en bici o está acostado: esos, siempre de lado)
+  // MODO juntos: en el momento final, el del camino malo se rinde (cabeza baja, brazos caídos) y se va caminando
+  // hacia su borde, mirando hacia donde va, con pasos reales; al llegar al borde se desvanece
+  if (CUR && CUR.leave > 0 && o.pe && o.pose.tr < 1.2) {
+    const L = CUR.leave, give = smooth(L / 0.25), go = smooth((L - 0.25) / 0.75);
+    const dist = go * CUR.w * 0.75;
+    const slumped = { ...o.pose, tr: 0.25, hd: 0.8, fa1: 0.1, fa2: 0.05, ba1: 0.05, ba2: 0.02 };
+    let pose = lerpPose(o.pose, slumped, give);
+    if (go > 0) { const wk = walkPose((dist / (o.F * 0.4)) * Math.PI); pose = { ...wk, tr: 0.18, hd: 0.7, fa1: wk.fa1 * 0.4, fa2: wk.fa2 * 0.4, ba1: wk.ba1 * 0.4, ba2: wk.ba2 * 0.4 }; }
+    o = { ...o, x: o.x - dist, y: (o.y || 0) * (1 - go), facing: go > 0 ? -1 : o.facing, pose, alpha: (o.alpha ?? 1) * (1 - smooth((L - 0.85) / 0.15)), neutral: 'none' };
+  }
   // Quien camina se queda de lado mientras se mueve; cuando se para (para abrazar, llorar, esperar) se gira
   // poco a poco hacia la cámara, y al volver a caminar vuelve a ponerse de lado (turnK, por persona y fotograma)
   const V = CUR && CUR.view;
