@@ -36,15 +36,18 @@ import './aeropuerto.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
 import { cameraAt, camBox } from './camara.js';
+import { drawVoz, SPLIT_TRANS, vozOf, alignMomentsToVoz } from './voz.js';
 import { viewAt, drawAerial, collectCtx, AERIAL_SCENES } from './angulos.js';
 
 export const W = 1080, H = 1920, FPS = 30;
 const FONT = '"Helvetica Neue", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
 
-export function makeTimeline(D) {
+// split: segundo en que la historia común (INICIO) se divide en los dos caminos; los caminos empiezan ahí
+export function makeTimeline(D, split = null) {
   const end = D <= 15 ? 3.6 : D <= 30 ? 5 : 6.5;
   const res = D <= 15 ? 2.2 : 3.0;
-  const mainStart = 1.8;
+  let mainStart = 1.8;
+  if (split != null) mainStart = Math.max(1.8, Math.min(split - 0.2, D - end - res - 4));
   const endStart = D - end;
   const resStart = endStart - res;
   const mainDur = resStart - mainStart;
@@ -68,6 +71,18 @@ export function fitScenes(sides, D) {
     if (pick.length === g.length) return sd;
     return { ...sd, segments: pick.length > 1 ? pick : null, scene: pick[0].scene, people: pick[0].people };
   });
+}
+
+// Inicio de cada escena de un lado, en progreso (0–1): iguales, o los que fija la VOZ (sd.segBounds)
+export function segBoundsOf(sd, n) {
+  const b = sd && sd.segBounds;
+  return b && b.length === n + 1 ? b : Array.from({ length: n + 1 }, (_, k) => k / n);
+}
+export function segAtP(bounds, p) {
+  let k = 0;
+  while (k < bounds.length - 2 && p >= bounds[k + 1]) k++;
+  const a = bounds[k], b = bounds[k + 1];
+  return { k, local: b > a ? clamp((p - a) / (b - a)) : 0 };
 }
 
 // Regla de guion: los dos empiezan iguales (neutral = 1). En CHOICE segundos cada uno elige
@@ -182,12 +197,22 @@ export function layoutFor(kind) {
       endY: 240,
     };
   }
+  if (kind === 'full') {
+    // UNA SOLA HISTORIA a pantalla completa (el inicio común, antes de dividirse)
+    return {
+      kind,
+      panels: [{ cx: 540, groundY: 1120, stageW: 1000, F: 330, titleY: 300, tw: 900, clip: [0, 150, 1080, 1230], size: 40, sub: 26, align: 'center' }],
+      dividers: [],
+      endY: 300,
+    };
+  }
   if (kind === 'lr') {
     return {
       kind,
       panels: [
-        { cx: 270, groundY: 1000, stageW: 510, F: 255, titleY: 305, tw: 470, clip: [0, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
-        { cx: 800, groundY: 1000, stageW: 500, F: 255, titleY: 305, tw: 460, clip: [542, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
+        // los dos paneles iguales y simétricos (mismo ancho, centros a 542 px): la misma escena sale igual en los dos (regla del arco)
+        { cx: 269, groundY: 1000, stageW: 500, F: 255, titleY: 305, tw: 465, clip: [0, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
+        { cx: 811, groundY: 1000, stageW: 500, F: 255, titleY: 305, tw: 465, clip: [542, 150, 538, 1230], size: 36, sub: 26, align: 'center' },
       ],
       divider: [540, 250, 540, 1320],
       endY: 300,
@@ -293,12 +318,45 @@ export function momentsOf(job) {
   if (!job.moments) {
     const roles = rolesOf(job);
     const tD = arcTime(job.tl);
-    job.moments = planMoments(job, { roles, tD, arcEnd: tD + ARC.quit[1] + 0.25 });
+    const V = vozOf(job);
+    job.moments = planMoments(job, { roles, tD, arcEnd: tD + ARC.quit[1] + 0.25, align: V ? (pl, T0, T1, typesIn) => alignMomentsToVoz(pl, V, T0, T1, typesIn) : null });
   }
   return job.moments;
 }
 
+// UNA SOLA HISTORIA Y LUEGO SE DIVIDE (INICIO / SEPARAR) y subtítulos de la VOZ: ver js/voz.js
 export function renderFrame(ctx, job, t, scale = 1) {
+  const I = !job.isIntro && job.intro;
+  if (I && t < I.Ts) {
+    // antes de dividirse: la historia común, a pantalla completa
+    renderCore(ctx, I.job, t, scale);
+  } else {
+    renderCore(ctx, job, t, scale);
+    if (I && t < I.Ts + SPLIT_TRANS) {
+      // la división: la imagen común se funde con los dos caminos y una raya vertical crece desde el centro
+      const k = smooth((t - I.Ts) / SPLIT_TRANS);
+      if (!I.frozen || I.frozen.width !== Math.round(W * scale)) {
+        I.frozen = typeof document !== 'undefined' ? document.createElement('canvas') : new OffscreenCanvas(1, 1);
+        I.frozen.width = Math.round(W * scale); I.frozen.height = Math.round(H * scale);
+        renderCore(I.frozen.getContext('2d'), I.job, I.Ts - 0.001, scale);
+      }
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1 - k;
+      ctx.drawImage(I.frozen, 0, 0);
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      const [x1, y1, x2, y2] = job.layout.divider || [540, 250, 540, 1320];
+      const g = smooth((t - I.Ts) / (SPLIT_TRANS * 0.8)), my = (y1 + y2) / 2;
+      ctx.globalAlpha = 0.85 * (1 - 0.6 * k);
+      ctx.strokeStyle = WHITE; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(x1, lerp(my, y1, g)); ctx.lineTo(x2, lerp(my, y2, g)); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  if (!job.isIntro) drawVoz(ctx, job, t, scale);
+}
+
+function renderCore(ctx, job, t, scale = 1) {
   if (job.roles === undefined) job.roles = rolesOf(job);
   const plans = momentsOf(job);
   const { tl, layout } = job;
@@ -310,7 +368,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
   if (t < 1.2) shootingStar(ctx, t);
 
   // línea divisoria: se dibuja desde el centro al inicio
-  const dk = smooth(t / 0.5);
+  const dk = job.intro && !job.isIntro ? smooth((t - job.intro.Ts) / 0.5) : smooth(t / 0.5);
   const isTime = layout.kind === 'time';
   for (const [x1, y1, x2, y2] of layout.dividers || [layout.divider]) {
     const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
@@ -370,10 +428,11 @@ export function renderFrame(ctx, job, t, scale = 1) {
       ? segOf(gSide).map((g, k) => ({ scene: g.scene, people: g.people.map((p, j) => { const own = (mySegs[Math.min(k, mySegs.length - 1)].people); return { ...p, badAct: (own[j] || own[0] || p).act }; }) }))
       : mySegs;
     const nSeg = segs.length;
-    const xs = clamp(sp) * nSeg;
-    const kSeg = Math.min(nSeg - 1, Math.floor(xs));
-    const local = nSeg === 1 ? sp : clamp(xs - kSeg);
-    const wl = Math.min(0.45, (0.3 / Math.max(1, tl.mainDur - CHOICE)) * nSeg); // ~0,3 s de fundido
+    // dónde empieza cada escena (iguales, o en los segundos de la VOZ): bounds = progreso de inicio de cada escena
+    const bounds = segBoundsOf(role === 'bad' ? gSide : side0, nSeg);
+    const { k: kSeg, local: local0 } = segAtP(bounds, clamp(sp));
+    const local = nSeg === 1 ? sp : local0;
+    const wl = Math.min(0.45, 0.3 / Math.max(0.5, (bounds[kSeg + 1] - bounds[kSeg]) * Math.max(1, tl.mainDur - CHOICE))); // ~0,3 s de fundido
     const draws = [{ seg: segs[kSeg], p: local, a: 1 }];
     if (kSeg < nSeg - 1 && local > 1 - wl && st.phase === 'main') {
       const f = (local - (1 - wl)) / wl;
@@ -388,7 +447,7 @@ export function renderFrame(ctx, job, t, scale = 1) {
       w: pn.stageW, F: pn.F, people: side.people.filter((p) => p.act !== 'ausente'), allPeople: side.people, absent: side.people.filter((p) => p.act === 'ausente'), good: role === 'bad' ? ps.r > 0 ? false : true : side.good, bad: side.bad,
       p: dr.p, r: ps.r, t, C: tl.C,
       // cuándo empezó esta escena (los desplazamientos de escenas anteriores no pasan a la nueva)
-      segT0: dr.seg === segs[0] ? -Infinity : tOfP(tl, role ? pathInv(tl, segs.indexOf(dr.seg) / nSeg, role) ?? 1 : segs.indexOf(dr.seg) / nSeg), seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
+      segT0: dr.seg === segs[0] ? -Infinity : tOfP(tl, role ? pathInv(tl, bounds[segs.indexOf(dr.seg)], role) ?? 1 : bounds[segs.indexOf(dr.seg)]), seed: isTime || job.roles ? job.seed : job.seed + i * 13, arc: arcState(tl, t, st, role), role, sceneName: side.scene,
       dimmed: !side0.good && ps.r > 0.4, focus: null,
       // si alguien usa ese objeto (tocar-guitarra…), va en su mano y no se dibuja aparte
       object: side.object && !side.people.some((p) => USES[p.act]?.obj === side.object) ? side.object : null,
@@ -481,7 +540,8 @@ export function renderFrame(ctx, job, t, scale = 1) {
   });
 
   // textos de cada lado
-  const titleA = st.phase === 'hook' || st.phase === 'rewind' ? smooth((t - 1.35) / 0.45) : st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1;
+  let titleA = st.phase === 'hook' || st.phase === 'rewind' ? smooth((t - 1.35) / 0.45) : st.phase === 'end' ? 1 - smooth(st.endK * 4) : 1;
+  if (job.intro && !job.isIntro) titleA *= smooth((t - job.intro.Ts - 0.25) / 0.5); // los títulos de cada camino, al dividirse
   job.sides.forEach((side, i) => {
     const pn = layout.panels[i];
     const tx = job.texts.sides[i];

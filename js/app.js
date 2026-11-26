@@ -3,6 +3,7 @@ import { parseScripts } from './parser.js';
 import { APP_VERSION } from './version.js';
 import { EXAMPLES } from './examples.js';
 import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES, fitScenes, loadCoverFonts } from './render.js';
+import { prepareStory } from './voz.js';
 import { renderAudio } from './audio.js';
 import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
 import { remuxWithAudio } from './remux.js';
@@ -263,7 +264,7 @@ function buildJob(script, idx, opts) {
   const tl = makeTimeline(opts.duration);
   // la misma semilla para el mismo guion: crear el mismo guion varias veces da el mismo video
   const seed = opts.seed ?? scriptSeed(script, opts);
-  return {
+  const job = {
     tl, seed, layoutKind, lang, bg: pickBg(script, opts), plano: script.plano || 'mixto', angulo: script.angulo || 'mixto', fontIdx: pickFont(opts),
     coverSpec: (en ? E.cover : script.cover) || null,
     layout: layoutFor(layoutKind),
@@ -280,6 +281,8 @@ function buildJob(script, idx, opts) {
     },
     title: ownTitle.trim() || phrase.replace(/\*/g, ''),
   };
+  // UNA SOLA HISTORIA Y LUEGO SE DIVIDE (INICIO / SEPARAR) y VOZ sincronizada con subtítulos
+  return prepareStory(job, { intro: script.intro, split: script.split, voz: script.voz, vozEn: script.en?.voz, subs: script.subs });
 }
 
 let wakeLock = null;

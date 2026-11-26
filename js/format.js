@@ -65,6 +65,11 @@ DIVISION: arriba-abajo | lados | tiempo
 PLANO: general | cerca | mixto (opcional; por defecto mixto: plano general al empezar cada escena y primer plano —personajes grandes, de la cintura para arriba— en los momentos emotivos; cerca = casi todo en primer plano; general = siempre cuerpo entero)
 ANGULO: lateral | frente | aereo | mixto (opcional; por defecto mixto: elige según el momento: desde arriba para la soledad y el final triste —la mesa con la silla vacía, la cama con un lado vacío, el camino que se separa—, de frente para el llanto y el abrazo, de lado para caminar y un contrapicado suave desde abajo para subir, ganar o el avión despegando; frente = los personajes miran a la cámara casi todo el video (quien camina, de lado mientras camina); aereo = desde arriba en las escenas con objetos; lateral = siempre de lado. La vista desde arriba solo se usa con muebles u objetos que se reconocen desde arriba —mesa, cama, sofá, escalera, tienda, libros, puente, teléfono, cocina, fogata, árbol, y el camino solo cuando se separa—; si solo hay personas moviéndose, por ejemplo una madre corriendo detrás de su niña, se ve de lado o de frente)
 GANCHO: frase de 3 a 6 palabras para los primeros 2 segundos
+INICIO: escenas | personajes | acciones (opcional y recomendado: UNA SOLA HISTORIA al principio, a pantalla completa —los mismos personajes, el inicio común—; en la decisión la pantalla se parte con una raya vertical: izquierda = camino A, derecha = camino B. Ej.: INICIO: casa>sofa | hombre+mujer+nino>hombre+mujer | abrazar-hijo+abrazar-hijo+abrazar>hablar+hablar)
+INICIO-MOMENTOS: sucesos de la parte común separados por > (opcional)
+SEPARAR: segundo en que se divide (opcional; por defecto el 40 % del video; con VOZ, el tramo que empieza más cerca)
+VOZ: 0-4 texto > 4-9 texto > 9-15 texto … (opcional: la voz que pondrás en CapCut, por tramos con sus segundos; cada tramo muestra lo que dice: la escena que nombra cambia justo al empezar su tramo y los gestos que nombra —llora, abraza, le da un corazón…— empiezan con él)
+SUBTITULOS: si | no (opcional; con VOZ, por defecto si: el texto de la voz sale grande abajo, palabra a palabra)
 PORTADA: 3 a 5 palabras para la miniatura, con *una palabra clave* en rojo | roto o entero (el corazón de la portada). Ej.: PORTADA: TE ESPERÓ *TODA* LA NOCHE | roto
 A: TÍTULO DEL CAMINO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 (Mejor con varias escenas seguidas por lado, para que no aburra. Según la duración: 15 s hasta 3 escenas, 30 s hasta 5, 45 s hasta 7, 60 s hasta 10; si pones más, la app usa la primera, la última y las de en medio repartidas. Nada de relleno: cada escena debe contar algo nuevo y no repetir la misma escena seguida. Ej.: «casa>camino>aeropuerto>telefono>casa» o «casa>camino>telefono>sofa» y las acciones de cada escena también con «>»: «abrazar+abrazar>llevar-maleta>llamar+llamar>abrazar+abrazar». O así: «casa(abrazar) > camino(llevar-maleta) > telefono(llamar) > sofa(se abrazan)».)
@@ -80,6 +85,7 @@ A_EN: PATH A TITLE | SUBTITLE WITH COUNTER
 B_EN: PATH B TITLE | SUBTITLE WITH COUNTER
 FRASE_EN: closing line shown big at the end, natural US English (not a literal translation; *keyword* in red)
 PREGUNTA_EN: closing question, natural US English
+VOZ_EN: 0-4 text > 4-9 text … (optional: the English voice-over, same timing)
 ---
 
 TIPO «TIEMPO» (DIVISION: tiempo)

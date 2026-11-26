@@ -6,7 +6,7 @@
 //  · un corazón grande, roto o entero según la historia;
 //  · una fuente fuerte y moderna que va rotando entre videos (5 fuentes, licencia OFL, en /fonts);
 //  · el mismo color de FONDO que el video.
-import { renderFrame, W, H, tOfP, arcTime, ARC, rolesOf, momentsOf, veil, parseRich } from './render.js';
+import { renderFrame, W, H, tOfP, arcTime, ARC, rolesOf, momentsOf, veil, parseRich, segBoundsOf } from './render.js';
 import { glow, heart, RED, smooth } from './scenes.js';
 import { WHITE } from './figure.js';
 
@@ -64,7 +64,8 @@ export function coverMoment(job) {
     segs.forEach((g, k) => {
       if (g.scene !== 'aeropuerto' || !g.people.some((p) => p.act === 'subir-avion')) return;
       const s = 10.2; // el avión despegando gana a casi todo (solo el llanto del lado malo, al final, puede más)
-      if (!best || s > best.s) best = { s, t: tOfP(tl, (k + 0.78) / segs.length), type: 'avion', side: i };
+      const bd = segBoundsOf(sd, segs.length);
+      if (!best || s > best.s) best = { s, t: tOfP(tl, bd[k] + 0.78 * (bd[k + 1] - bd[k])), type: 'avion', side: i };
     });
   });
   // el abrazo del final feliz
@@ -137,7 +138,7 @@ function drawCover(ctx, job) {
   const mom = coverMoment(job);
   // la escena sin los títulos de cada lado ni el gancho; los fotogramas anteriores se dibujan antes (fuera de la
   // imagen) para que los personajes y la cámara estén donde están en el video en ese instante
-  const cj = { ...job, moments: undefined, roles: undefined, shots: undefined, camState: undefined, coverJob: undefined, _cover: undefined, texts: { ...job.texts, hook: '', sides: [] } };
+  const cj = { ...job, moments: undefined, roles: undefined, shots: undefined, camState: undefined, coverJob: undefined, _cover: undefined, voz: null, vozEn: null, texts: { ...job.texts, hook: '', sides: [] } };
   // el lado del momento emotivo, en primer plano (salvo el avión, que se ve de lejos)
   const solo = ['llora', 'tristeza', 'ansiedad', 'cansa', 'distraido'].includes(mom.type);
   if (mom.side >= 0 && mom.type !== 'avion' && job.layout.kind !== 'time') cj.coverShot = { i: mom.side, who: solo && mom.who != null ? [mom.who] : 'all', main: mom.who ?? null };

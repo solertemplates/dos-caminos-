@@ -72,6 +72,13 @@ const PERSON_WORDS = [
 const PLURAL = /\b(juntos|juntas|los dos|las dos|ambos|ambas|todos|los tres|together|both|they)\b|\bse \w+(an|en)\b|^\w+(an|en)\b/;
 
 // Lee una frase de MOMENTOS → { type, who: índice | 'all', target, text }
+// los gestos que nombra un texto (para la VOZ: el gesto empieza con el tramo que lo dice)
+export function typesIn(text) {
+  const n = ' ' + nrm(text).replace(/[^a-z0-9ñ' ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+  const out = new Set();
+  for (const [w, type] of PHRASES) if (n.includes(' ' + w + ' ') && MOMENTS[type] && type !== 'reaccion' && type !== 'mira' && type !== 'contador') out.add(type);
+  return out;
+}
 export function classifyMoment(text, people) {
   const raw = String(text || '').toLowerCase();
   const n = ' ' + nrm(text).replace(/[^a-z0-9ñ' ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
@@ -273,6 +280,8 @@ export function planMoments(job, info) {
     return [0, 1, 2].map((i) => one.filter((e) => e.panel === i || (i === 2 && e.t0 >= tl.resStart)));
   }
   const plans = job.sides.map((s, i) => mk(i, (roles ? 1 : i + 1) * 31));
+  // VOZ: los gestos que nombra cada tramo empiezan al empezar ese tramo (antes de copiar al lado malo: regla del arco)
+  if (info.align) plans.forEach((pl) => info.align(pl, T0, T1, typesIn));
   // REGLA DEL ARCO: en «se rinde», antes del momento difícil los dos lados son idénticos (mismos sucesos)
   if (roles) {
     const bi = roles.indexOf('bad');

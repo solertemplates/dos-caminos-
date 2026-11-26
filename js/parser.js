@@ -19,6 +19,10 @@ const KEY = {
   fondo: 'bg', background: 'bg', color: 'bg',
   plano: 'plano', planos: 'plano', camara: 'plano', shot: 'plano', shots: 'plano', camera: 'plano',
   angulo: 'angulo', angulos: 'angulo', angle: 'angulo', vista: 'angulo', view: 'angulo',
+  inicio: 'intro', comun: 'intro', intro: 'intro', start: 'intro',
+  separar: 'split', dividir: 'split', split: 'split',
+  voz: 'voz', voice: 'voz', narracion: 'voz',
+  subtitulos: 'subs', subtitles: 'subs', subs: 'subs',
   portada: 'cover', miniatura: 'cover', cover: 'cover', thumbnail: 'cover',
   inspiracion: 'inspiration', inspiration: 'inspiration', // de qué video viral sale la idea (no se dibuja)
 };
@@ -285,6 +289,20 @@ export function coverSpec(v) {
   return { text: txt || '', heart: /rot|broken/.test(hn) ? 'roto' : /enter|whole|full|sano/.test(hn) ? 'entero' : null };
 }
 
+// VOZ: «0-4 texto > 4-9 texto > 9-15 texto» → [{ a, b, text }] (segundos del video)
+export function parseVoz(v, errs = [], label = '') {
+  if (!v) return null;
+  const out = [];
+  for (const part of String(v).split(/\s*>\s*/)) {
+    const m = part.match(/^\s*(\d+(?:[.,]\d+)?)\s*(?:s\b)?\s*[-–—a]\s*(\d+(?:[.,]\d+)?)\s*(?:s\b)?\s*[:.)-]?\s*(.*)$/);
+    if (!m) { if (part.trim()) errs.push(`${label}: tramo de VOZ sin segundos («${part.trim().slice(0, 30)}»); usa «0-4 texto».`); continue; }
+    const a = parseFloat(m[1].replace(',', '.')), b = parseFloat(m[2].replace(',', '.'));
+    if (b > a && m[3].trim()) out.push({ a, b, text: m[3].trim().replace(/^["«“]|["»”]$/g, '') });
+  }
+  return out.length ? out.sort((x, y) => x.a - y.a) : null;
+}
+export { SCENE_ALIAS };
+
 export function parseScripts(text) {
   const scripts = [];
   const errors = [];
@@ -294,6 +312,9 @@ export function parseScripts(text) {
       // A-MOMENTOS: / B-MOMENTOS: (también MOMENTOS_A, A MOMENTOS…): sucesos de cada lado separados por «>»
       const mm = raw.match(/^\s*[#*\-\s]*(?:([AaBb])[\s_\-]*MOMENTOS|MOMENTOS[\s_\-]*([AaBb]))\s*:\s*(.*)$/i);
       if (mm) { f[`mom${(mm[1] || mm[2]).toUpperCase()}`] = mm[3].replace(/\*\*/g, '').trim(); continue; }
+      // INICIO-MOMENTOS: sucesos de la parte común (antes de dividirse)
+      const mi = raw.match(/^\s*[#*\-\s]*(?:INICIO[\s_\-]*MOMENTOS|MOMENTOS[\s_\-]*INICIO)\s*:\s*(.*)$/i);
+      if (mi) { f.momI = mi[1].replace(/\*\*/g, '').trim(); continue; }
       const m = raw.match(/^\s*[#*\-\s]*([A-Za-zÁÉÍÓÚáéíóúÑñ]+)(?:[_ ]?(EN|en))?\s*:\s*(.*)$/);
       if (!m) continue;
       const key = KEY[norm(m[1])];
@@ -329,6 +350,17 @@ export function parseScripts(text) {
     if (!f.momA && f.stages && />/.test(f.stages)) { f.momA = f.stages; f.stages = ''; }
     A.moments = parseMomentList(f.momA);
     if (B !== A) B.moments = parseMomentList(f.momB);
+    // UNA SOLA HISTORIA Y LUEGO SE DIVIDE: INICIO (escenas | personajes | acciones) y SEPARAR (segundo)
+    let intro = null;
+    const splitRaw = f.split ? parseFloat(String(f.split).replace(',', '.').replace(/[^0-9.]/g, '')) : NaN;
+    if (!isTime && (f.intro || f.split)) {
+      if (f.intro) {
+        const [isc = '', ipe = '', iac = ''] = f.intro.split('|').map((x) => x.trim());
+        intro = parseSide(` |  | ${isc} | ${ipe || 'hombre'} | ${iac} | crece`, theme, errs, label + ' INICIO');
+      } else intro = { ...A, segments: A.segments ? [A.segments[0]] : null };
+      intro = { ...intro, title: '', sub: '', good: true, bad: null, result: 'crece', object: null, moments: parseMomentList(f.momI) };
+    }
+    if (isTime && (f.intro || f.split)) errs.push(`${label}: INICIO y SEPARAR no valen en el tipo «tiempo».`);
     const stagesOf = (v, def) => { const l = (v || '').split('|').map((x) => x.trim()).filter(Boolean); return l.length === 3 ? l : def; };
     const enSide = (v, base) => {
       if (!v) return null;
@@ -346,13 +378,15 @@ export function parseScripts(text) {
       phrase: f.phrase || '',
       bg: bgName(f.bg),
       plano: planoName(f.plano),
+      intro, split: Number.isFinite(splitRaw) ? splitRaw : null,
+      voz: parseVoz(f.voz, errs, label), subs: f.subs ? !/^(no|off|false|sin)/.test(norm(f.subs)) : true,
       angulo: anguloName(f.angulo),
       cover: coverSpec(f.cover),
       question: f.question || '',
       sides: isTime ? [A, A, A] : [A, B],
       stages: isTime ? stagesOf(f.stages, ['HOY', 'EN UN MES', 'EN UN AÑO']) : null,
       en: {
-        title: f.en.title, cover: coverSpec(f.en.cover), hook: f.en.hook, phrase: f.en.phrase, question: f.en.question,
+        title: f.en.title, cover: coverSpec(f.en.cover), voz: parseVoz(f.en.voz, errs, label + ' (EN)'), hook: f.en.hook, phrase: f.en.phrase, question: f.en.question,
         sides: [enSide(f.en.A, A), enSide(f.en.B, B)],
         stages: isTime ? stagesOf(f.en.stages, ['TODAY', 'IN A MONTH', 'IN A YEAR']) : null,
       },

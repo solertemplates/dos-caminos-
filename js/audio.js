@@ -1,7 +1,7 @@
 // Dos Caminos — audio. Efectos de sonido sintetizados por código (obra propia, dedicada CC0)
 // y mezcla con la música del banco del usuario. Todo se genera en el teléfono, sin API.
 import { SCENES } from './scenes.js';
-import { tOfP, timeEventP, rolesOf, pathInv, arcTime, ARC, momentsOf } from './render.js';
+import { tOfP, timeEventP, rolesOf, pathInv, arcTime, ARC, momentsOf, segBoundsOf } from './render.js';
 import { MOMENTS } from './moments.js';
 
 const SR = 48000;
@@ -181,55 +181,62 @@ export async function renderAudio({ job, D, musicData, sfxOn = true, sfxVol = 1,
     };
     play('heartbeat', 0.05);
     play('shimmer', 0.2);
-    const isTime = job.layout.kind === 'time';
-    const roles = rolesOf(job);
-    job.sides.forEach((side0, i) => {
-      // el lado malo hace lo mismo que el bueno hasta que se rinde: suenan las mismas acciones
-      const role = roles ? roles[i] : null;
-      const side = role === 'bad' ? { ...side0, scene: job.sides[roles.indexOf('good')].scene, people: job.sides[roles.indexOf('good')].people, segments: job.sides[roles.indexOf('good')].segments } : side0;
-      if (isTime && i > 0) return; // mismo camino: los sonidos se calculan una vez
-      const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
-      // varias escenas por lado: los sonidos de cada escena suenan en su tramo
-      const segs = !isTime && side.segments && side.segments.length > 1 ? side.segments : [{ scene: side.scene, people: side.people }];
-      segs.forEach((g, k) => {
-        const scene = SCENES[g.scene];
-        if (!scene || !scene.events) return;
-        const S = { people: g.people.filter((p) => p.act !== 'ausente'), good: side0.good, bad: side0.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
-        for (const e of scene.events(S)) {
-          let t;
-          if (e.p != null) {
-            const pl = (k + e.p) / segs.length;
-            const pg = isTime ? timeEventP(tl.C, pl) : role ? pathInv(tl, pl, role) : pl;
-            if (pg == null) continue;
-            t = tOfP(tl, pg);
-          } else if (k === segs.length - 1) t = tl.resStart + e.r * tl.res;
-          else continue;
-          play(e.type, t, e, pan);
+    // los sonidos de una historia (los dos caminos, o la parte común antes de dividirse)
+    const storySounds = (job, tl, play) => {
+      const isTime = job.layout.kind === 'time';
+      const roles = rolesOf(job);
+      job.sides.forEach((side0, i) => {
+        // el lado malo hace lo mismo que el bueno hasta que se rinde: suenan las mismas acciones
+        const role = roles ? roles[i] : null;
+        const side = role === 'bad' ? { ...side0, scene: job.sides[roles.indexOf('good')].scene, people: job.sides[roles.indexOf('good')].people, segments: job.sides[roles.indexOf('good')].segments, segBounds: job.sides[roles.indexOf('good')].segBounds } : side0;
+        if (isTime && i > 0) return; // mismo camino: los sonidos se calculan una vez
+        const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.35 : -0.35) : (i ? 0.15 : -0.15);
+        // varias escenas por lado: los sonidos de cada escena suenan en su tramo
+        const segs = !isTime && side.segments && side.segments.length > 1 ? side.segments : [{ scene: side.scene, people: side.people }];
+        segs.forEach((g, k) => {
+          const scene = SCENES[g.scene];
+          if (!scene || !scene.events) return;
+          const S = { people: g.people.filter((p) => p.act !== 'ausente'), good: side0.good, bad: side0.bad, C: tl.C, w: 1000, F: 250, seed: 1 };
+          for (const e of scene.events(S)) {
+            let t;
+            if (e.p != null) {
+              const bd = segBoundsOf(side, segs.length);
+              const pl = bd[k] + e.p * (bd[k + 1] - bd[k]);
+              const pg = isTime ? timeEventP(tl.C, pl) : role ? pathInv(tl, pl, role) : pl;
+              if (pg == null) continue;
+              t = tOfP(tl, pg);
+            } else if (k === segs.length - 1) t = tl.resStart + e.r * tl.res;
+            else continue;
+            play(e.type, t, e, pan);
+          }
+        });
+      });
+      if (roles) {
+        // el momento difícil llega a los dos a la vez; el bueno se levanta (nota suave); el malo suspira y se queda
+        const tD = arcTime(tl);
+        play('thud', tD + 0.25, {}, -0.2);
+        play('thud', tD + 0.27, {}, 0.2);
+        play('ping', tD + ARC.rise[1], { vol: 0.6 }, roles.indexOf('good') ? 0.25 : -0.25);
+        play('wind', tD + ARC.quit[0], {}, roles.indexOf('bad') ? 0.25 : -0.25);
+      } else if (isTime) [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
+      play('ping', tl.endStart + 0.5, { vol: 0.8 });
+      // sucesos (regla de ritmo): un sonido suave al empezar cada uno
+      const heard = new Set();
+      momentsOf(job).forEach((plan, i) => {
+        const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.3 : -0.3) : (i ? 0.12 : -0.12);
+        for (const e of plan) {
+          const fx = MOMENTS[e.type]?.sfx;
+          const key = `${e.type}@${e.t0.toFixed(2)}`;
+          if (!fx || heard.has(key)) continue;
+          heard.add(key);
+          if (e.type === 'llueve') [0, 0.35, 0.8, 1.3].forEach((d) => play('drip', e.t0 + d, { vol: 0.45 }, pan));
+          else play(fx, e.t0 + 0.05, { vol: 0.45 }, pan);
         }
       });
-    });
-    if (roles) {
-      // el momento difícil llega a los dos a la vez; el bueno se levanta (nota suave); el malo suspira y se queda
-      const tD = arcTime(tl);
-      play('thud', tD + 0.25, {}, -0.2);
-      play('thud', tD + 0.27, {}, 0.2);
-      play('ping', tD + ARC.rise[1], { vol: 0.6 }, roles.indexOf('good') ? 0.25 : -0.25);
-      play('wind', tD + ARC.quit[0], {}, roles.indexOf('bad') ? 0.25 : -0.25);
-    } else if (isTime) [1, 2].forEach((k) => play('ping', tOfP(tl, k / 3), { vol: 0.7 }));
-    play('ping', tl.endStart + 0.5, { vol: 0.8 });
-    // sucesos (regla de ritmo): un sonido suave al empezar cada uno
-    const heard = new Set();
-    momentsOf(job).forEach((plan, i) => {
-      const pan = isTime ? 0 : job.layout.kind === 'lr' ? (i ? 0.3 : -0.3) : (i ? 0.12 : -0.12);
-      for (const e of plan) {
-        const fx = MOMENTS[e.type]?.sfx;
-        const key = `${e.type}@${e.t0.toFixed(2)}`;
-        if (!fx || heard.has(key)) continue;
-        heard.add(key);
-        if (e.type === 'llueve') [0, 0.35, 0.8, 1.3].forEach((d) => play('drip', e.t0 + d, { vol: 0.45 }, pan));
-        else play(fx, e.t0 + 0.05, { vol: 0.45 }, pan);
-      }
-    });
+    };
+    storySounds(job, tl, play);
+    // UNA SOLA HISTORIA Y LUEGO SE DIVIDE: los sonidos de la parte común, solo hasta la división
+    if (job.intro) { const I = job.intro; storySounds(I.job, I.job.tl, (type, t, e, pan) => { if (t < I.Ts) play(type, t, e, 0); }); play('whoosh', I.Ts, { vol: 0.6 }); }
   }
   const rendered = await ctx.startRendering();
   // nivel de la mezcla (para el Diagnóstico)

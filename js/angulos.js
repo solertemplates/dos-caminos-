@@ -9,7 +9,7 @@
 // Mixto: elige según el momento: aéreo para la soledad y el final triste; de frente para el llanto y el abrazo;
 // lateral para caminar; contrapicado para subir, ganar y el avión. Cambios suaves (~0,6 s), nunca negro.
 // Regla del arco: los ángulos salen de los sucesos y de las escenas, idénticos en los dos lados antes del momento difícil.
-import { tOfP, pathInv, CHOICE, arcTime } from './render.js';
+import { tOfP, pathInv, CHOICE, arcTime, segBoundsOf } from './render.js';
 import { rawFigure } from './scenes.js';
 import { drawFigureIcons } from './moments.js';
 import { drawUseProp } from './uses.js';
@@ -50,7 +50,8 @@ export function anglesFor(job, plans, i) {
   const segs = side.segments && side.segments.length > 1 ? side.segments : [{ scene: side.scene, people: side.people }];
   const nSeg = segs.length;
   const tAt = (pe) => { const q = role ? pathInv(tl, pe, role) : pe; return q == null ? null : tOfP(tl, q); };
-  const segT = segs.map((g, k) => [tAt(k / nSeg), k === nSeg - 1 ? tl.resStart : tAt((k + 1) / nSeg)]);
+  const bnd = segBoundsOf(side, nSeg);
+  const segT = segs.map((g, k) => [tAt(bnd[k]), k === nSeg - 1 ? tl.resStart : tAt(bnd[k + 1])]);
   const segAt = (t) => { let k = 0; segT.forEach(([a], j) => { if (a != null && t >= a) k = j; }); return k; };
   const absent = (g) => g.people.some((p) => p.act === 'ausente');
   // el camino solo desde arriba cuando se separa en dos (lado malo con dos personas que caminan; en «se rinde», en el final)

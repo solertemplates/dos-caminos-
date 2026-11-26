@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 24 nov 2026 (v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 26 nov 2026 (v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -242,6 +242,22 @@ Como en el cine, no todo se ve de lado:
 - La **portada** usa el ángulo del momento elegido (p. ej. la mesa con la silla vacía desde arriba).
 - Código: `js/angulos.js` (cuándo y cómo, y la vista aérea de cada escena).
 
+### ⭐ Una sola historia y luego se divide (líneas `INICIO` y `SEPARAR`)
+
+Ver A y B juntos desde el principio satura. Con `INICIO`:
+- **Al principio, pantalla completa con UNA sola historia**: los mismos personajes, el inicio común (`INICIO: escenas | personajes | acciones`, con `>` para varias escenas y personajes por escena; `INICIO-MOMENTOS:` opcional para sus sucesos). Se dibuja con todo lo de siempre (gancho, sucesos, gestos, planos, ángulos, fondo, estrellas).
+- **En la decisión** (`SEPARAR:` segundo; por defecto el **40 %** del video; con VOZ, el tramo que empieza más cerca, ±2 s) la imagen común se funde (~0,6 s) con los dos caminos y **una raya vertical crece desde el centro**: **izquierda = camino A, derecha = camino B** (la división es siempre «lados»). Suena un «whoosh» suave. **Nunca negro.** Los títulos de cada camino aparecen al dividirse.
+- Los caminos empiezan justo en la división: los dos lados empiezan iguales y la diferencia aparece enseguida; los sucesos, la regla del arco, el resultado y la frase final van después (comprobado: ≤ 42 píxeles distintos antes del momento difícil, las estrellas).
+- Sin `INICIO` (ni `SEPARAR`) todo es como antes (comprobado: los mismos videos, píxel a píxel). Con `SEPARAR` sin `INICIO`, la parte común es la primera escena del camino A. No vale en el tipo «tiempo».
+- Los dos paneles de «lados» ahora son iguales y simétricos (500 px cada uno, centros a 269 y 811): la misma escena sale igual en los dos (antes A medía 510 y B 500 y no eran idénticos píxel a píxel).
+
+### ⭐ Voz sincronizada con las acciones (línea `VOZ`)
+
+- `VOZ: 0-4 texto > 4-9 texto > 9-15 texto …` (y `VOZ_EN` en inglés): la voz que se pondrá en CapCut, por tramos con sus segundos.
+- **Cada tramo muestra lo que dice, en esos segundos exactos:** la escena que nombra un tramo («aeropuerto», «avión», «mesa», «teléfono», «llamaba»…) empieza justo al empezar ese tramo; si no nombra ninguna, el cambio de escena cae al empezar el tramo más cercano. Los gestos que nombra (llora, abraza, le da un corazón, se aleja…) empiezan con su tramo (antes de copiarse al lado malo: la regla del arco se cumple).
+- **Subtítulos** (`SUBTITULOS: si | no`, por defecto sí con VOZ): el texto sale **grande, abajo** (dentro de la zona segura), sobre una banda oscura suave, **palabra a palabra** al ritmo del tramo, con la palabra que se está diciendo en ámbar. Sirven para que coincida con la voz de CapCut. La portada no lleva subtítulos.
+- Código: `js/voz.js`.
+
 ### ⭐ Ritmo y sucesos (REGLA FIJA DE RITMO)
 
 - **SIN NEGRO:** ningún fotograma negro ni fundido a negro (TikTok los elegía como miniatura): fotograma 0 = portada; desde el fotograma 1 la escena ya está dibujada; al pasar de una escena a otra, fundido entre las dos; en el cierre la escena solo se atenúa un poco (el velo oscuro va solo detrás de la frase); en la grabación en tiempo real se repinta la portada al empezar y la última imagen al terminar. Comprobado leyendo fotograma a fotograma el principio, los segundos 1,5–2,6 y el final de un video creado.
@@ -270,6 +286,11 @@ PLANO: general | cerca | mixto   (opcional; por defecto mixto)
 ANGULO: lateral | frente | aereo | mixto   (opcional; por defecto mixto)
 GANCHO: frase de 3 a 6 palabras
 PORTADA: 3 a 5 palabras para la miniatura, *clave* en rojo | roto | entero   (opcional)
+INICIO: escenas | personajes | acciones   (opcional: la historia común antes de dividirse)
+INICIO-MOMENTOS: sucesos de la parte común   (opcional)
+SEPARAR: segundo en que se divide   (opcional; por defecto el 40 %)
+VOZ: 0-4 texto > 4-9 texto > …   (opcional: voz por tramos; escenas y gestos sincronizados)
+SUBTITULOS: si | no   (opcional; con VOZ, por defecto si)
 A: TÍTULO A | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 B: TÍTULO B | SUBTÍTULO CON CONTADOR | escena | personajes | acciones | final
 A-MOMENTOS: 8 sucesos separados por >   (la app acepta de 3 a 8; la regla de oro pide 8)
@@ -656,7 +677,9 @@ Ejemplos de cada final nuevo:
 
 - Lienzo 1080 × 1920, 30 fps, H.264 + AAC.
 - **Arriba-abajo:** títulos a la izquierda en y≈290 (panel A) y y≈850 (panel B); suelos en y≈680 y y≈1292.
-- **Lados:** títulos centrados en y≈305; suelo en y≈1000.
+- **Lados:** títulos centrados en y≈305; suelo en y≈1000. Dos paneles iguales de 500 px, centros en x≈269 y x≈811.
+- **Historia común (INICIO):** pantalla completa, suelo en y≈1120.
+- **Subtítulos de la VOZ:** abajo, en y≈1200–1270.
 - **Tiempo:** tres franjas de 390 px desde y≈175 (HOY, EN UN MES, EN UN AÑO); etiqueta a la izquierda y suelo a 340 px del borde superior de cada franja; termina en y≈1355.
 - Nada importante por debajo de y≈1360 (ahí van el nombre de la cuenta y la descripción) ni pegado al borde derecho en la mitad de abajo (columna de botones).
 
@@ -703,6 +726,7 @@ Ejemplos de cada final nuevo:
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/angulos.js` | Ángulos de cámara (línea ANGULO): lateral, de frente, desde arriba (vista aérea de cada escena) y contrapicado |
+| `js/voz.js` | Una sola historia y luego se divide (INICIO / SEPARAR) y VOZ sincronizada con subtítulos |
 | `js/camara.js` | Planos: general y primer plano (línea PLANO), cámara que se acerca y se aleja |
 | `js/portada.js` | Portada / miniatura: momento más emotivo, texto grande con palabra roja, corazón roto o entero, fuentes que rotan |
 | `fonts/` | 5 fuentes de la portada (Anton, Archivo Black, Bebas Neue, Montserrat Black, Oswald Bold; SIL OFL, `fonts/OFL.txt`) |

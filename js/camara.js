@@ -7,7 +7,7 @@
 // Regla del arco: los planos salen de los sucesos y de las posiciones, que son idénticos en los dos lados
 // antes del momento difícil → los dos lados siguen idénticos píxel a píxel.
 import { MOMENTS } from './moments.js';
-import { tOfP, pathInv, CHOICE } from './render.js';
+import { tOfP, pathInv, CHOICE, segBoundsOf } from './render.js';
 
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const smooth = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
@@ -39,7 +39,8 @@ export function shotsFor(job, plans, i) {
   // cuándo empieza cada escena (plano general para presentarla)
   const cuts = [];
   for (let k = 1; k < nSeg; k++) {
-    const pe = role ? pathInv(tl, k / nSeg, role) : k / nSeg;
+    const bk = segBoundsOf(side, nSeg)[k];
+    const pe = role ? pathInv(tl, bk, role) : bk;
     if (pe != null) cuts.push({ t: tOfP(tl, pe), k });
   }
   const segAt = (t) => { let k = 0; for (const c of cuts) if (t >= c.t) k = c.k; return segs[k]; };
