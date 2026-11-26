@@ -54,7 +54,9 @@ const SCENE_ALIAS = {
   reloj: 'reloj', clock: 'reloj', tiempo: 'reloj',
   telefono: 'telefono', llamada: 'telefono', call: 'telefono',
   regalo: 'regalo', gift: 'regalo', present: 'regalo',
-  aeropuerto: 'aeropuerto', avion: 'aeropuerto', airport: 'aeropuerto', plane: 'aeropuerto', vuelo: 'aeropuerto'
+  aeropuerto: 'aeropuerto', avion: 'aeropuerto', airport: 'aeropuerto', plane: 'aeropuerto', vuelo: 'aeropuerto',
+  lago: 'lago', barco: 'lago', bote: 'lago', barca: 'lago', lake: 'lago', boat: 'lago', orilla: 'lago',
+  computadora: 'oficina', ordenador: 'oficina', computer: 'oficina', laptop: 'oficina', escritorio: 'oficina',
 };
 
 const PERSON_ALIAS = {
@@ -105,6 +107,7 @@ const SCENE_ACTS = {
   sofa: ['hablar', 'celular', 'abrazar'],
   parque: ['jugar', 'caminar', 'celular'],
   aeropuerto: ['despedirse', 'subir-avion', 'llegar-avion', 'esperar'],
+  lago: ['arreglar-barco', 'remar', 'esperar', 'celular'],
 };
 function resolveAct(raw, scene) {
   const a = raw.replace(/\s+/g, '-');
@@ -118,6 +121,10 @@ function resolveAct(raw, scene) {
   if (['despedirse', 'despedir', 'se-despide', 'decir-adios', 'adios', 'say-goodbye', 'goodbye'].includes(a)) return 'despedirse';
   if (['subir-avion', 'subir-al-avion', 'embarcar', 'despegar', 'irse-en-avion', 'board', 'take-off'].includes(a)) return 'subir-avion';
   if (['llegar-avion', 'llegar-en-avion', 'aterrizar', 'bajar-del-avion', 'volver-en-avion', 'land', 'arrive-by-plane'].includes(a)) return 'llegar-avion';
+  // lago: arreglar-barco (arregla su barca en la orilla), remar
+  if (['arreglar-barco', 'arreglar-el-barco', 'arreglar-bote', 'arreglar-barca', 'reparar-barco', 'arreglar', 'fix-boat', 'repair-boat'].includes(a) && (scene === 'lago' || a !== 'arreglar')) return 'arreglar-barco';
+  if (['remar', 'rema', 'zarpar', 'cruzar', 'row', 'sail'].includes(a)) return 'remar';
+  if (['trabajar-computadora', 'hacer-videos', 'computadora', 'editar'].includes(a)) return 'trabajar';
   // «bailar»: bailan juntos (vale en cualquier escena)
   if (['bailar', 'baila', 'bailan', 'dance', 'dancing'].includes(a)) return 'bailar';
   // «abrazar-hijo»: los padres se agachan y abrazan al niño, contentos (vale en cualquier escena)

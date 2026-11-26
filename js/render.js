@@ -33,6 +33,7 @@ function paintBackground(ctx, job) {
 }
 import './scenes2.js';
 import './aeropuerto.js';
+import './lago.js';
 import { planMoments, momentsNow, drawWorldMoments, counterPulse } from './moments.js';
 import { drawAbsent } from './ausente.js';
 import { cameraAt, camBox } from './camara.js';
@@ -637,20 +638,20 @@ function renderCore(ctx, job, t, scale = 1) {
 }
 
 // ---------------------------------------------------------------------------
-// MODO: juntos — UNA sola escena a pantalla completa, sin dividir: el objeto principal (el árbol…) en el centro,
-// el personaje del camino A a la izquierda y el del B a la derecha, los dos haciendo la misma acción a la vez.
-// Un solo contador arriba en el centro, sin más textos. En el momento final, el del camino que termina mal se rinde
-// y se va caminando hacia su borde; el otro sigue. El objeto cambia solo de su lado: florece del lado del que
-// sigue y se seca del lado del que se va. (Cada mitad es la misma escena: la derecha en espejo.)
-const JUNTOS_X = 0.6; // fundido (s) entre el estado común y el final de cada lado
-function juntosPivot(job, scene, pn, people) {
-  if (job._pivot != null) return job._pivot;
-  const S = { w: pn.stageW, F: pn.F, people, allPeople: people, absent: [], good: true, bad: null, p: 1, r: 1, t: 0, C: job.tl.C, seed: job.seed, sceneName: job.sides[0].scene, focus: null, box: { l: -pn.stageW / 2, r: pn.stageW / 2, top: -pn.F * 3, bot: pn.F }, moments: null };
-  setCurrent(S);
-  try { scene.draw(collectCtx(), S); } catch (e) {}
-  setCurrent(null);
-  job._pivot = S.focus ? S.focus[0] : 0;
-  return job._pivot;
+// MODO: juntos — como una Y: UNA sola escena a pantalla completa, sin división. Al principio A y B están juntos en
+// el centro; el camino se abre como una Y: A va a la izquierda, a SU objeto (su árbol, su barca, su computadora…),
+// y B a la derecha, al suyo. Los dos hacen lo mismo a la vez y todo es igual hasta los últimos 3 segundos.
+// Final: A se rinde y se desanima (se sienta, cabeza baja) y su objeto se apaga; B lo logra (su objeto florece,
+// en el lago cruza a la otra orilla) y levanta los brazos de victoria. Sin títulos, frases, gancho ni subtítulos:
+// solo los personajes, los objetos y, si el guion lo trae, un contador arriba en el centro.
+// (Cada lado es la misma escena dibujada en su mitad; la de A en espejo, para que los dos queden hacia el centro.)
+const JUNTOS_X = 0.6; // fundido (s) del objeto de A hacia su final
+const JUNTOS_S = 0.7; // tamaño de cada mitad
+// línea de tiempo: igual que siempre, pero el final (el resultado) son los últimos 3 s y no hay cierre con texto
+export function juntosTimeline(tl) {
+  const resStart = tl.D - 3;
+  const mainDur = resStart - tl.mainStart;
+  return { ...tl, resStart, res: 3, endStart: tl.D + 1, end: 1, mainDur, C: Math.max(4, Math.min(22, Math.round(mainDur / 1.6))) };
 }
 function renderJuntos(ctx, job, t, scale) {
   const { tl, layout } = job;
@@ -661,70 +662,76 @@ function renderJuntos(ctx, job, t, scale) {
   drawStars(ctx, job.stars, t);
   if (t < 1.2) shootingStar(ctx, t);
   const pn = layout.panels[0];
-  const gi = job.sides[1] && job.sides[1].good && !job.sides[0].good ? 1 : job.sides[0].good ? 0 : 1; // el camino que sigue
-  const G = job.sides[gi];
-  const sceneName = G.scene;
-  const scene = SCENES[sceneName] || SCENES.arbol;
-  // la misma acción a la vez: las acciones del camino que sigue, con los personajes de cada lado
-  const peopleOf = (sd) => sd.people.map((p, j) => ({ ...p, act: (G.people[j] || G.people[0]).act }));
-  const pivot = juntosPivot(job, scene, pn, peopleOf(G));
   const ps = panelState(layout, 0, st, tl.C);
-  const endDim = st.phase === 'end' ? 1 - 0.2 * smooth(st.endK * 2.5) : 1;
-  const rk = st.phase === 'main' || st.phase === 'hook' ? 0 : smooth((t - tl.resStart) / JUNTOS_X);
+  const r = st.phase === 'result' || st.phase === 'end' ? ps.r : 0;
+  const rk = r > 0 ? smooth((t - tl.resStart) / JUNTOS_X) : 0;
+  // la Y: salen juntos del centro y cada uno va a su sitio (de 1,4 s a 2,8 s)
+  const arrive = smooth((t - 1.4) / 1.4);
+  const s = JUNTOS_S, hw = W / 2;
   const half = (idx) => {
-    const sd = job.sides[idx];
-    const right = idx === 1;
-    const people = peopleOf(sd);
-    const quits = !sd.good;
-    // dos estados: el común (los dos igual) y el final de su camino; se funden al llegar el momento final
-    const states = quits ? [{ good: true, a: 1 - rk, leave: 0 }, { good: false, a: rk, leave: clamp(ps.r * 1.15) }] : [{ good: true, a: 1, leave: 0 }];
+    const sd = job.sides[idx] || job.sides[0];
+    const A = idx === 0, m = A ? -1 : 1, hx = A ? W / 4 : (3 * W) / 4;
+    const sceneName = sd.scene;
+    const scene = SCENES[sceneName] || SCENES.arbol;
+    const people = sd.people;
+    // dónde está el centro de la pantalla en las coordenadas de esta mitad (de ahí salen al principio)
+    const lx = (W / 2 + (A ? -1 : 1) * pn.F * 0.13 * s - hx) / (m * s);
+    // dos estados del objeto de A al final (el común y el suyo); B, siempre el bueno
+    const states = A && r > 0 ? [{ good: true, a: 1 - rk }, { good: false, a: rk }] : [{ good: true, a: 1 }];
     for (const stt of states) {
       if (stt.a <= 0.001) continue;
       const S = {
-        w: pn.stageW, F: pn.F, people: people.filter((p) => p.act !== 'ausente'), allPeople: people, absent: [], good: stt.good, bad: sd.bad,
-        p: ps.p, r: stt.good ? (sd.good ? ps.r : 0) : ps.r, t, C: tl.C, segT0: -Infinity, seed: job.seed, arc: null, role: null, sceneName,
-        dimmed: false, focus: null, object: null, moments: null, leave: stt.leave, view: { yaw: 0 },
-        box: { l: -pn.stageW / 2, r: pn.stageW / 2, top: pn.clip[1] - pn.groundY, bot: pn.clip[1] + pn.clip[3] - pn.groundY },
+        w: hw / s, F: pn.F, people: people.filter((p) => p.act !== 'ausente'), allPeople: people, absent: [], good: stt.good, bad: stt.good ? null : sd.bad || 'decay',
+        p: ps.p, r: stt.good ? (A ? 0 : r) : r, t, C: tl.C, segT0: -Infinity, seed: job.seed, arc: null, role: null, sceneName,
+        dimmed: false, focus: null, object: null, moments: null, view: { yaw: 0 },
+        arrive: arrive < 1 ? { k: arrive, x: lx } : null,
+        giveUp: A ? smooth(r / 0.5) : 0, victory: !A && sceneName !== 'lago' ? smooth(r / 0.4) : 0,
+        box: { l: -hw / s / 2, r: hw / s / 2, top: (pn.clip[1] - pn.groundY) / s, bot: (pn.clip[1] + pn.clip[3] - pn.groundY) / s },
       };
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(right ? W / 2 : 0, pn.clip[1], W / 2, pn.clip[3]);
-      ctx.clip();
-      ctx.translate(pn.cx, pn.groundY);
-      if (right) ctx.scale(-1, 1); // la derecha es la misma escena en espejo: el personaje B a la derecha del objeto
-      ctx.translate(-pivot, 0);
+      ctx.translate(hx, pn.groundY);
+      ctx.scale(m * s, s);
       setNeutral(ps.neutral);
       setCurrent(S);
-      withAlpha(ctx, stt.a * endDim, () => { S._drawn = new Set(); scene.draw(ctx, S); drawExtras(ctx, S); });
+      withAlpha(ctx, stt.a, () => { S._drawn = new Set(); scene.draw(ctx, S); drawExtras(ctx, S); });
       setNeutral(0);
       setCurrent(null);
       ctx.restore();
-      if (sd.good && stt.good && S.focus && ps.r > 0.45) {
-        // final feliz: el corazón grande, del lado del que sigue
-        const k = smooth((ps.r - 0.45) / 0.4);
-        const fx = (right ? -1 : 1) * (S.focus[0] - pivot) + pn.cx, fy = S.focus[1] + pn.groundY;
-        const hx = right ? Math.max(fx, W / 2 + pn.F * 0.35) : Math.min(fx, W / 2 - pn.F * 0.35);
+      if (!A && S.focus && r > 0.45) {
+        // B lo logra: corazón grande sobre su objeto
+        const k = smooth((r - 0.45) / 0.4);
+        const fx = hx + m * s * S.focus[0], fy = pn.groundY + s * S.focus[1];
         const beat = 1 + 0.07 * Math.max(0, Math.sin(t * 5.2)) * Math.max(0, Math.sin(t * 5.2 + 0.6));
-        glow(ctx, hx, fy, pn.F * 1.05 * k, RED, 0.95);
-        heart(ctx, hx, fy, pn.F * 0.3 * k * beat, RED, Math.max(0.85, endDim) * k);
+        glow(ctx, fx, fy, pn.F * s * 1.05 * k, RED, 0.95);
+        heart(ctx, fx, fy, pn.F * s * 0.3 * k * beat, RED, k);
       }
     }
   };
   half(0);
   half(1);
-  // un solo contador arriba en el centro (el del camino que sigue); ningún otro texto
-  const sub = (job.texts.sides[gi] || job.texts.sides[0] || {}).sub;
+  // el camino en forma de Y sobre el suelo: viene del centro de abajo y se abre hacia cada uno
+  ctx.save();
+  ctx.strokeStyle = WHITE; ctx.lineCap = 'round';
+  ctx.globalAlpha = 0.28; ctx.lineWidth = 3;
+  const gy = pn.groundY, jy = gy + 95;
+  for (const d of [-1, 1]) {
+    ctx.beginPath(); ctx.moveTo(W / 2 + d * 26, 1360); ctx.lineTo(W / 2 + d * 26, jy + 20);
+    ctx.quadraticCurveTo(W / 2 + d * 30, jy - 10, W / 2 + d * W * 0.24, gy + 14); ctx.stroke();
+  }
+  ctx.globalAlpha = 0.16;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 1, jy + 30); ctx.quadraticCurveTo(W / 2, jy + 5, W / 2 - W * 0.2, gy + 24); ctx.moveTo(W / 2 + 1, jy + 30); ctx.quadraticCurveTo(W / 2, jy + 5, W / 2 + W * 0.2, gy + 24); ctx.stroke();
+  ctx.restore();
+  // un solo contador arriba en el centro (si el guion lo trae); ningún otro texto
+  const sub = (job.texts.sides[1] || job.texts.sides[0] || {}).sub;
   if (sub) {
     const a = smooth((t - 1.2) / 0.5);
-    const jump = st.phase === 'hook' ? 0 : counterPulse(momentsNow(momentsOf(job)[gi], t));
     ctx.save();
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    ctx.globalAlpha = a * (0.85 + 0.15 * jump);
-    ctx.fillStyle = jump > 0.4 ? AMBER : WHITE;
+    ctx.globalAlpha = a * 0.9;
+    ctx.fillStyle = WHITE;
     ctx.textBaseline = 'alphabetic';
-    const fs = Math.round(46 * (1 + 0.2 * jump));
-    ctx.font = `400 ${fs}px ${FONT}`;
-    spaced(ctx, counterText(sub, ps.cp).toUpperCase(), W / 2, 300, fs * 0.2);
+    ctx.font = `400 46px ${FONT}`;
+    spaced(ctx, counterText(sub, ps.cp).toUpperCase(), W / 2, 300, 9);
     ctx.restore();
   }
 }

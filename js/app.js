@@ -2,7 +2,7 @@
 import { parseScripts } from './parser.js';
 import { APP_VERSION } from './version.js';
 import { EXAMPLES } from './examples.js';
-import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES, fitScenes, loadCoverFonts } from './render.js';
+import { makeTimeline, layoutFor, makeStars, renderCover, BG_NAMES, fitScenes, loadCoverFonts, juntosTimeline } from './render.js';
 import { prepareStory } from './voz.js';
 import { renderAudio } from './audio.js';
 import { encodeVideo, unlockAudio, isIOS, audioCtx, encodeAudioOnly } from './encoder.js';
@@ -282,7 +282,7 @@ function buildJob(script, idx, opts) {
     title: ownTitle.trim() || phrase.replace(/\*/g, ''),
   };
   // MODO: juntos — una sola escena a pantalla completa, A a la izquierda y B a la derecha (sin dividir ni textos)
-  if (script.modo === 'juntos') { job.modo = 'juntos'; job.layoutKind = 'full'; job.layout = layoutFor('full'); return job; }
+  if (script.modo === 'juntos') { job.modo = 'juntos'; job.layoutKind = 'full'; job.layout = layoutFor('full'); job.tl = juntosTimeline(job.tl); return job; }
   // UNA SOLA HISTORIA Y LUEGO SE DIVIDE (INICIO / SEPARAR) y VOZ sincronizada con subtítulos
   return prepareStory(job, { intro: script.intro, split: script.split, voz: script.voz, vozEn: script.en?.voz, subs: script.subs });
 }

@@ -3,7 +3,7 @@
 > **Leer completo antes de tocar nada.** Este documento manda sobre cualquier otra decisión.
 > Cada vez que cambie algo importante de la app, se actualiza aquí en el mismo cambio.
 
-Última actualización: 26 nov 2026 (v45: MODO juntos; v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
+Última actualización: 26 nov 2026 (v46: MODO juntos como una Y y escena lago; v45: MODO juntos; v44: una sola historia y luego se divide —INICIO / SEPARAR—; VOZ sincronizada con subtítulos; v43: FRASE FINAL en la fórmula; vista desde arriba solo con objetos; v42: personajes por escena, hasta 3 en cualquier escena y «abrazar-hijo»; v41: ángulos más claros —quien camina se gira al pararse, todas las escenas desde arriba—; v39: FÓRMULA DOS CAMINOS al principio; v38: ángulos de cámara —lateral, de frente, desde arriba y contrapicado—; v37: videos a 30 fps constantes en iPhone para CapCut, TikTok y Facebook; v36: pasos reales con objetos, portada-miniatura, escenas según la duración, planos).
 
 ---
 
@@ -242,13 +242,15 @@ Como en el cine, no todo se ve de lado:
 - La **portada** usa el ángulo del momento elegido (p. ej. la mesa con la silla vacía desde arriba).
 - Código: `js/angulos.js` (cuándo y cómo, y la vista aérea de cada escena).
 
-### ⭐ MODO: juntos (una sola escena, sin dividir)
+### ⭐ MODO: juntos (como una Y, sin dividir)
 
-- Con `MODO: juntos` **no se divide la pantalla**: una sola escena a pantalla completa, con **el objeto principal en el centro** (el árbol, la casa…: el que la escena marca como su objeto), **el personaje del camino A a la izquierda y el del B a la derecha**, **los dos haciendo la misma acción a la vez** (la del camino que sigue).
-- **Un solo contador arriba en el centro** (el del camino que sigue). **Sin títulos de cada camino ni ningún otro texto** (ni gancho, ni frase final, ni pregunta, ni subtítulos).
-- **En el momento final** (el resultado), el del camino que termina mal **se rinde** (cabeza baja, brazos caídos) **y se va** caminando hacia su borde, mirando hacia donde va, con pasos reales, hasta desaparecer; el otro sigue. **El objeto cambia solo de su lado:** florece del lado del que sigue (con el corazón grande) y se seca del lado del que se va (las dos mitades se funden ~0,6 s, nunca negro).
-- Cómo lo hace la app: cada mitad de la pantalla es la misma escena (la derecha en espejo), centrada en su objeto; hasta el final las dos mitades están en el mismo estado y en el final cada una pasa al de su camino.
-- La portada se mantiene (en este modo, el texto va arriba, sobre el cielo, y la escena queda limpia debajo).
+- Con `MODO: juntos` **no se divide la pantalla**: una sola escena a pantalla completa, **como una Y**. Al principio **A y B están juntos en el centro**; el camino se abre como una Y (dibujada suave en el suelo) y **A va a la izquierda, a SU objeto** (su árbol, su barca, su computadora…) **y B a la derecha, al suyo**, caminando con pasos reales (de 1,4 s a 2,8 s).
+- **Los dos hacen lo mismo a la vez y todo es igual** (en espejo) **hasta los últimos 3 segundos.**
+- **Final (los últimos 3 s):** **A se rinde y se desanima** (se sienta, cabeza baja) y su objeto se apaga (el árbol se seca, la gráfica baja, la barca nunca sale); **B lo logra** (su árbol florece, en el lago zarpa, cruza y llega a la otra orilla) **y levanta los brazos de victoria**, con el corazón grande.
+- **Sin títulos, sin frases, sin gancho y sin subtítulos:** solo los personajes, los objetos, **un contador arriba en el centro** si el subtítulo lo trae (`DÍA {1-30}`) y la música.
+- Cómo lo hace la app: cada lado es la misma escena dibujada en su mitad (la de A en espejo, para que los dos queden hacia el centro y sus objetos hacia fuera).
+- Escenas probadas: **arbol** (regar), **lago** (arreglar-barco), **computadora** (= oficina, trabajar). Vale con cualquier escena.
+- La portada se mantiene (en este modo, el texto va arriba, sobre el cielo).
 - **Por defecto (sin la línea MODO) todo sigue como antes** (comprobado: los mismos videos, píxel a píxel). No se combina con INICIO ni con la división.
 
 ### ⭐ Una sola historia y luego se divide (líneas `INICIO` y `SEPARAR`)
@@ -295,7 +297,7 @@ PLANO: general | cerca | mixto   (opcional; por defecto mixto)
 ANGULO: lateral | frente | aereo | mixto   (opcional; por defecto mixto)
 GANCHO: frase de 3 a 6 palabras
 PORTADA: 3 a 5 palabras para la miniatura, *clave* en rojo | roto | entero   (opcional)
-MODO: juntos   (opcional: una sola escena sin dividir, A a la izquierda y B a la derecha)
+MODO: juntos   (opcional: una sola escena como una Y, A a la izquierda con su objeto y B a la derecha con el suyo)
 INICIO: escenas | personajes | acciones   (opcional: la historia común antes de dividirse)
 INICIO-MOMENTOS: sucesos de la parte común   (opcional)
 SEPARAR: segundo en que se divide   (opcional; por defecto el 40 %)
@@ -377,7 +379,7 @@ PREGUNTA_EN: Where do you want to be a year from now?
 
 Regla: **todas las escenas dibujan a todos los personajes del guion** (hasta 3 en cualquier escena: 2 adultos y un niño o una niña), bien colocados y con el mismo sello. Cada escena tiene un decorado propio que se reconoce desde el primer segundo, para que los videos no parezcan repetidos.
 
-### Escenas (26)
+### Escenas (27)
 
 | Escena | Qué se ve | Acciones | Ejemplo de línea |
 |---|---|---|---|
@@ -407,6 +409,7 @@ Regla: **todas las escenas dibujan a todos los personajes del guion** (hasta 3 e
 | `telefono` | Dos casas; ondas de una llamada; al final una línea naranja las une | llamar, ignorar | `B: NO CONTESTA \| LLAMADA {1-15} \| telefono \| mujer+hombre \| llamar+ignorar \| pierden` |
 | `regalo` | Caja con lazo (rojo solo al abrirla) y estante de regalos guardados | dar, guardar (2.º: esperar) | `A: LO DA A TIEMPO \| DÍA {1-30} \| regalo \| hombre+nina \| dar+esperar \| se unen` |
 | `aeropuerto` | Terminal con ventanal encendido y torre, pista con rayas y un avión de perfil con ventanillas cálidas y escalerilla. **subir-avion**: camina tirando de la maleta hasta la escalerilla, sube un escalón por paso con la maleta en la mano y entra; se va la escalerilla, el avión rueda, levanta el morro, despega y **se va haciendo pequeño en el cielo** con su estela hasta ser una lucecita roja. **llegar-avion**: el avión aparece pequeño en el cielo sobre la terminal, baja creciendo, aterriza y frena; llega la escalerilla, baja con la maleta y camina hacia quien lo espera (con final bueno, se abrazan). **despedirse**: dice adiós con la mano y luego mira cómo se va el avión. **esperar**: espera mirando al cielo. Vale en guiones de varias escenas | despedirse, subir-avion, llegar-avion, esperar | `A: SE VA LEJOS \| AÑO {1-3} \| aeropuerto \| mujer+hombre \| despedirse+subir-avion \| llega` |
+| `lago` (también barco, bote) | La orilla, el agua con olas y la otra orilla con una banderita; una barca que se arregla tabla a tabla (las que faltan, a trozos). **arreglar-barco**: agachado junto a su barca, la arregla con el martillo. **Final bueno**: la empuja al agua, sube, rema (los remos van y vienen), cruza y en la otra orilla celebra con los brazos arriba y saltitos (corazón grande, la banderita se pone roja). **Final malo**: la arregla con mucho detalle y nunca la termina ni sale; se desanima (se sienta, cabeza baja) | arreglar-barco, remar | `A: ZARPA \| DÍA {1-30} \| lago \| mujer \| arreglar-barco \| llega` |
 
 ### Objetos concretos (38)
 
@@ -736,6 +739,7 @@ Ejemplos de cada final nuevo:
 | `js/mp4strip.js` | Quita la pista de audio de un MP4 (para «Descargar sin música») y lee sus pistas para el Diagnóstico (`inspectMp4`) |
 | `js/render.js` | Composición, estrellas, textos, línea de tiempo, zona segura |
 | `js/angulos.js` | Ángulos de cámara (línea ANGULO): lateral, de frente, desde arriba (vista aérea de cada escena) y contrapicado |
+| `js/lago.js` | Escena «lago»: la orilla, el agua y la barca (arreglar, zarpar, remar, cruzar y celebrar) |
 | `js/voz.js` | Una sola historia y luego se divide (INICIO / SEPARAR) y VOZ sincronizada con subtítulos |
 | `js/camara.js` | Planos: general y primer plano (línea PLANO), cámara que se acerca y se aleja |
 | `js/portada.js` | Portada / miniatura: momento más emotivo, texto grande con palabra roja, corazón roto o entero, fuentes que rotan |
